@@ -1,0 +1,14 @@
+.layout {
+  height: 100vh;
+  background: var(--cor-fundo);
+}
+
+/* A sidebar é fixa, então a coluna de conteúdo anda para o lado dela. O
+   deslocamento é de 80px, e não os 76px da sidebar: no Figma o conteúdo
+   começa em 80 e fica uma faixa de 4px de fundo entre os dois. */
+.coluna {
+  display: flex;
+  height: 100vh;
+  flex-direction: column;
+  margin-left: var(--deslocamento-conteudo);
+}

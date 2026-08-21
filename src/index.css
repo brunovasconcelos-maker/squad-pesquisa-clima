@@ -1,11 +1,20 @@
-:root {
-  font-family: 'Inter', sans-serif;
-}
+@import './styles/tokens.css';
 
-* {
-  font-family: inherit;
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  font-family: var(--fonte);
+  line-height: var(--altura-linha);
+  color: var(--cor-texto);
+  background: var(--cor-fundo);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
 }

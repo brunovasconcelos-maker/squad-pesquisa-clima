@@ -1,0 +1,117 @@
+.sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  display: flex;
+  width: var(--largura-sidebar);
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--espaco-12) var(--espaco-16);
+  background: var(--cor-superficie);
+}
+
+/* Os 76px menos os 16px de padding dos dois lados deixam 44px de coluna. */
+.pilha {
+  display: flex;
+  width: 44px;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--espaco-26);
+}
+
+.topo {
+  display: flex;
+  width: 44px;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--espaco-16);
+  padding-bottom: var(--espaco-8);
+}
+
+.slotAlternar {
+  display: flex;
+  width: 44px;
+  height: 48px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.moduloIcone {
+  display: block;
+  width: 48px;
+  height: 48px;
+  flex: none;
+}
+
+.navegacao {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--espaco-14);
+}
+
+.avatares {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--espaco-16);
+}
+
+.slot {
+  display: flex;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: var(--raio-icone);
+  background: transparent;
+  cursor: pointer;
+}
+
+/* No Figma o item ativo tem preenchimento e borda de 3px na mesma cor, o que
+   dá no mesmo que só o preenchimento. Fica só o fundo. */
+.slotAtivo {
+  background: var(--cor-item-ativo);
+}
+
+.avatar {
+  display: block;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--raio-avatar);
+  background: var(--cor-avatar-fundo);
+  object-fit: cover;
+}
+
+.divisor {
+  width: 44px;
+  height: 1px;
+  flex: none;
+  margin: 0;
+  border: none;
+  background: var(--cor-borda-sutil);
+}
+
+.slotConfig {
+  display: flex;
+  width: 44px;
+  height: 48px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
