@@ -49,7 +49,12 @@
   align-items: center;
   gap: var(--espaco-8);
   padding: var(--espaco-16) 0;
+  border: none;
   border-radius: var(--raio-icone);
+  background: transparent;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
 .caixa {

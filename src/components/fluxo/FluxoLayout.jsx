@@ -5,8 +5,7 @@ import IconeBotao from './IconeBotao.jsx'
 import close from '../../assets/icons/Close.svg'
 
 /*
- * Moldura das seis telas do fluxo "Nova Pesquisa" (Figma 8057:3447 e irmãos).
- * Só o visual: nada navega, nada valida.
+ * Moldura das telas do fluxo "Nova Pesquisa" (Figma 8057:3447 e irmãos).
  *
  * As telas são full-bleed — no Figma a moldura ocupa os 1440px inteiros e a
  * sidebar não aparece em nenhuma delas. Por isso o fluxo não monta a Sidebar.
@@ -26,6 +25,11 @@ export default function FluxoLayout({
   centrada = false,
   mostrarContinuar = true,
   mostrarPular = false,
+  continuarDesabilitado = false,
+  onFechar,
+  onVoltar,
+  onContinuar,
+  onPular,
   children,
 }) {
   const classesColuna = [
@@ -41,7 +45,7 @@ export default function FluxoLayout({
       <header className={s.cabecalho}>
         <p className={s.titulo}>{titulo}</p>
         <div className={s.acoesCabecalho}>
-          <IconeBotao src={close} rotulo="Fechar" />
+          <IconeBotao src={close} rotulo="Fechar" onClick={onFechar} />
         </div>
       </header>
 
@@ -57,10 +61,18 @@ export default function FluxoLayout({
           />
         </div>
         <div className={s.acoesRodape}>
-          <Botao>Voltar</Botao>
+          <Botao onClick={onVoltar}>Voltar</Botao>
           <div className={s.acoesDireita}>
-            {mostrarPular ? <Botao>Pular</Botao> : null}
-            {mostrarContinuar ? <Botao variante="marca">Continuar</Botao> : null}
+            {mostrarPular ? <Botao onClick={onPular}>Pular</Botao> : null}
+            {mostrarContinuar ? (
+              <Botao
+                variante="marca"
+                desabilitado={continuarDesabilitado}
+                onClick={onContinuar}
+              >
+                Continuar
+              </Botao>
+            ) : null}
           </div>
         </div>
       </div>

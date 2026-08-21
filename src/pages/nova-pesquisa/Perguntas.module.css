@@ -73,3 +73,8 @@
   color: var(--cor-destaque);
   font-weight: var(--peso-medio);
 }
+
+.passo:disabled {
+  cursor: default;
+  opacity: 0.4;
+}

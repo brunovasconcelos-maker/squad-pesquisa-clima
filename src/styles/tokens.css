@@ -28,6 +28,8 @@
   --cor-borda-forte: #b2b9b9;        /* borda do campo de prompt */
   --cor-destaque: #ff9230;           /* minutos estimados */
   --cor-scrim: rgba(0, 0, 0, 0.2);   /* fundo atrás do modal */
+  --cor-fundo-desabilitado: #e3e6e6; /* background/disable */
+  --cor-texto-desabilitado: #b2b9b9; /* texto-icones/disable */
 
   /* Tipografia — Inter em todo o projeto. */
   --fonte: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;

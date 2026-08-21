@@ -22,3 +22,17 @@
   background: var(--cor-marca);
   color: var(--cor-texto-invertido);
 }
+
+/* Variante desabilitada do Figma (8060:4681): fundo e texto apagados. */
+.botao:disabled {
+  cursor: default;
+}
+
+.marca:disabled {
+  background: var(--cor-fundo-desabilitado);
+  color: var(--cor-texto-desabilitado);
+}
+
+.botao:not(.marca):disabled {
+  color: var(--cor-texto-desabilitado);
+}

@@ -59,6 +59,12 @@
   min-width: 0;
   align-items: center;
   gap: var(--espaco-12);
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
 .linhaChave {

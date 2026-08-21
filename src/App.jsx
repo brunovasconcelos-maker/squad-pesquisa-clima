@@ -1,27 +1,29 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Home from './pages/Home.jsx'
+import PesquisaProvider from './pages/nova-pesquisa/estado.jsx'
 import TelaNome from './pages/nova-pesquisa/TelaNome.jsx'
-import TelaParticipantes from './pages/nova-pesquisa/TelaParticipantes.jsx'
-import TelaNomePreenchido from './pages/nova-pesquisa/TelaNomePreenchido.jsx'
 import TelaTemplate from './pages/nova-pesquisa/TelaTemplate.jsx'
 import TelaPerguntas from './pages/nova-pesquisa/TelaPerguntas.jsx'
 import TelaPrompt from './pages/nova-pesquisa/TelaPrompt.jsx'
+import TelaStub from './pages/nova-pesquisa/TelaStub.jsx'
 
 /*
- * As seis telas do fluxo têm rota própria e nenhuma leva à outra: a navegação
- * entra depois. Por enquanto cada uma é um endereço para abrir e olhar.
+ * O provider do fluxo é a rota-mãe: o estado nasce ao entrar em
+ * /pesquisas/nova e morre ao sair, sem virar estado global.
  */
 export default function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/pesquisas/nova" element={<TelaNome />} />
-        <Route path="/pesquisas/nova/participantes" element={<TelaParticipantes />} />
-        <Route path="/pesquisas/nova/preenchido" element={<TelaNomePreenchido />} />
-        <Route path="/pesquisas/nova/template" element={<TelaTemplate />} />
-        <Route path="/pesquisas/nova/perguntas" element={<TelaPerguntas />} />
-        <Route path="/pesquisas/nova/prompt" element={<TelaPrompt />} />
+        <Route path="/pesquisas/nova" element={<PesquisaProvider />}>
+          <Route index element={<TelaNome />} />
+          <Route path="template" element={<TelaTemplate />} />
+          <Route path="perguntas" element={<TelaPerguntas />} />
+          <Route path="prompt" element={<TelaPrompt />} />
+          <Route path="branco" element={<TelaStub />} />
+          <Route path="carregando" element={<TelaStub />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   )
