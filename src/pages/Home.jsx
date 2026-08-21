@@ -1,3 +1,3 @@
 export default function Home() {
-  return <h1>Gestão de Pessoas</h1>
+  return <h1>Pesquisa de Clima</h1>
 }
