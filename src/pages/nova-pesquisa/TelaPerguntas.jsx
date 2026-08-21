@@ -16,19 +16,19 @@ import plus from '../../assets/icons/Plus.svg'
  *
  * Os minutos estimados acompanham o contador: 45 segundos por pergunta.
  *
- * O "Pular" só aparece no caminho em branco.
+ * Só o caminho com template passa por aqui — o branco vai da escolha direto
+ * para a revisão.
  */
 export default function TelaPerguntas() {
   const navigate = useNavigate()
   const { pesquisa, definir } = usePesquisa()
 
-  const ehBranco = pesquisa.template === 'blank'
-  const minutos = minutosEstimados(pesquisa.perguntas)
+  const minutos = minutosEstimados(pesquisa.quantidade)
   const somar = (passo) =>
     definir({
-      perguntas: Math.min(
+      quantidade: Math.min(
         PERGUNTAS_MAX,
-        Math.max(PERGUNTAS_MIN, pesquisa.perguntas + passo),
+        Math.max(PERGUNTAS_MIN, pesquisa.quantidade + passo),
       ),
     })
 
@@ -37,11 +37,9 @@ export default function TelaPerguntas() {
       titulo="Feedback time de Design"
       progresso={3 / 4}
       centrada
-      mostrarPular={ehBranco}
       onFechar={() => navigate('/')}
       onVoltar={() => navigate('../template')}
       onContinuar={() => navigate('../prompt')}
-      onPular={() => navigate('../prompt')}
     >
       <div className={s.conteudo}>
         <p className={s.rotulo}>Quantas perguntas serão feitas?</p>
@@ -51,17 +49,17 @@ export default function TelaPerguntas() {
             type="button"
             className={s.passo}
             aria-label="Menos uma pergunta"
-            disabled={pesquisa.perguntas <= PERGUNTAS_MIN}
+            disabled={pesquisa.quantidade <= PERGUNTAS_MIN}
             onClick={() => somar(-1)}
           >
             <img className={s.icone} src={minus} alt="" width={24} height={24} />
           </button>
-          <p className={s.numero}>{pesquisa.perguntas}</p>
+          <p className={s.numero}>{pesquisa.quantidade}</p>
           <button
             type="button"
             className={s.passo}
             aria-label="Mais uma pergunta"
-            disabled={pesquisa.perguntas >= PERGUNTAS_MAX}
+            disabled={pesquisa.quantidade >= PERGUNTAS_MAX}
             onClick={() => somar(1)}
           >
             <img className={s.icone} src={plus} alt="" width={24} height={24} />

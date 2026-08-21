@@ -37,11 +37,11 @@ export default function TelaTemplate() {
     navigate('../perguntas')
   }
 
-  /* O branco segue o mesmo caminho dos templates; o que muda é o prompt, que
-     nasce vazio, e o "Pular" que passa a aparecer nas telas 5 e 6. */
+  /* O branco pula o contador, o prompt e o carregamento: não há o que gerar.
+     Vai direto para a revisão, que abre só com a Abertura. */
   const escolherBranco = () => {
     escolherTemplate('blank')
-    navigate('../perguntas')
+    navigate('../revisao')
   }
 
   return (

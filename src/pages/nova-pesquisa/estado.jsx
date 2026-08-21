@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo, useState } from 'react'
 import { Outlet } from 'react-router-dom'
+import { gerarPerguntas } from './bancoDePerguntas.js'
 
 /*
  * Estado do fluxo "Nova Pesquisa".
@@ -18,8 +19,10 @@ const ESTADO_INICIAL = {
   // usuário desmarcar tudo no modal, o Continuar volta a travar.
   participantes: { todaEmpresa: true, grupos: [] },
   template: null,
-  perguntas: 10,
+  // Quantidade escolhida na tela 5; a lista gerada mora em `perguntas`.
+  quantidade: 10,
   prompt: '',
+  perguntas: [],
 }
 
 export const GRUPOS = ['Atendimento', 'Vendas', 'Design']
@@ -99,7 +102,32 @@ export default function PesquisaProvider() {
         definir({
           template,
           prompt: montarPrompt(template, pesquisa.participantes),
+          perguntas: [],
         }),
+
+      /* Chamada pela tela de carregamento, no fim dos 3 segundos. */
+      gerar: () =>
+        definir({
+          perguntas: gerarPerguntas(
+            pesquisa.template,
+            fraseParticipantes(pesquisa.participantes),
+            pesquisa.quantidade,
+          ),
+        }),
+
+      removerPergunta: (id) =>
+        definir({ perguntas: pesquisa.perguntas.filter((q) => q.id !== id) }),
+
+      /* Serve para editar e para acrescentar: se o id já está na lista ele é
+         substituído no lugar, senão entra no fim. */
+      salvarPergunta: (pergunta) => {
+        const existe = pesquisa.perguntas.some((q) => q.id === pergunta.id)
+        definir({
+          perguntas: existe
+            ? pesquisa.perguntas.map((q) => (q.id === pergunta.id ? pergunta : q))
+            : [...pesquisa.perguntas, pergunta],
+        })
+      },
     }
   }, [pesquisa])
 

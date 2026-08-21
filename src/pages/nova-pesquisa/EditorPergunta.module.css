@@ -1,0 +1,188 @@
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--espaco-40);
+  background: var(--cor-scrim);
+  overflow-y: auto;
+}
+
+.modal {
+  display: flex;
+  width: 640px;
+  max-height: 100%;
+  flex-direction: column;
+  gap: var(--espaco-24);
+  padding: var(--espaco-24);
+  border-radius: var(--raio-card);
+  background: var(--cor-fundo);
+}
+
+.cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.titulo {
+  margin: 0;
+  color: var(--cor-preto-suave);
+  font-size: 20px;
+  font-weight: var(--peso-semibold);
+  letter-spacing: -0.45px;
+  line-height: 25px;
+}
+
+.corpo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-24);
+  overflow-y: auto;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-8);
+}
+
+.rotulo {
+  margin: 0;
+  color: var(--cor-texto-secundario);
+  font-size: 14px;
+  font-weight: var(--peso-medio);
+  letter-spacing: -0.08px;
+}
+
+.entrada {
+  width: 100%;
+  padding: var(--espaco-12);
+  border: 1px solid var(--cor-borda-acao);
+  border-radius: var(--raio-caixa);
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: var(--peso-regular);
+  letter-spacing: -0.31px;
+  resize: vertical;
+}
+
+.entrada::placeholder {
+  color: var(--cor-texto-secundario);
+}
+
+.entrada:focus {
+  outline: 1px solid var(--cor-texto);
+}
+
+.duasColunas {
+  display: grid;
+  gap: var(--espaco-16);
+  grid-template-columns: 1fr 1fr;
+}
+
+/* Lista de opções: cada linha tem o campo e o botão de remover. */
+.opcoes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-8);
+}
+
+.linhaOpcao {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-8);
+}
+
+.remover {
+  display: flex;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: var(--raio-pilula);
+  background: transparent;
+  cursor: pointer;
+}
+
+.remover:disabled {
+  cursor: default;
+  opacity: 0.3;
+}
+
+.icone {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+
+.secundario {
+  align-self: flex-start;
+  padding: var(--espaco-8) var(--espaco-12);
+  border: 1px solid var(--cor-borda-acao);
+  border-radius: var(--raio-pilula);
+  background: transparent;
+  color: var(--cor-texto);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: var(--peso-medio);
+  cursor: pointer;
+}
+
+.alternador {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-8);
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--cor-texto);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: var(--peso-regular);
+  cursor: pointer;
+}
+
+.dica {
+  margin: 0;
+  color: var(--cor-texto-secundario);
+  font-size: 14px;
+  font-weight: var(--peso-regular);
+}
+
+/* Escolha do tipo, no "Adicionar pergunta". */
+.tipos {
+  display: grid;
+  gap: var(--espaco-8);
+  grid-template-columns: 1fr 1fr;
+}
+
+.tipo {
+  padding: var(--espaco-16);
+  border: 1px solid var(--cor-borda-acao);
+  border-radius: var(--raio-caixa);
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: var(--peso-medio);
+  text-align: left;
+  cursor: pointer;
+}
+
+.tipo:hover {
+  background: var(--cor-superficie);
+}
+
+.rodape {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}

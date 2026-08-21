@@ -24,7 +24,6 @@ export default function App() {
           <Route path="prompt" element={<TelaPrompt />} />
           <Route path="carregando" element={<TelaCarregando />} />
           <Route path="revisao" element={<TelaRevisao />} />
-          <Route path="revisao-branco" element={<TelaRevisao vazia />} />
         </Route>
       </Routes>
     </BrowserRouter>
