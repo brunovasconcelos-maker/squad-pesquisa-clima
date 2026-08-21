@@ -1,0 +1,96 @@
+.tela {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  background: var(--cor-fundo);
+}
+
+.cabecalho {
+  display: flex;
+  height: var(--altura-cabecalho-fluxo);
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--espaco-16) var(--espaco-40);
+  border-bottom: 1px solid var(--cor-borda-acao);
+  background: var(--cor-fundo);
+}
+
+/* Os dois lados têm 300px fixos no Figma: é o que mantém o título preso à
+   esquerda e o X à direita, sem o título empurrar nada. */
+.titulo {
+  width: 300px;
+  margin: 0;
+  font-size: 20px;
+  font-weight: var(--peso-medio);
+  letter-spacing: -0.26px;
+  line-height: 1.2;
+  overflow-wrap: break-word;
+}
+
+.acoesCabecalho {
+  display: flex;
+  width: 300px;
+  justify-content: flex-end;
+}
+
+.miolo {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+}
+
+/* O topo do miolo é medido a partir do documento, não do fim do cabeçalho:
+   156px na tela do nome e 216px nas demais. Descontar os 96px do cabeçalho
+   dá o respiro real de cada uma. */
+.coluna {
+  display: flex;
+  width: var(--largura-miolo);
+  flex-direction: column;
+  padding-top: 60px;
+}
+
+.colunaLarga {
+  width: var(--largura-miolo-largo);
+  padding-top: 120px;
+}
+
+.colunaCentrada {
+  padding-top: 120px;
+}
+
+.rodape {
+  position: sticky;
+  bottom: 0;
+  height: var(--altura-rodape-fluxo);
+  flex: none;
+  background: var(--cor-fundo);
+}
+
+.progresso {
+  height: 8px;
+  overflow: hidden;
+  background: var(--cor-superficie);
+}
+
+/* A trilha começa 4px à esquerda para que o raio de 360px seja cortado na
+   borda da tela — no Figma a ponta esquerda não aparece arredondada. */
+.progressoPreenchido {
+  height: 8px;
+  margin-left: -4px;
+  border-radius: var(--raio-pilula);
+  background: var(--cor-marca);
+}
+
+.acoesRodape {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--espaco-16) var(--espaco-40);
+}
+
+.acoesDireita {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-8);
+}

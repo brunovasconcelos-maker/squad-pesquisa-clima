@@ -1,0 +1,24 @@
+/* Pílula de 40px do Figma. O "Voltar" é a variante sem fundo; o "Continuar"
+   e o "Salvar" são a preta. */
+.botao {
+  display: flex;
+  height: 40px;
+  flex: none;
+  align-items: center;
+  gap: var(--espaco-8);
+  padding: var(--espaco-12) var(--espaco-16);
+  border: none;
+  border-radius: var(--raio-pilula);
+  background: transparent;
+  color: var(--cor-texto);
+  font-size: 14px;
+  font-weight: var(--peso-medio);
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.marca {
+  background: var(--cor-marca);
+  color: var(--cor-texto-invertido);
+}
