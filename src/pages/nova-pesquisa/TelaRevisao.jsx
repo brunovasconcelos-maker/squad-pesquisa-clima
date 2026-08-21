@@ -223,7 +223,7 @@ export default function TelaRevisao() {
       <RodapeFluxo
         progresso={5 / 6}
         onVoltar={() => (ehBranco ? voltar() : setConfirmandoVoltar(true))}
-        onContinuar={() => navigate('../configuracoes')}
+        onContinuar={() => navigate('../configuracao')}
       />
 
       {confirmandoVoltar ? (

@@ -1,0 +1,30 @@
+/* Interruptor do Figma: 64x28, botão branco de 39x24 correndo de ponta a
+   ponta com 2px de folga. Desligado troca o verde pelo cinza e o botão
+   volta para a esquerda. */
+.interruptor {
+  display: flex;
+  flex: none;
+  width: 64px;
+  align-items: center;
+  padding: 2px;
+  border: none;
+  border-radius: 100px;
+  cursor: pointer;
+}
+
+.ligado {
+  justify-content: flex-end;
+  background: var(--cor-verde-ativo);
+}
+
+.desligado {
+  justify-content: flex-start;
+  background: var(--cor-texto-desabilitado);
+}
+
+.botao {
+  width: 39px;
+  height: 24px;
+  border-radius: 100px;
+  background: var(--cor-fundo);
+}

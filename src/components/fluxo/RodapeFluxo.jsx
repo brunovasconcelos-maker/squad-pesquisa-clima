@@ -12,6 +12,7 @@ import Botao from './Botao.jsx'
 export default function RodapeFluxo({
   progresso,
   mostrarContinuar = true,
+  rotuloContinuar = 'Continuar',
   mostrarPular = false,
   continuarDesabilitado = false,
   onVoltar,
@@ -36,7 +37,7 @@ export default function RodapeFluxo({
               desabilitado={continuarDesabilitado}
               onClick={onContinuar}
             >
-              Continuar
+              {rotuloContinuar}
             </Botao>
           ) : null}
         </div>
