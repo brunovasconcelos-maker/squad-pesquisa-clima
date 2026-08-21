@@ -4,32 +4,45 @@ import LinhaResumo from '../../components/fluxo/LinhaResumo.jsx'
 import Interruptor from '../../components/fluxo/Interruptor.jsx'
 
 import circle from '../../assets/icons/Circle.svg'
+import radioButton from '../../assets/icons/RadioButton.svg'
 import square from '../../assets/icons/Square.svg'
 
 /*
  * Os seis modais da tela de Configuração. Só o visual: nada marca, salva ou
  * fecha ainda.
  *
- * FALTA UM ASSET: o Figma usa duas artes de rádio — "Circle" para a opção
- * solta e "RadioButton" para a marcada. Só o Circle.svg existe em
- * src/assets/icons, então nenhuma opção aparece marcada aqui. Não desenhei o
- * ponto interno em CSS de propósito.
+ * São duas artes de rádio, como no Figma: Circle para a opção solta e
+ * RadioButton para a marcada. Qual fica marcada é fixo por enquanto e segue o
+ * que o arquivo desenha — e bate com os valores mostrados na lista da tela.
  */
 
-function Opcao({ texto }) {
+function Opcao({ texto, marcada = false, rotulo }) {
   return (
-    <button type="button" className={s.opcao}>
-      <img className={s.icone} src={circle} alt="" width={24} height={24} />
-      <span className={s.textoOpcao}>{texto}</span>
+    <button
+      type="button"
+      className={s.opcao}
+      role="radio"
+      aria-checked={marcada}
+      aria-label={rotulo}
+    >
+      <img
+        className={s.icone}
+        src={marcada ? radioButton : circle}
+        alt=""
+        width={24}
+        height={24}
+      />
+      {texto ? <span className={s.textoOpcao}>{texto}</span> : null}
     </button>
   )
 }
 
-function ListaDeOpcoes({ opcoes }) {
+/* `marcada` é o índice da opção selecionada no Figma. */
+function ListaDeOpcoes({ opcoes, marcada }) {
   return (
-    <div className={s.opcoes}>
-      {opcoes.map((texto) => (
-        <Opcao key={texto} texto={texto} />
+    <div className={s.opcoes} role="radiogroup">
+      {opcoes.map((texto, i) => (
+        <Opcao key={texto} texto={texto} marcada={i === marcada} />
       ))}
     </div>
   )
@@ -71,7 +84,7 @@ export function ModalDataEnvio(props) {
 export function ModalRecorrencia(props) {
   return (
     <ModalFluxo titulo="Recorrência" {...props}>
-      <ListaDeOpcoes opcoes={['Recorrente', 'Única']} />
+      <ListaDeOpcoes opcoes={['Recorrente', 'Única']} marcada={0} />
     </ModalFluxo>
   )
 }
@@ -87,6 +100,7 @@ export function ModalFrequencia(props) {
           'A cada seis meses',
           'Anual',
         ]}
+        marcada={1}
       />
     </ModalFluxo>
   )
@@ -95,9 +109,9 @@ export function ModalFrequencia(props) {
 export function ModalPrazo(props) {
   return (
     <ModalFluxo titulo="Prazo pra respostas" {...props}>
-      <div className={s.opcoes}>
+      <div className={s.opcoes} role="radiogroup">
         <Opcao texto="1 dia" />
-        <Opcao texto="1 semana" />
+        <Opcao texto="1 semana" marcada />
         <Opcao texto="1 mês" />
 
         <div className={s.divisor}>
@@ -107,9 +121,7 @@ export function ModalPrazo(props) {
         </div>
 
         <div className={s.opcaoComCampos}>
-          <button type="button" className={s.opcao} aria-label="Data específica">
-            <img className={s.icone} src={circle} alt="" width={24} height={24} />
-          </button>
+          <Opcao rotulo="Data específica" />
           <ParDeCampos />
         </div>
       </div>

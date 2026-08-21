@@ -166,12 +166,20 @@
   white-space: nowrap;
 }
 
-/* Última linha do prazo: o rádio e, ao lado, o par data + hora. */
+/* Última linha do prazo: o rádio e, ao lado, o par data + hora.
+   O par divide o que sobra em vez de tomar a largura toda — senão o rádio e
+   o gap somam por cima dos 484 do miolo e a hora vaza para fora do card. */
 .opcaoComCampos {
   display: flex;
   width: 100%;
   align-items: center;
   gap: var(--espaco-20);
+}
+
+.opcaoComCampos .parDeCampos {
+  width: auto;
+  flex: 1 0 0;
+  min-width: 0;
 }
 
 /* Textarea da mensagem final. */
