@@ -1,6 +1,6 @@
 import s from './Interruptor.module.css'
 
-export default function Interruptor({ ligado = false, rotulo }) {
+export default function Interruptor({ ligado = false, rotulo, onAlternar }) {
   return (
     <button
       type="button"
@@ -8,6 +8,7 @@ export default function Interruptor({ ligado = false, rotulo }) {
       role="switch"
       aria-checked={ligado}
       aria-label={rotulo}
+      onClick={onAlternar}
     >
       <span className={s.botao} />
     </button>

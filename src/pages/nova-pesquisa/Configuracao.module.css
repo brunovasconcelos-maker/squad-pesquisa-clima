@@ -107,6 +107,13 @@
   outline: none;
 }
 
+/* Desligado quando a data não vale — imediato marcado, ou prazo por período. */
+.campoData:disabled {
+  border-color: var(--cor-borda-acao);
+  color: var(--cor-texto-desabilitado);
+  cursor: default;
+}
+
 /* Bloco do modal de Data e Hora: campos e o checkbox, com 20 de folga. */
 .blocoEnvio {
   display: flex;

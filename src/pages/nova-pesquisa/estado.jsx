@@ -14,6 +14,37 @@ import { ABERTURA_TEMPLATE, ABERTURA_BRANCO } from './perguntasExemplo.js'
  * conjunto maior.
  */
 
+export const MENSAGEM_FINAL_PADRAO =
+  'Obrigado por dedicar esses minutos pra compartilhar sua visão. Cada resposta ajuda o time de design a crescer e trabalhar melhor, juntos. Até a próxima pesquisa.'
+
+/*
+ * Configuração do último passo. Os padrões são o que o Figma desenha na tela
+ * estática, incluindo os três interruptores do modal de avançadas.
+ *
+ * `envio` e `prazo` guardam data e hora como texto solto porque os campos são
+ * de texto livre — não há date picker ainda.
+ */
+export const CONFIGURACAO_INICIAL = {
+  respostasAnonimas: true,
+  envio: { data: '11 Agosto 2026', hora: '10:30', imediato: false },
+  recorrencia: 'Recorrente',
+  frequencia: 'Mensal',
+  // tipo: 'periodo' usa `periodo`; 'data' usa `data` e `hora`.
+  prazo: {
+    tipo: 'periodo',
+    periodo: '1 semana',
+    data: '11 Agosto 2026',
+    hora: '10:30',
+  },
+  mensagemFinal: MENSAGEM_FINAL_PADRAO,
+  avancadas: {
+    lembrete: 'Diário',
+    barraProgresso: true,
+    embaralhar: false,
+    obrigatorias: true,
+  },
+}
+
 const ESTADO_INICIAL = {
   nome: '',
   // Começa em "Toda a empresa" porque é o que a tela 1 do Figma mostra. Se o
@@ -27,6 +58,7 @@ const ESTADO_INICIAL = {
   // Parágrafo do card de Abertura. Fica no estado, e não como constante da
   // tela, porque agora é editável.
   abertura: ABERTURA_TEMPLATE,
+  configuracao: CONFIGURACAO_INICIAL,
 }
 
 export const GRUPOS = ['Atendimento', 'Vendas', 'Design']
@@ -120,6 +152,10 @@ export default function PesquisaProvider() {
             pesquisa.quantidade,
           ),
         }),
+
+      /* Mescla um pedaço da configuração sem apagar o resto. */
+      definirConfiguracao: (campos) =>
+        definir({ configuracao: { ...pesquisa.configuracao, ...campos } }),
 
       removerPergunta: (id) =>
         definir({ perguntas: pesquisa.perguntas.filter((q) => q.id !== id) }),

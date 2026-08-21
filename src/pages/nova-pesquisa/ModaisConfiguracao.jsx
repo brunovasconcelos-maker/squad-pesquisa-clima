@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import s from './Configuracao.module.css'
 import ModalFluxo from '../../components/fluxo/ModalFluxo.jsx'
 import LinhaResumo from '../../components/fluxo/LinhaResumo.jsx'
@@ -6,17 +7,20 @@ import Interruptor from '../../components/fluxo/Interruptor.jsx'
 import circle from '../../assets/icons/Circle.svg'
 import radioButton from '../../assets/icons/RadioButton.svg'
 import square from '../../assets/icons/Square.svg'
+import checkSquare from '../../assets/icons/CheckSquare.svg'
 
 /*
- * Os seis modais da tela de Configuração. Só o visual: nada marca, salva ou
- * fecha ainda.
+ * Os modais da tela de Configuração.
+ *
+ * Todos seguem a mesma regra: editam uma cópia e só o "Salvar" devolve o
+ * valor. "Voltar" e o X descartam — é o que faz o rascunho não vazar para a
+ * lista da tela.
  *
  * São duas artes de rádio, como no Figma: Circle para a opção solta e
- * RadioButton para a marcada. Qual fica marcada é fixo por enquanto e segue o
- * que o arquivo desenha — e bate com os valores mostrados na lista da tela.
+ * RadioButton para a marcada.
  */
 
-function Opcao({ texto, marcada = false, rotulo }) {
+function Opcao({ texto, marcada = false, rotulo, onEscolher }) {
   return (
     <button
       type="button"
@@ -24,6 +28,7 @@ function Opcao({ texto, marcada = false, rotulo }) {
       role="radio"
       aria-checked={marcada}
       aria-label={rotulo}
+      onClick={onEscolher}
     >
       <img
         className={s.icone}
@@ -37,43 +42,84 @@ function Opcao({ texto, marcada = false, rotulo }) {
   )
 }
 
-/* `marcada` é o índice da opção selecionada no Figma. */
-function ListaDeOpcoes({ opcoes, marcada }) {
+function ListaDeOpcoes({ opcoes, marcada, onEscolher }) {
   return (
     <div className={s.opcoes} role="radiogroup">
-      {opcoes.map((texto, i) => (
-        <Opcao key={texto} texto={texto} marcada={i === marcada} />
+      {opcoes.map((texto) => (
+        <Opcao
+          key={texto}
+          texto={texto}
+          marcada={texto === marcada}
+          onEscolher={() => onEscolher(texto)}
+        />
       ))}
     </div>
   )
 }
 
-function ParDeCampos({ data = '11 Agosto 2026', hora = '10:30' }) {
+function ParDeCampos({ data, hora, onMudar, desabilitado = false }) {
   return (
     <div className={s.parDeCampos}>
       <input
         className={s.campoData}
         type="text"
-        defaultValue={data}
+        value={data}
+        disabled={desabilitado}
         aria-label="Data"
+        onChange={(e) => onMudar({ data: e.target.value })}
       />
       <input
         className={s.campoData}
         type="text"
-        defaultValue={hora}
+        value={hora}
+        disabled={desabilitado}
         aria-label="Hora"
+        onChange={(e) => onMudar({ hora: e.target.value })}
       />
     </div>
   )
 }
 
-export function ModalDataEnvio(props) {
+/* Fecha e devolve, ou fecha e descarta — o par que todo modal daqui usa. */
+function useRascunho(valor, onSalvar) {
+  const [rascunho, setRascunho] = useState(valor)
+  const alterar = (campos) => setRascunho((r) => ({ ...r, ...campos }))
+  return [rascunho, setRascunho, alterar, () => onSalvar(rascunho)]
+}
+
+export function ModalDataEnvio({ valor, onSalvar, onFechar }) {
+  const [rascunho, , alterar, salvar] = useRascunho(valor, onSalvar)
+
   return (
-    <ModalFluxo titulo="Data e Hora de Envio" {...props}>
+    <ModalFluxo
+      titulo="Data e Hora de Envio"
+      onVoltar={onFechar}
+      onFechar={onFechar}
+      onSalvar={salvar}
+    >
       <div className={s.blocoEnvio}>
-        <ParDeCampos />
-        <button type="button" className={s.linhaCheck}>
-          <img className={s.icone} src={square} alt="" width={24} height={24} />
+        {/* Marcar "enviar imediatamente" desliga os campos: a data deixa de
+            valer, e deixá-los editáveis sugeriria o contrário. */}
+        <ParDeCampos
+          data={rascunho.data}
+          hora={rascunho.hora}
+          desabilitado={rascunho.imediato}
+          onMudar={alterar}
+        />
+        <button
+          type="button"
+          className={s.linhaCheck}
+          role="checkbox"
+          aria-checked={rascunho.imediato}
+          onClick={() => alterar({ imediato: !rascunho.imediato })}
+        >
+          <img
+            className={s.icone}
+            src={rascunho.imediato ? checkSquare : square}
+            alt=""
+            width={24}
+            height={24}
+          />
           <span className={s.textoCheck}>Enviar imediatamente</span>
         </button>
       </div>
@@ -81,17 +127,33 @@ export function ModalDataEnvio(props) {
   )
 }
 
-export function ModalRecorrencia(props) {
+export function ModalRecorrencia({ valor, onSalvar, onFechar }) {
+  const [rascunho, setRascunho] = useState(valor)
   return (
-    <ModalFluxo titulo="Recorrência" {...props}>
-      <ListaDeOpcoes opcoes={['Recorrente', 'Única']} marcada={0} />
+    <ModalFluxo
+      titulo="Recorrência"
+      onVoltar={onFechar}
+      onFechar={onFechar}
+      onSalvar={() => onSalvar(rascunho)}
+    >
+      <ListaDeOpcoes
+        opcoes={['Recorrente', 'Única']}
+        marcada={rascunho}
+        onEscolher={setRascunho}
+      />
     </ModalFluxo>
   )
 }
 
-export function ModalFrequencia(props) {
+export function ModalFrequencia({ valor, onSalvar, onFechar }) {
+  const [rascunho, setRascunho] = useState(valor)
   return (
-    <ModalFluxo titulo="Frequência" {...props}>
+    <ModalFluxo
+      titulo="Frequência"
+      onVoltar={onFechar}
+      onFechar={onFechar}
+      onSalvar={() => onSalvar(rascunho)}
+    >
       <ListaDeOpcoes
         opcoes={[
           'Semanal',
@@ -100,19 +162,35 @@ export function ModalFrequencia(props) {
           'A cada seis meses',
           'Anual',
         ]}
-        marcada={1}
+        marcada={rascunho}
+        onEscolher={setRascunho}
       />
     </ModalFluxo>
   )
 }
 
-export function ModalPrazo(props) {
+const PERIODOS = ['1 dia', '1 semana', '1 mês']
+
+export function ModalPrazo({ valor, onSalvar, onFechar }) {
+  const [rascunho, , alterar, salvar] = useRascunho(valor, onSalvar)
+  const porData = rascunho.tipo === 'data'
+
   return (
-    <ModalFluxo titulo="Prazo pra respostas" {...props}>
+    <ModalFluxo
+      titulo="Prazo pra respostas"
+      onVoltar={onFechar}
+      onFechar={onFechar}
+      onSalvar={salvar}
+    >
       <div className={s.opcoes} role="radiogroup">
-        <Opcao texto="1 dia" />
-        <Opcao texto="1 semana" marcada />
-        <Opcao texto="1 mês" />
+        {PERIODOS.map((periodo) => (
+          <Opcao
+            key={periodo}
+            texto={periodo}
+            marcada={!porData && rascunho.periodo === periodo}
+            onEscolher={() => alterar({ tipo: 'periodo', periodo })}
+          />
+        ))}
 
         <div className={s.divisor}>
           <span className={s.divisorLinha} />
@@ -120,50 +198,133 @@ export function ModalPrazo(props) {
           <span className={s.divisorLinha} />
         </div>
 
+        {/* Os campos só ficam editáveis com a opção de data escolhida. */}
         <div className={s.opcaoComCampos}>
-          <Opcao rotulo="Data específica" />
-          <ParDeCampos />
+          <Opcao
+            rotulo="Data específica"
+            marcada={porData}
+            onEscolher={() => alterar({ tipo: 'data' })}
+          />
+          <ParDeCampos
+            data={rascunho.data}
+            hora={rascunho.hora}
+            desabilitado={!porData}
+            onMudar={alterar}
+          />
         </div>
       </div>
     </ModalFluxo>
   )
 }
 
-const MENSAGEM_EXEMPLO =
-  'Obrigado por dedicar esses minutos pra compartilhar sua visão. Cada resposta ajuda o time de design a crescer e trabalhar melhor, juntos. Até a próxima pesquisa.'
-
-export function ModalMensagemFinal(props) {
+export function ModalMensagemFinal({ valor, onSalvar, onFechar }) {
+  const [rascunho, setRascunho] = useState(valor)
   return (
-    <ModalFluxo titulo="Mensagem final" {...props}>
+    <ModalFluxo
+      titulo="Mensagem final"
+      onVoltar={onFechar}
+      onFechar={onFechar}
+      onSalvar={() => onSalvar(rascunho)}
+    >
       <textarea
         className={s.mensagem}
-        defaultValue={MENSAGEM_EXEMPLO}
+        value={rascunho}
         aria-label="Mensagem final"
+        onChange={(e) => setRascunho(e.target.value)}
       />
     </ModalFluxo>
   )
 }
 
-export function ModalAvancadas(props) {
+/* Sem spec própria: três opções que cobrem os casos usuais de lembrete. */
+const LEMBRETES = ['Diário', 'Semanal', 'Nunca']
+
+function ModalLembrete({ valor, onSalvar, onFechar }) {
+  const [rascunho, setRascunho] = useState(valor)
   return (
-    <ModalFluxo titulo="Configurações avançadas" espacamento={32} {...props}>
-      <div className={s.listaAvancada}>
-        <LinhaResumo rotulo="Enviar lembrete" valor="Diário" />
-        <LinhaResumo
-          rotulo="Mostrar barra de progresso"
-          controle={<Interruptor ligado rotulo="Mostrar barra de progresso" />}
-        />
-        <LinhaResumo
-          rotulo="Embaralhar perguntas"
-          controle={<Interruptor rotulo="Embaralhar perguntas" />}
-        />
-        <LinhaResumo
-          rotulo="Tornar as perguntas obrigatórias por padrão"
-          controle={
-            <Interruptor ligado rotulo="Tornar as perguntas obrigatórias por padrão" />
-          }
-        />
-      </div>
+    <ModalFluxo
+      titulo="Enviar lembrete"
+      onVoltar={onFechar}
+      onFechar={onFechar}
+      onSalvar={() => onSalvar(rascunho)}
+    >
+      <ListaDeOpcoes
+        opcoes={LEMBRETES}
+        marcada={rascunho}
+        onEscolher={setRascunho}
+      />
     </ModalFluxo>
+  )
+}
+
+export function ModalAvancadas({ valor, onSalvar, onFechar }) {
+  const [rascunho, , alterar, salvar] = useRascunho(valor, onSalvar)
+  const [lembreteAberto, setLembreteAberto] = useState(false)
+
+  return (
+    <>
+      <ModalFluxo
+        titulo="Configurações avançadas"
+        espacamento={32}
+        onVoltar={onFechar}
+        onFechar={onFechar}
+        onSalvar={salvar}
+      >
+        <div className={s.listaAvancada}>
+          <LinhaResumo
+            rotulo="Enviar lembrete"
+            valor={rascunho.lembrete}
+            onAbrir={() => setLembreteAberto(true)}
+          />
+          <LinhaResumo
+            rotulo="Mostrar barra de progresso"
+            controle={
+              <Interruptor
+                ligado={rascunho.barraProgresso}
+                rotulo="Mostrar barra de progresso"
+                onAlternar={() =>
+                  alterar({ barraProgresso: !rascunho.barraProgresso })
+                }
+              />
+            }
+          />
+          <LinhaResumo
+            rotulo="Embaralhar perguntas"
+            controle={
+              <Interruptor
+                ligado={rascunho.embaralhar}
+                rotulo="Embaralhar perguntas"
+                onAlternar={() => alterar({ embaralhar: !rascunho.embaralhar })}
+              />
+            }
+          />
+          <LinhaResumo
+            rotulo="Tornar as perguntas obrigatórias por padrão"
+            controle={
+              <Interruptor
+                ligado={rascunho.obrigatorias}
+                rotulo="Tornar as perguntas obrigatórias por padrão"
+                onAlternar={() =>
+                  alterar({ obrigatorias: !rascunho.obrigatorias })
+                }
+              />
+            }
+          />
+        </div>
+      </ModalFluxo>
+
+      {/* O seletor de lembrete abre por cima e devolve para o rascunho daqui,
+          então sair dele não perde o que já foi mexido nos interruptores. */}
+      {lembreteAberto ? (
+        <ModalLembrete
+          valor={rascunho.lembrete}
+          onSalvar={(lembrete) => {
+            alterar({ lembrete })
+            setLembreteAberto(false)
+          }}
+          onFechar={() => setLembreteAberto(false)}
+        />
+      ) : null}
+    </>
   )
 }

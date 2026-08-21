@@ -1,4 +1,5 @@
-import { useNavigate, useParams } from 'react-router-dom'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import s from './Configuracao.module.css'
 import CabecalhoFluxo from '../../components/fluxo/CabecalhoFluxo.jsx'
 import RodapeFluxo from '../../components/fluxo/RodapeFluxo.jsx'
@@ -6,6 +7,7 @@ import Botao from '../../components/fluxo/Botao.jsx'
 import LinhaResumo from '../../components/fluxo/LinhaResumo.jsx'
 import Interruptor from '../../components/fluxo/Interruptor.jsx'
 import ModalParticipantes from './ModalParticipantes.jsx'
+import { usePesquisa, rotuloParticipantes } from './estado.jsx'
 import {
   ModalDataEnvio,
   ModalRecorrencia,
@@ -15,35 +17,39 @@ import {
   ModalAvancadas,
 } from './ModaisConfiguracao.jsx'
 
-const MENSAGEM_EXEMPLO =
-  'Obrigado por dedicar esses minutos pra compartilhar sua visão. Cada resposta ajuda o time de design a crescer e trabalhar melhor, juntos. Até a próxima pesquisa.'
-
 /*
- * Último passo do fluxo (Figma 8067:5498). Só o visual: nada marca, abre ou
- * salva ainda — cada modal tem rota própria para dar para olhar sem clicar.
+ * Último passo do fluxo (Figma 8067:5498).
  *
  * O Figma rotula a seção como "Configurações" e o link como "Ver settings
  * avançadas"; os textos aqui seguem o combinado: "Configuração" e "Ver
  * configurações avançadas". "Frequencia" também ganhou o acento.
  *
- * A linha de Frequência só existe quando a recorrência é "Recorrente" — é o
- * estado que o Figma desenha.
+ * Os modais abrem por estado local, não por rota: são passos dentro desta
+ * tela, e voltar de um não deveria mexer no histórico do navegador.
+ *
+ * Data e hora são texto livre — não há date picker ainda —, então o valor
+ * mostrado na lista é montado a partir do que foi digitado.
  */
-const MODAIS = {
-  participantes: ModalParticipantes,
-  'data-envio': ModalDataEnvio,
-  recorrencia: ModalRecorrencia,
-  frequencia: ModalFrequencia,
-  prazo: ModalPrazo,
-  'mensagem-final': ModalMensagemFinal,
-  avancadas: ModalAvancadas,
+function textoDeEnvio({ imediato, data, hora }) {
+  return imediato ? 'Imediatamente' : `${data}, as ${hora}`
+}
+
+function textoDePrazo({ tipo, periodo, data, hora }) {
+  return tipo === 'data' ? `${data}, as ${hora}` : periodo
 }
 
 export default function TelaConfiguracao() {
   const navigate = useNavigate()
-  const { modal } = useParams()
-  const Modal = modal ? MODAIS[modal] : null
-  const recorrencia = 'Recorrente'
+  const { pesquisa, definir, definirConfiguracao } = usePesquisa()
+  const [modal, setModal] = useState(null)
+
+  const c = pesquisa.configuracao
+  const fechar = () => setModal(null)
+  /* Todo modal salva do mesmo jeito: grava o campo e fecha. */
+  const salvar = (campo) => (valor) => {
+    definirConfiguracao({ [campo]: valor })
+    fechar()
+  }
 
   return (
     <div className={s.tela}>
@@ -54,35 +60,126 @@ export default function TelaConfiguracao() {
           <div className={s.lista}>
             <p className={s.secao}>Configuração</p>
 
-            <LinhaResumo rotulo="Participantes" valor="Time de Design" />
+            <LinhaResumo
+              rotulo="Participantes"
+              valor={rotuloParticipantes(pesquisa.participantes)}
+              onAbrir={() => setModal('participantes')}
+            />
             <LinhaResumo
               rotulo="Respostas anônimas"
-              controle={<Interruptor ligado rotulo="Respostas anônimas" />}
+              controle={
+                <Interruptor
+                  ligado={c.respostasAnonimas}
+                  rotulo="Respostas anônimas"
+                  onAlternar={() =>
+                    definirConfiguracao({
+                      respostasAnonimas: !c.respostasAnonimas,
+                    })
+                  }
+                />
+              }
             />
-            <LinhaResumo rotulo="Data de Envio" valor="Sex 14 Ago 2026, as 10h" />
-            <LinhaResumo rotulo="Recorrência" valor={recorrencia} />
-            {recorrencia === 'Recorrente' ? (
-              <LinhaResumo rotulo="Frequência" valor="Mensal" />
+            <LinhaResumo
+              rotulo="Data de Envio"
+              valor={textoDeEnvio(c.envio)}
+              onAbrir={() => setModal('envio')}
+            />
+            <LinhaResumo
+              rotulo="Recorrência"
+              valor={c.recorrencia}
+              onAbrir={() => setModal('recorrencia')}
+            />
+            {/* Sem recorrência não há frequência que faça sentido. */}
+            {c.recorrencia === 'Recorrente' ? (
+              <LinhaResumo
+                rotulo="Frequência"
+                valor={c.frequencia}
+                onAbrir={() => setModal('frequencia')}
+              />
             ) : null}
-            <LinhaResumo rotulo="Prazo pra respostas" valor="1 semana" />
-            <LinhaResumo rotulo="Mensagem final" valor={MENSAGEM_EXEMPLO} cortar />
+            <LinhaResumo
+              rotulo="Prazo pra respostas"
+              valor={textoDePrazo(c.prazo)}
+              onAbrir={() => setModal('prazo')}
+            />
+            <LinhaResumo
+              rotulo="Mensagem final"
+              valor={c.mensagemFinal}
+              cortar
+              onAbrir={() => setModal('mensagem')}
+            />
           </div>
 
-          <Botao>Ver configurações avançadas</Botao>
+          <Botao onClick={() => setModal('avancadas')}>
+            Ver configurações avançadas
+          </Botao>
         </div>
       </div>
 
-      <RodapeFluxo progresso={6 / 6} rotuloContinuar="Salvar Pesquisa" />
+      <RodapeFluxo
+        progresso={6 / 6}
+        rotuloContinuar="Salvar Pesquisa"
+        onVoltar={() => navigate('../revisao')}
+        onContinuar={() => navigate('../confirmacao')}
+      />
 
-      {/* Nada fecha nem salva ainda; os handlers entram no próximo passo. */}
       {modal === 'participantes' ? (
         <ModalParticipantes
-          selecao={{ todaEmpresa: false, grupos: ['Design'] }}
-          onSalvar={() => {}}
-          onFechar={() => {}}
+          selecao={pesquisa.participantes}
+          onSalvar={(participantes) => {
+            definir({ participantes })
+            fechar()
+          }}
+          onFechar={fechar}
         />
-      ) : Modal ? (
-        <Modal />
+      ) : null}
+
+      {modal === 'envio' ? (
+        <ModalDataEnvio
+          valor={c.envio}
+          onSalvar={salvar('envio')}
+          onFechar={fechar}
+        />
+      ) : null}
+
+      {modal === 'recorrencia' ? (
+        <ModalRecorrencia
+          valor={c.recorrencia}
+          onSalvar={salvar('recorrencia')}
+          onFechar={fechar}
+        />
+      ) : null}
+
+      {modal === 'frequencia' ? (
+        <ModalFrequencia
+          valor={c.frequencia}
+          onSalvar={salvar('frequencia')}
+          onFechar={fechar}
+        />
+      ) : null}
+
+      {modal === 'prazo' ? (
+        <ModalPrazo
+          valor={c.prazo}
+          onSalvar={salvar('prazo')}
+          onFechar={fechar}
+        />
+      ) : null}
+
+      {modal === 'mensagem' ? (
+        <ModalMensagemFinal
+          valor={c.mensagemFinal}
+          onSalvar={salvar('mensagemFinal')}
+          onFechar={fechar}
+        />
+      ) : null}
+
+      {modal === 'avancadas' ? (
+        <ModalAvancadas
+          valor={c.avancadas}
+          onSalvar={salvar('avancadas')}
+          onFechar={fechar}
+        />
       ) : null}
     </div>
   )
