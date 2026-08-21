@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import s from './Revisao.module.css'
 import CabecalhoFluxo from '../../components/fluxo/CabecalhoFluxo.jsx'
 import EditorPergunta from './EditorPergunta.jsx'
+import EditorAbertura from './EditorAbertura.jsx'
 import { usePesquisa } from './estado.jsx'
 import { LIMITE_CURTA, LIMITE_LONGA } from './bancoDePerguntas.js'
-import { ABERTURA_TEMPLATE, ABERTURA_BRANCO } from './perguntasExemplo.js'
 
 import pencilSimpleLine from '../../assets/icons/PencilSimpleLine.svg'
 import trash from '../../assets/icons/Trash.svg'
@@ -128,18 +128,20 @@ function CorpoDaPergunta({ pergunta }) {
  * A lista vem do estado do fluxo: cheia quando veio pelo carregamento de um
  * template, vazia quando veio do "Criar pesquisa em Branco".
  *
- * `emEdicao` guarda o que o editor está mexendo: um objeto quando é uma
- * pergunta existente, null quando é uma nova (aí o editor começa pela escolha
+ * `emEdicao` guarda o que o editor de pergunta está mexendo: um objeto
+ * quando é uma existente, null quando é nova (aí o editor começa pela escolha
  * do tipo). O `false` é "editor fechado" — precisa ser diferente de null.
+ *
+ * O nome da pesquisa é um dado só: o cabeçalho, o título da Abertura e o
+ * campo da tela 1 leem e escrevem o mesmo pesquisa.nome.
  *
  * O vermelho do Trash vem do próprio SVG (#FF2633), não de CSS.
  */
 export default function TelaRevisao() {
   const navigate = useNavigate()
-  const { pesquisa, removerPergunta, salvarPergunta } = usePesquisa()
+  const { pesquisa, definir, removerPergunta, salvarPergunta } = usePesquisa()
   const [emEdicao, setEmEdicao] = useState(false)
-
-  const ehBranco = pesquisa.template === 'blank'
+  const [aberturaAberta, setAberturaAberta] = useState(false)
 
   return (
     <div className={s.tela}>
@@ -158,15 +160,17 @@ export default function TelaRevisao() {
         <section className={s.cartao}>
           <div className={s.topoCartao}>
             <p className={s.rotuloAbertura}>Abertura</p>
-            <Icone src={pencilSimpleLine} rotulo="Editar abertura" />
+            <Icone
+              src={pencilSimpleLine}
+              rotulo="Editar abertura"
+              onClick={() => setAberturaAberta(true)}
+            />
           </div>
           <div className={s.linha}>
             <p className={s.nomePesquisa}>{pesquisa.nome || 'Nova Pesquisa'}</p>
           </div>
           <div className={s.linha}>
-            <p className={s.introducao}>
-              {ehBranco ? ABERTURA_BRANCO : ABERTURA_TEMPLATE}
-            </p>
+            <p className={s.introducao}>{pesquisa.abertura}</p>
           </div>
         </section>
 
@@ -203,6 +207,15 @@ export default function TelaRevisao() {
           <img className={s.icone} src={plus} alt="" width={24} height={24} />
         </button>
       </div>
+
+      {aberturaAberta ? (
+        <EditorAbertura
+          nome={pesquisa.nome}
+          abertura={pesquisa.abertura}
+          definir={definir}
+          onFechar={() => setAberturaAberta(false)}
+        />
+      ) : null}
 
       {emEdicao !== false ? (
         <EditorPergunta

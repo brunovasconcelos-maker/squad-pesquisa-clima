@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import s from './EditorPergunta.module.css'
+import s from './Editor.module.css'
 import Botao from '../../components/fluxo/Botao.jsx'
 import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
 import {

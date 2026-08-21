@@ -1,6 +1,7 @@
 import { createContext, useContext, useMemo, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { gerarPerguntas } from './bancoDePerguntas.js'
+import { ABERTURA_TEMPLATE, ABERTURA_BRANCO } from './perguntasExemplo.js'
 
 /*
  * Estado do fluxo "Nova Pesquisa".
@@ -23,6 +24,9 @@ const ESTADO_INICIAL = {
   quantidade: 10,
   prompt: '',
   perguntas: [],
+  // Parágrafo do card de Abertura. Fica no estado, e não como constante da
+  // tela, porque agora é editável.
+  abertura: ABERTURA_TEMPLATE,
 }
 
 export const GRUPOS = ['Atendimento', 'Vendas', 'Design']
@@ -103,6 +107,8 @@ export default function PesquisaProvider() {
           template,
           prompt: montarPrompt(template, pesquisa.participantes),
           perguntas: [],
+          abertura:
+            template === 'blank' ? ABERTURA_BRANCO : ABERTURA_TEMPLATE,
         }),
 
       /* Chamada pela tela de carregamento, no fim dos 3 segundos. */
