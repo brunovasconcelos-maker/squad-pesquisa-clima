@@ -3,6 +3,7 @@ import s from './Sidebar.module.css'
 import sidepanel from '../assets/icons/Sidepanel.svg'
 import houseSimple from '../assets/icons/HouseSimple.svg'
 import ferramentas from '../assets/icons/Ferramentas.svg'
+import table from '../assets/icons/Table.svg'
 import dotsThreeOutline from '../assets/icons/DotsThreeOutline.svg'
 import gearSix from '../assets/icons/GearSix.svg'
 
@@ -21,10 +22,8 @@ import avatarDois from '../assets/images/40x40-1.png'
  * de 12 a 534 e a engrenagem de 868 a 916, ou seja, uma encostada em cada
  * ponta. Dentro da pilha as folgas entre blocos são de 26px.
  *
- * FALTA UM ASSET: o terceiro item da navegação — o da seção principal deste
- * módulo, que é o que fica ativo. No calendário é o CalendarHeart.svg; aqui
- * não existe equivalente em src/assets/icons. O slot não foi desenhado com um
- * ícone qualquer de propósito: entra quando o arquivo chegar.
+ * O terceiro item da navegação é a seção principal do módulo, e é o que fica
+ * ativo — o Table.svg aqui faz o papel do CalendarHeart.svg no calendário.
  */
 export default function Sidebar() {
   return (
@@ -53,6 +52,14 @@ export default function Sidebar() {
           </button>
           <button type="button" className={s.slot} aria-label="Ferramentas">
             <img src={ferramentas} alt="" width={21} height={21} />
+          </button>
+          <button
+            type="button"
+            className={`${s.slot} ${s.slotAtivo}`}
+            aria-label="Pesquisa de Clima"
+            aria-current="page"
+          >
+            <img src={table} alt="" width={24} height={24} />
           </button>
         </nav>
 
