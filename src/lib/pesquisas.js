@@ -1,0 +1,223 @@
+import { paraData, fimDoCiclo, proximoCiclo, formatarCurto } from './datas.js'
+
+/*
+ * Guarda e faz evoluir as pesquisas.
+ *
+ * Não há backend nem processo em segundo plano: tudo vive no localStorage e o
+ * status só avança quando a página está aberta. Por isso `avaliar` não é um
+ * relógio, e sim uma função que compara o que está guardado com o horário de
+ * agora — chamada na carga e de tempos em tempos. Uma pesquisa que deveria ter
+ * trocado de status ontem troca no próximo carregamento, de uma vez.
+ */
+
+const CHAVE = 'squad-pesquisa-clima:pesquisas'
+
+export const INTERVALO_MS = 30000
+
+/* Quanto a taxa de resposta sobe a cada checagem, enquanto o ciclo roda. */
+const PASSO_TAXA_MIN = 1
+const PASSO_TAXA_MAX = 5
+
+export const STATUS = {
+  rascunho: { texto: 'Rascunho', tom: 'padrao' },
+  agendada: { texto: 'Agendada', tom: 'destaque' },
+  rodando: { texto: 'Ativa | Rodando', tom: 'positivo' },
+  aguardando: { texto: 'Ativa | Aguardando', tom: 'acao' },
+  naoAtiva: { texto: 'Não ativa', tom: 'negativo' },
+  encerrada: { texto: 'Encerrada', tom: 'padrao' },
+}
+
+export function ler() {
+  try {
+    const cru = localStorage.getItem(CHAVE)
+    return cru ? JSON.parse(cru) : []
+  } catch {
+    // Storage bloqueado ou conteúdo corrompido: melhor lista vazia que travar.
+    return []
+  }
+}
+
+export function gravar(lista) {
+  try {
+    localStorage.setItem(CHAVE, JSON.stringify(lista))
+  } catch {
+    // Sem espaço ou sem permissão. A sessão continua com o que está em memória.
+  }
+}
+
+const novoId = () =>
+  `p_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`
+
+export const ehRecorrente = (p) => p.configuracao?.recorrencia === 'Recorrente'
+
+/* Início do ciclo: a data de envio, ou agora quando marcado "imediatamente". */
+function inicioAgendado(configuracao, agora) {
+  if (configuracao?.envio?.imediato) return agora
+  return paraData(configuracao?.envio?.data, configuracao?.envio?.hora)
+}
+
+/*
+ * Monta a pesquisa a partir do estado do fluxo. Uma pesquisa nasce agendada
+ * quando dá para saber quando ela começa, e rascunho quando não dá.
+ */
+export function criarDoFluxo(pesquisa, agora = new Date()) {
+  const inicio = inicioAgendado(pesquisa.configuracao, agora)
+  const base = {
+    id: novoId(),
+    criadoEm: agora.toISOString(),
+    atualizadoEm: agora.toISOString(),
+    nome: pesquisa.nome || 'Nova Pesquisa',
+    participantes: pesquisa.participantes,
+    template: pesquisa.template,
+    abertura: pesquisa.abertura,
+    prompt: pesquisa.prompt,
+    quantidade: pesquisa.quantidade,
+    perguntas: pesquisa.perguntas,
+    configuracao: pesquisa.configuracao,
+    ciclos: 0,
+    taxa: 0,
+    cicloInicio: inicio ? inicio.toISOString() : null,
+    cicloFim: null,
+    status: inicio ? 'agendada' : 'rascunho',
+  }
+  // Já passou da hora de enviar? Entra rodando direto.
+  return avaliar(base, agora)
+}
+
+export function duplicar(p, agora = new Date()) {
+  return {
+    ...p,
+    id: novoId(),
+    nome: `${p.nome} (cópia)`,
+    criadoEm: agora.toISOString(),
+    atualizadoEm: agora.toISOString(),
+    status: 'rascunho',
+    ciclos: 0,
+    taxa: 0,
+    cicloInicio: null,
+    cicloFim: null,
+  }
+}
+
+/* Começa um ciclo agora mesmo — usado pelo Play e pela virada de recorrência. */
+function iniciarCiclo(p, quando) {
+  return {
+    ...p,
+    status: 'rodando',
+    ciclos: p.ciclos + 1,
+    taxa: 0,
+    cicloInicio: quando.toISOString(),
+    cicloFim: fimDoCiclo(quando, p.configuracao?.prazo)?.toISOString() ?? null,
+    atualizadoEm: quando.toISOString(),
+  }
+}
+
+export function forcarInicio(p, agora = new Date()) {
+  return iniciarCiclo(p, agora)
+}
+
+export function pausar(p, agora = new Date()) {
+  return { ...p, status: 'naoAtiva', atualizadoEm: agora.toISOString() }
+}
+
+const sobeTaxa = (taxa) =>
+  Math.min(
+    100,
+    taxa +
+      PASSO_TAXA_MIN +
+      Math.floor(Math.random() * (PASSO_TAXA_MAX - PASSO_TAXA_MIN + 1)),
+  )
+
+/*
+ * Uma pesquisa por vez, comparando o guardado com `agora`. Roda em laço porque
+ * a página pode ter ficado fechada tempo suficiente para vencer mais de um
+ * ciclo — sem isso, uma recorrente mensal esquecida por um trimestre voltaria
+ * atrasada em vez de acertar o ciclo atual.
+ */
+export function avaliar(p, agora = new Date()) {
+  if (p.status === 'rascunho' || p.status === 'encerrada' || p.status === 'naoAtiva') {
+    return p
+  }
+
+  let atual = p
+  for (let volta = 0; volta < 240; volta += 1) {
+    const inicio = atual.cicloInicio ? new Date(atual.cicloInicio) : null
+    const fim = atual.cicloFim ? new Date(atual.cicloFim) : null
+
+    if (atual.status === 'agendada') {
+      if (!inicio || agora < inicio) return atual
+      atual = iniciarCiclo(atual, inicio)
+      continue
+    }
+
+    if (atual.status === 'rodando') {
+      if (!fim || agora < fim) return atual
+      atual = ehRecorrente(atual)
+        ? { ...atual, status: 'aguardando', atualizadoEm: fim.toISOString() }
+        : { ...atual, status: 'encerrada', atualizadoEm: fim.toISOString() }
+      continue
+    }
+
+    if (atual.status === 'aguardando') {
+      if (!inicio) return atual
+      const proximo = proximoCiclo(inicio, atual.configuracao?.frequencia)
+      if (agora < proximo) return atual
+      atual = iniciarCiclo(atual, proximo)
+      continue
+    }
+
+    return atual
+  }
+  return atual
+}
+
+/* Passa a lista pelo motor e sobe a taxa de quem está rodando. */
+export function avaliarLista(lista, agora = new Date()) {
+  let mudou = false
+  const nova = lista.map((p) => {
+    let atualizada = avaliar(p, agora)
+    if (atualizada.status === 'rodando' && atualizada.taxa < 100) {
+      atualizada = { ...atualizada, taxa: sobeTaxa(atualizada.taxa) }
+    }
+    if (atualizada !== p) mudou = true
+    return atualizada
+  })
+  return { lista: nova, mudou }
+}
+
+/* ---- o que a linha da tabela mostra ---- */
+
+export function botaoDe(p) {
+  if (p.status === 'rascunho' || p.status === 'encerrada') return null
+  if (p.status === 'rodando') return ehRecorrente(p) ? 'pausar' : null
+  return 'iniciar'
+}
+
+function eventoDe(p) {
+  if (p.status === 'agendada') return `Começa: ${formatarCurto(p.cicloInicio)}`
+  if (p.status === 'rodando') return `Encerra: ${formatarCurto(p.cicloFim)}`
+  if (p.status === 'encerrada') return `Encerrada: ${formatarCurto(p.cicloFim)}`
+  if (p.status === 'aguardando') {
+    const proximo = proximoCiclo(
+      new Date(p.cicloInicio),
+      p.configuracao?.frequencia,
+    )
+    return `Próxima: ${formatarCurto(proximo.toISOString())}`
+  }
+  return '—'
+}
+
+export function paraLinha(p, rotuloDoPublico) {
+  const rascunho = p.status === 'rascunho'
+  return {
+    id: p.id,
+    nome: p.nome,
+    publico: rascunho ? '—' : rotuloDoPublico(p.participantes) || '—',
+    tipo: rascunho ? '—' : ehRecorrente(p) ? 'Recorrente' : 'Única',
+    status: STATUS[p.status],
+    evento: eventoDe(p),
+    taxa: rascunho || p.status === 'agendada' ? '—' : `${p.taxa}%`,
+    ciclos: rascunho ? '—' : String(p.ciclos),
+    transporte: botaoDe(p),
+  }
+}

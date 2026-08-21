@@ -8,6 +8,7 @@ import LinhaResumo from '../../components/fluxo/LinhaResumo.jsx'
 import Interruptor from '../../components/fluxo/Interruptor.jsx'
 import ModalParticipantes from './ModalParticipantes.jsx'
 import { usePesquisa, rotuloParticipantes } from './estado.jsx'
+import { ler, gravar, criarDoFluxo } from '../../lib/pesquisas.js'
 import {
   ModalDataEnvio,
   ModalRecorrencia,
@@ -120,7 +121,10 @@ export default function TelaConfiguracao() {
         progresso={6 / 6}
         rotuloContinuar="Salvar Pesquisa"
         onVoltar={() => navigate('../revisao')}
-        onContinuar={() => navigate('../confirmacao')}
+        onContinuar={() => {
+          gravar([...ler(), criarDoFluxo(pesquisa)])
+          navigate('../confirmacao')
+        }}
       />
 
       {modal === 'participantes' ? (

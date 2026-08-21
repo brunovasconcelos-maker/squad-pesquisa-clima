@@ -1,7 +1,20 @@
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar.jsx'
 import CartaoPesquisa from '../components/lista/CartaoPesquisa.jsx'
-import { PESQUISAS_EXEMPLO } from '../components/lista/pesquisasExemplo.js'
+import ModalConfirmar from '../components/fluxo/ModalConfirmar.jsx'
+import { rotuloParticipantes } from './nova-pesquisa/estado.jsx'
+import {
+  ler,
+  gravar,
+  avaliarLista,
+  duplicar,
+  forcarInicio,
+  pausar,
+  paraLinha,
+  botaoDe,
+  INTERVALO_MS,
+} from '../lib/pesquisas.js'
 import s from './Home.module.css'
 
 import add from '../assets/icons/Add.svg'
@@ -10,11 +23,12 @@ import search from '../assets/icons/Search.svg'
 /*
  * Home do módulo (Figma 8137:11498).
  *
- * A busca é decorativa por enquanto — não filtra nada, e não há o que filtrar
- * até as pesquisas existirem.
+ * As pesquisas vêm do localStorage. Como não há backend nem processo em
+ * segundo plano, o motor de status só roda com a página aberta: uma vez na
+ * carga e depois a cada 30s. Uma pesquisa que deveria ter virado ontem vira
+ * na próxima carga, de uma vez só.
  *
- * As linhas são exemplo fixo por enquanto; o cartão já recebe tudo por prop,
- * então trocar a fonte dos dados não mexe nele.
+ * A busca é decorativa por enquanto — não filtra nada.
  *
  * O Figma tem um botão de settings à esquerda do "+", mas com opacity 0.
  * Ficou de fora: um botão invisível e clicável é pior que ausente.
@@ -30,8 +44,74 @@ const COLUNAS = [
   { nome: 'Ciclos', largura: 60 },
 ]
 
+const maisRecentePrimeiro = (a, b) =>
+  new Date(b.atualizadoEm) - new Date(a.atualizadoEm)
+
 export default function Home() {
   const navigate = useNavigate()
+  const [pesquisas, setPesquisas] = useState([])
+  const [confirmacao, setConfirmacao] = useState(null)
+  const [aviso, setAviso] = useState('')
+
+  /* Grava junto com o setState: a lista em memória e a guardada não podem
+     divergir, senão um F5 desfaz a última ação. */
+  const aplicar = useCallback((proxima) => {
+    setPesquisas(proxima)
+    gravar(proxima)
+  }, [])
+
+  useEffect(() => {
+    const rodar = () => {
+      const { lista, mudou } = avaliarLista(ler())
+      setPesquisas(lista)
+      if (mudou) gravar(lista)
+    }
+    rodar()
+    const id = setInterval(rodar, INTERVALO_MS)
+    return () => clearInterval(id)
+  }, [])
+
+  useEffect(() => {
+    if (!aviso) return undefined
+    const id = setTimeout(() => setAviso(''), 2500)
+    return () => clearTimeout(id)
+  }, [aviso])
+
+  const trocar = (id, transformar) =>
+    aplicar(pesquisas.map((p) => (p.id === id ? transformar(p) : p)))
+
+  const aoTransportar = (p) => {
+    if (botaoDe(p) === 'pausar') {
+      trocar(p.id, (atual) => pausar(atual))
+      return
+    }
+    // Iniciar sobrescreve a data agendada, então pede confirmação.
+    setConfirmacao({
+      titulo: 'Iniciar agora?',
+      texto: `"${p.nome}" começa imediatamente e passa a receber respostas, ignorando a data de envio agendada. Um novo ciclo é iniciado a partir de agora.`,
+      rotulo: 'Iniciar',
+      aoConfirmar: () => trocar(p.id, (atual) => forcarInicio(atual)),
+    })
+  }
+
+  const aoDeletar = (p) =>
+    setConfirmacao({
+      titulo: 'Deletar pesquisa?',
+      texto: `"${p.nome}" e tudo o que foi respondido nela serão removidos. Não dá para desfazer.`,
+      rotulo: 'Deletar',
+      aoConfirmar: () => aplicar(pesquisas.filter((q) => q.id !== p.id)),
+    })
+
+  const aoCopiarLink = async (p) => {
+    const link = `${window.location.origin}${import.meta.env.BASE_URL}pesquisas/${p.id}`
+    try {
+      await navigator.clipboard.writeText(link)
+      setAviso('Link copiado')
+    } catch {
+      // Sem permissão de área de transferência (contexto inseguro, por ex.).
+      setAviso('Não foi possível copiar o link')
+    }
+  }
 
   return (
     <div className={s.layout}>
@@ -70,11 +150,33 @@ export default function Home() {
         </div>
 
         <div className={s.linhas}>
-          {PESQUISAS_EXEMPLO.map((pesquisa) => (
-            <CartaoPesquisa key={pesquisa.id} pesquisa={pesquisa} />
+          {[...pesquisas].sort(maisRecentePrimeiro).map((p) => (
+            <CartaoPesquisa
+              key={p.id}
+              pesquisa={paraLinha(p, rotuloParticipantes)}
+              onTransporte={() => aoTransportar(p)}
+              onDuplicar={() => aplicar([...pesquisas, duplicar(p)])}
+              onCopiarLink={() => aoCopiarLink(p)}
+              onDeletar={() => aoDeletar(p)}
+            />
           ))}
         </div>
       </div>
+
+      {aviso ? <div className={s.aviso} role="status">{aviso}</div> : null}
+
+      {confirmacao ? (
+        <ModalConfirmar
+          titulo={confirmacao.titulo}
+          texto={confirmacao.texto}
+          rotuloConfirmar={confirmacao.rotulo}
+          onConfirmar={() => {
+            confirmacao.aoConfirmar()
+            setConfirmacao(null)
+          }}
+          onCancelar={() => setConfirmacao(null)}
+        />
+      ) : null}
     </div>
   )
 }

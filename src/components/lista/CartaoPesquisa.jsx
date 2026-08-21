@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import s from './CartaoPesquisa.module.css'
 
 import pauseCircle from '../../assets/icons/PauseCircle.svg'
@@ -11,8 +11,7 @@ import more from '../../assets/icons/More.svg'
  * Recebe os dados por prop e não sabe de onde vêm — hoje é exemplo fixo,
  * depois vira a pesquisa de verdade.
  *
- * Nada clica: o play/pause e os itens do menu estão sem ação. O menu abre e
- * fecha porque, sem isso, não dá para vê-lo.
+ * As ações chegam por prop; o cartão só decide quando chamá-las.
  */
 const TONS = {
   positivo: s.positivo,
@@ -27,8 +26,30 @@ const TRANSPORTE = {
   iniciar: { icone: play, rotulo: 'Iniciar' },
 }
 
-export default function CartaoPesquisa({ pesquisa }) {
+export default function CartaoPesquisa({
+  pesquisa,
+  onTransporte,
+  onDuplicar,
+  onCopiarLink,
+  onDeletar,
+}) {
   const [menuAberto, setMenuAberto] = useState(false)
+  const envoltorio = useRef(null)
+
+  /* Clicar fora fecha o menu — senão ele ficaria aberto atrás de tudo. */
+  useEffect(() => {
+    if (!menuAberto) return undefined
+    const aoClicar = (e) => {
+      if (!envoltorio.current?.contains(e.target)) setMenuAberto(false)
+    }
+    document.addEventListener('mousedown', aoClicar)
+    return () => document.removeEventListener('mousedown', aoClicar)
+  }, [menuAberto])
+
+  const executar = (acao) => () => {
+    setMenuAberto(false)
+    acao?.()
+  }
   const { nome, publico, tipo, status, evento, taxa, ciclos, transporte } =
     pesquisa
   const botao = transporte ? TRANSPORTE[transporte] : null
@@ -49,14 +70,19 @@ export default function CartaoPesquisa({ pesquisa }) {
 
       <div className={s.acoes}>
         {botao ? (
-          <button type="button" className={s.transporte} aria-label={`${botao.rotulo} ${nome}`}>
+          <button
+            type="button"
+            className={s.transporte}
+            aria-label={`${botao.rotulo} ${nome}`}
+            onClick={onTransporte}
+          >
             <img className={s.icone} src={botao.icone} alt="" width={24} height={24} />
           </button>
         ) : (
           <span className={s.semTransporte} />
         )}
 
-        <div className={s.envoltorioMenu}>
+        <div className={s.envoltorioMenu} ref={envoltorio}>
           <button
             type="button"
             className={s.menu}
@@ -69,16 +95,27 @@ export default function CartaoPesquisa({ pesquisa }) {
 
           {menuAberto ? (
             <div className={s.suspenso} role="menu">
-              <button type="button" className={s.itemSuspenso} role="menuitem">
+              <button
+                type="button"
+                className={s.itemSuspenso}
+                role="menuitem"
+                onClick={executar(onDuplicar)}
+              >
                 Duplicar
               </button>
-              <button type="button" className={s.itemSuspenso} role="menuitem">
+              <button
+                type="button"
+                className={s.itemSuspenso}
+                role="menuitem"
+                onClick={executar(onCopiarLink)}
+              >
                 Copiar link
               </button>
               <button
                 type="button"
                 className={`${s.itemSuspenso} ${s.destrutivo}`}
                 role="menuitem"
+                onClick={executar(onDeletar)}
               >
                 Deletar
               </button>
