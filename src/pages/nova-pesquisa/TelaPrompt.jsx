@@ -23,7 +23,7 @@ export default function TelaPrompt() {
   return (
     <FluxoLayout
       titulo="Feedback time de Design"
-      progresso={4 / 4}
+      progresso={4 / 6}
       centrada
       onFechar={() => navigate('/')}
       onVoltar={() => navigate('../perguntas')}

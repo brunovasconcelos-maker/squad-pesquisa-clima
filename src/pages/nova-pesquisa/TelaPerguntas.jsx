@@ -35,7 +35,7 @@ export default function TelaPerguntas() {
   return (
     <FluxoLayout
       titulo="Feedback time de Design"
-      progresso={3 / 4}
+      progresso={3 / 6}
       centrada
       onFechar={() => navigate('/')}
       onVoltar={() => navigate('../template')}

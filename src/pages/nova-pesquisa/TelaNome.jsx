@@ -27,7 +27,7 @@ export default function TelaNome() {
     <>
       <FluxoLayout
         titulo="Nova Pesquisa"
-        progresso={1 / 4}
+        progresso={1 / 6}
         continuarDesabilitado={!podeContinuar}
         onFechar={() => navigate('/')}
         onVoltar={() => navigate('/')}

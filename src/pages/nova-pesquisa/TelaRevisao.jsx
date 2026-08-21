@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import s from './Revisao.module.css'
 import CabecalhoFluxo from '../../components/fluxo/CabecalhoFluxo.jsx'
+import RodapeFluxo from '../../components/fluxo/RodapeFluxo.jsx'
 import EditorPergunta from './EditorPergunta.jsx'
 import EditorAbertura from './EditorAbertura.jsx'
+import ModalConfirmarVoltar from './ModalConfirmarVoltar.jsx'
 import { usePesquisa } from './estado.jsx'
 import { LIMITE_CURTA, LIMITE_LONGA } from './bancoDePerguntas.js'
 
@@ -135,6 +137,10 @@ function CorpoDaPergunta({ pergunta }) {
  * O nome da pesquisa é um dado só: o cabeçalho, o título da Abertura e o
  * campo da tela 1 leem e escrevem o mesmo pesquisa.nome.
  *
+ * Passo 5 de 6 na trilha: depois daqui vêm as configurações. O caminho em
+ * branco chega aqui vindo do passo 2, então a barra dá um salto — é o que
+ * mostra que ele pulou o contador e o prompt.
+ *
  * O vermelho do Trash vem do próprio SVG (#FF2633), não de CSS.
  */
 export default function TelaRevisao() {
@@ -142,6 +148,12 @@ export default function TelaRevisao() {
   const { pesquisa, definir, removerPergunta, salvarPergunta } = usePesquisa()
   const [emEdicao, setEmEdicao] = useState(false)
   const [aberturaAberta, setAberturaAberta] = useState(false)
+  const [confirmandoVoltar, setConfirmandoVoltar] = useState(false)
+
+  const ehBranco = pesquisa.template === 'blank'
+  /* O branco volta para a escolha de template e não tem o que perder; o
+     caminho com template volta para o prompt e passa pela confirmação. */
+  const voltar = () => navigate(ehBranco ? '../template' : '../prompt')
 
   return (
     <div className={s.tela}>
@@ -207,6 +219,19 @@ export default function TelaRevisao() {
           <img className={s.icone} src={plus} alt="" width={24} height={24} />
         </button>
       </div>
+
+      <RodapeFluxo
+        progresso={5 / 6}
+        onVoltar={() => (ehBranco ? voltar() : setConfirmandoVoltar(true))}
+        onContinuar={() => navigate('../configuracoes')}
+      />
+
+      {confirmandoVoltar ? (
+        <ModalConfirmarVoltar
+          onConfirmar={voltar}
+          onCancelar={() => setConfirmandoVoltar(false)}
+        />
+      ) : null}
 
       {aberturaAberta ? (
         <EditorAbertura

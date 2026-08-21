@@ -1,6 +1,6 @@
 import s from './FluxoLayout.module.css'
-import Botao from './Botao.jsx'
 import CabecalhoFluxo from './CabecalhoFluxo.jsx'
+import RodapeFluxo from './RodapeFluxo.jsx'
 
 /*
  * Moldura das telas do fluxo "Nova Pesquisa" (Figma 8057:3447 e irmãos).
@@ -46,29 +46,15 @@ export default function FluxoLayout({
         <div className={classesColuna}>{children}</div>
       </div>
 
-      <div className={s.rodape}>
-        <div className={s.progresso}>
-          <div
-            className={s.progressoPreenchido}
-            style={{ width: `calc(${progresso * 100}% + 4px)` }}
-          />
-        </div>
-        <div className={s.acoesRodape}>
-          <Botao onClick={onVoltar}>Voltar</Botao>
-          <div className={s.acoesDireita}>
-            {mostrarPular ? <Botao onClick={onPular}>Pular</Botao> : null}
-            {mostrarContinuar ? (
-              <Botao
-                variante="marca"
-                desabilitado={continuarDesabilitado}
-                onClick={onContinuar}
-              >
-                Continuar
-              </Botao>
-            ) : null}
-          </div>
-        </div>
-      </div>
+      <RodapeFluxo
+        progresso={progresso}
+        mostrarContinuar={mostrarContinuar}
+        mostrarPular={mostrarPular}
+        continuarDesabilitado={continuarDesabilitado}
+        onVoltar={onVoltar}
+        onContinuar={onContinuar}
+        onPular={onPular}
+      />
     </div>
   )
 }

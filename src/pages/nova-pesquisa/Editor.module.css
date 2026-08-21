@@ -21,6 +21,18 @@
   background: var(--cor-fundo);
 }
 
+.modalCompacto {
+  width: 480px;
+}
+
+.texto {
+  margin: 0;
+  font-size: 16px;
+  font-weight: var(--peso-regular);
+  letter-spacing: -0.31px;
+  line-height: 1.5;
+}
+
 .cabecalho {
   display: flex;
   align-items: center;

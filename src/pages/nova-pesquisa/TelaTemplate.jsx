@@ -47,7 +47,7 @@ export default function TelaTemplate() {
   return (
     <FluxoLayout
       titulo="Feedback time de Design"
-      progresso={2 / 4}
+      progresso={2 / 6}
       larga
       mostrarContinuar={false}
       onFechar={() => navigate('/')}
