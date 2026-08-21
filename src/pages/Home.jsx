@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar.jsx'
+import CartaoPesquisa from '../components/lista/CartaoPesquisa.jsx'
+import { PESQUISAS_EXEMPLO } from '../components/lista/pesquisasExemplo.js'
 import s from './Home.module.css'
 
 import add from '../assets/icons/Add.svg'
@@ -11,8 +13,8 @@ import search from '../assets/icons/Search.svg'
  * A busca é decorativa por enquanto — não filtra nada, e não há o que filtrar
  * até as pesquisas existirem.
  *
- * Abaixo do cabeçalho da tabela não entra nada ainda: os cards das pesquisas
- * vêm quando dar para criar e guardar uma.
+ * As linhas são exemplo fixo por enquanto; o cartão já recebe tudo por prop,
+ * então trocar a fonte dos dados não mexe nele.
  *
  * O Figma tem um botão de settings à esquerda do "+", mas com opacity 0.
  * Ficou de fora: um botão invisível e clicável é pior que ausente.
@@ -64,6 +66,12 @@ export default function Home() {
             <span key={nome} className={s.coluna1} style={{ width: largura }}>
               {nome}
             </span>
+          ))}
+        </div>
+
+        <div className={s.linhas}>
+          {PESQUISAS_EXEMPLO.map((pesquisa) => (
+            <CartaoPesquisa key={pesquisa.id} pesquisa={pesquisa} />
           ))}
         </div>
       </div>

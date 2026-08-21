@@ -119,3 +119,15 @@
 .coluna1 {
   flex: none;
 }
+
+/* Mesma coluna do cabeçalho da página: as linhas são cards e não sangram até
+   a borda como a linha de títulos. */
+.linhas {
+  display: flex;
+  width: 1100px;
+  max-width: calc(100% - var(--recuo-lista) - var(--espaco-40));
+  flex-direction: column;
+  gap: var(--espaco-12);
+  margin-top: var(--espaco-20);
+  margin-left: var(--recuo-lista);
+}

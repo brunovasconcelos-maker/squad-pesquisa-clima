@@ -1,0 +1,189 @@
+.cartao {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: var(--espaco-12);
+  padding: var(--espaco-12) var(--espaco-16);
+  border-radius: var(--raio-caixa);
+  background: var(--cor-superficie);
+}
+
+.celula {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: var(--peso-medio);
+  color: var(--cor-texto-secundario);
+  letter-spacing: -0.08px;
+  line-height: 1.2;
+}
+
+/* Nenhuma coluna de texto invade a vizinha: todas cortam com reticências.
+   As larguras do Figma entram como base do flex, não como largura fixa —
+   assim elas valem enquanto couberem e cedem proporcionalmente quando não,
+   em vez de o nome absorver sozinho toda a falta de espaço. O piso de 80px
+   evita a coluna virar duas letras numa tela estreita. */
+.nome {
+  flex: 0 1 198px;
+  min-width: 80px;
+  color: var(--cor-texto);
+}
+
+.publico,
+.tipo {
+  flex: 0 1 120px;
+}
+
+/* O selo não corta: ou cabe, ou a linha rola. */
+.status {
+  display: flex;
+  flex: none;
+  width: 140px;
+  align-items: center;
+}
+
+.evento {
+  flex: 0 1 140px;
+}
+
+.taxa {
+  flex: 0 1 110px;
+}
+
+/* Ciclos absorve a sobra e é o primeiro a ceder quando a tela aperta. */
+.ciclos {
+  flex: 1 1 0;
+}
+
+.acoes {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--espaco-12);
+}
+
+/* Botão de play/pause: quadrado branco sobre o cinza da linha. */
+.transporte {
+  display: flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  border: none;
+  border-radius: var(--raio-caixa);
+  background: var(--cor-fundo);
+  cursor: pointer;
+}
+
+/* Quando não há play nem pause, o espaço continua reservado para os menus
+   das linhas ficarem todos na mesma coluna. */
+.semTransporte {
+  width: 40px;
+  height: 40px;
+  flex: none;
+}
+
+.envoltorioMenu {
+  position: relative;
+  flex: none;
+}
+
+.menu {
+  display: flex;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  border: none;
+  border-radius: var(--raio-pilula);
+  background: transparent;
+  cursor: pointer;
+}
+
+.icone {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+
+/* ---- selo de status ---- */
+.selo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px var(--espaco-12);
+  border-radius: 90px;
+  font-size: 12px;
+  font-weight: var(--peso-medio);
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.positivo {
+  background: var(--selo-positivo-fundo);
+  color: var(--cor-verde-ativo);
+}
+
+.destaque {
+  background: var(--selo-destaque-fundo);
+  color: var(--cor-azul);
+}
+
+.acao {
+  background: var(--selo-acao-fundo);
+  color: var(--cor-destaque);
+}
+
+.negativo {
+  background: var(--selo-negativo-fundo);
+  color: var(--cor-vermelho);
+}
+
+.padrao {
+  background: var(--selo-padrao-fundo);
+  color: var(--cor-texto-secundario);
+}
+
+/* ---- menu de três pontos ---- */
+.suspenso {
+  position: absolute;
+  top: calc(100% + var(--espaco-8));
+  right: 0;
+  z-index: 5;
+  display: flex;
+  min-width: 168px;
+  flex-direction: column;
+  padding: var(--espaco-8);
+  border: 1px solid var(--cor-borda-acao);
+  border-radius: var(--raio-caixa);
+  background: var(--cor-fundo);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.itemSuspenso {
+  padding: var(--espaco-8) var(--espaco-12);
+  border: none;
+  border-radius: var(--raio-campo);
+  background: transparent;
+  color: var(--cor-texto);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: var(--peso-medio);
+  letter-spacing: -0.08px;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.itemSuspenso:hover {
+  background: var(--cor-superficie);
+}
+
+.destrutivo {
+  color: var(--cor-vermelho);
+}

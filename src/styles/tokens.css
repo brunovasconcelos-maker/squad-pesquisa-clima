@@ -30,7 +30,17 @@
   --cor-scrim: rgba(0, 0, 0, 0.2);   /* fundo atrás do modal */
   --cor-fundo-desabilitado: #e3e6e6; /* background/disable */
   --cor-texto-desabilitado: #b2b9b9; /* texto-icones/disable */
-  --cor-verde-ativo: #60c60c;        /* accent/green — interruptor ligado */
+  --cor-verde-ativo: #60c60c;        /* accent/green */
+  --cor-azul: #0091ff;               /* accent/blue */
+  --cor-vermelho: #ff2633;           /* accent/red */
+
+  /* Selos de status da lista. O fundo é a mesma cor do texto a 10%, menos o
+     laranja, que no Figma vem como um tom sólido próprio. */
+  --selo-positivo-fundo: rgba(1, 180, 108, 0.1);
+  --selo-destaque-fundo: rgba(0, 145, 255, 0.1);
+  --selo-acao-fundo: #fff3e9;
+  --selo-negativo-fundo: rgba(255, 38, 51, 0.1);
+  --selo-padrao-fundo: #e3e6e6;      /* status/default */
 
   /* Tipografia — Inter em todo o projeto. */
   --fonte: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
