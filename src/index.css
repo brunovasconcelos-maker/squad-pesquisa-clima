@@ -1,3 +1,13 @@
+/* Inter servida localmente, igual ao calendario-conteudo: sem depender do
+   Google Fonts em runtime.
+
+   São quatro pesos, e não os três da referência: lá todo título tem classe
+   própria, aqui o <h1> da home fica sem regra e herda o bold 700 do
+   navegador. Sem o 700 aquele título cairia num bold sintético. */
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
 @import './styles/tokens.css';
 
 *,
