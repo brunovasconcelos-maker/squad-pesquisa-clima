@@ -14,9 +14,7 @@ import plus from '../../assets/icons/Plus.svg'
 /*
  * Tela 5 (Figma 8063:4769).
  *
- * Os minutos estimados acompanham o contador: 45 segundos por pergunta. O
- * Figma desenha "12 minutos" fixo, que não corresponde às 10 perguntas do
- * mesmo desenho — o número agora é calculado.
+ * Os minutos estimados acompanham o contador: 45 segundos por pergunta.
  *
  * O "Pular" só aparece no caminho em branco.
  */
