@@ -1,8 +1,6 @@
 import s from './FluxoLayout.module.css'
 import Botao from './Botao.jsx'
-import IconeBotao from './IconeBotao.jsx'
-
-import close from '../../assets/icons/Close.svg'
+import CabecalhoFluxo from './CabecalhoFluxo.jsx'
 
 /*
  * Moldura das telas do fluxo "Nova Pesquisa" (Figma 8057:3447 e irmãos).
@@ -42,12 +40,7 @@ export default function FluxoLayout({
 
   return (
     <div className={s.tela}>
-      <header className={s.cabecalho}>
-        <p className={s.titulo}>{titulo}</p>
-        <div className={s.acoesCabecalho}>
-          <IconeBotao src={close} rotulo="Fechar" onClick={onFechar} />
-        </div>
-      </header>
+      <CabecalhoFluxo titulo={titulo} onFechar={onFechar} />
 
       <div className={s.miolo}>
         <div className={classesColuna}>{children}</div>

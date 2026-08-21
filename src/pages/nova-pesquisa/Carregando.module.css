@@ -1,0 +1,23 @@
+/* Tela cheia, sem cabeçalho, sem rodapé, sem X — só a ilustração no centro.
+   O .palco é o slot que vai receber o vídeo mais para a frente: trocar o
+   <img> por um <video> aqui não mexe em mais nada. */
+.tela {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  background: var(--cor-fundo);
+}
+
+.palco {
+  display: flex;
+  max-width: 720px;
+  align-items: center;
+  justify-content: center;
+}
+
+.ilustracao {
+  display: block;
+  width: 100%;
+  height: auto;
+}
