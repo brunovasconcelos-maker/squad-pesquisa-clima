@@ -1,7 +1,12 @@
 import { useNavigate } from 'react-router-dom'
 import s from './Perguntas.module.css'
 import FluxoLayout from '../../components/fluxo/FluxoLayout.jsx'
-import { usePesquisa, PERGUNTAS_MIN, PERGUNTAS_MAX } from './estado.jsx'
+import {
+  usePesquisa,
+  minutosEstimados,
+  PERGUNTAS_MIN,
+  PERGUNTAS_MAX,
+} from './estado.jsx'
 
 import minus from '../../assets/icons/Minus.svg'
 import plus from '../../assets/icons/Plus.svg'
@@ -9,18 +14,18 @@ import plus from '../../assets/icons/Plus.svg'
 /*
  * Tela 5 (Figma 8063:4769).
  *
- * Os minutos estimados são fixos em 12, como no Figma — não há regra de
- * cálculo definida, e inventar uma seria chutar.
+ * Os minutos estimados acompanham o contador: 45 segundos por pergunta. O
+ * Figma desenha "12 minutos" fixo, que não corresponde às 10 perguntas do
+ * mesmo desenho — o número agora é calculado.
  *
- * O "Pular" só aparece no caminho em branco. Hoje o branco não passa por
- * aqui (a tela 4 manda direto para o stub), então na prática ele não aparece;
- * a condição fica pronta para quando as telas do branco existirem.
+ * O "Pular" só aparece no caminho em branco.
  */
 export default function TelaPerguntas() {
   const navigate = useNavigate()
   const { pesquisa, definir } = usePesquisa()
 
   const ehBranco = pesquisa.template === 'blank'
+  const minutos = minutosEstimados(pesquisa.perguntas)
   const somar = (passo) =>
     definir({
       perguntas: Math.min(
@@ -67,7 +72,9 @@ export default function TelaPerguntas() {
 
         <div className={s.estimativa}>
           <p className={s.estimativaTexto}>Em média</p>
-          <p className={s.estimativaValor}>12 minutos</p>
+          <p className={s.estimativaValor}>
+            {minutos} {minutos === 1 ? 'minuto' : 'minutos'}
+          </p>
           <p className={s.estimativaTexto}>para responder</p>
         </div>
       </div>

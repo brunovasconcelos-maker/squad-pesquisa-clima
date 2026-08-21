@@ -27,6 +27,15 @@ export const GRUPOS = ['Atendimento', 'Vendas', 'Design']
 export const PERGUNTAS_MIN = 1
 export const PERGUNTAS_MAX = 20
 
+/* 45 segundos por pergunta, arredondando para o minuto mais próximo. O .5
+   sobe: 10 perguntas dão 7,5 minutos e viram 8. Nunca chega a zero, porque
+   já a primeira pergunta arredonda 0,75 para 1. */
+const SEGUNDOS_POR_PERGUNTA = 45
+
+export function minutosEstimados(perguntas) {
+  return Math.round((perguntas * SEGUNDOS_POR_PERGUNTA) / 60)
+}
+
 /* Os textos de exemplo da tela 6, um por template. */
 const PROMPTS = {
   clima: (p) =>

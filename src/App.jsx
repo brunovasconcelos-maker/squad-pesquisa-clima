@@ -21,7 +21,6 @@ export default function App() {
           <Route path="template" element={<TelaTemplate />} />
           <Route path="perguntas" element={<TelaPerguntas />} />
           <Route path="prompt" element={<TelaPrompt />} />
-          <Route path="branco" element={<TelaStub />} />
           <Route path="carregando" element={<TelaStub />} />
         </Route>
       </Routes>

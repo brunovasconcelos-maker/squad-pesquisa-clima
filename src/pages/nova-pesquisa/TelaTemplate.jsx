@@ -37,11 +37,11 @@ export default function TelaTemplate() {
     navigate('../perguntas')
   }
 
-  /* O branco vai direto para o stub: as telas próprias dele ainda não
-     existem. */
+  /* O branco segue o mesmo caminho dos templates; o que muda é o prompt, que
+     nasce vazio, e o "Pular" que passa a aparecer nas telas 5 e 6. */
   const escolherBranco = () => {
     escolherTemplate('blank')
-    navigate('../branco')
+    navigate('../perguntas')
   }
 
   return (
