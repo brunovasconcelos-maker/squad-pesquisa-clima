@@ -122,8 +122,10 @@ export default function TelaConfiguracao() {
         rotuloContinuar="Salvar Pesquisa"
         onVoltar={() => navigate('../revisao')}
         onContinuar={() => {
+          // Grava antes de sair: a home lê o localStorage ao montar, então a
+          // pesquisa nova já aparece na lista sem recarregar a página.
           gravar([...ler(), criarDoFluxo(pesquisa)])
-          navigate('../confirmacao')
+          navigate('/')
         }}
       />
 

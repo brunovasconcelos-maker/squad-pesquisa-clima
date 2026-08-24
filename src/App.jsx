@@ -8,7 +8,6 @@ import TelaPrompt from './pages/nova-pesquisa/TelaPrompt.jsx'
 import TelaCarregando from './pages/nova-pesquisa/TelaCarregando.jsx'
 import TelaRevisao from './pages/nova-pesquisa/TelaRevisao.jsx'
 import TelaConfiguracao from './pages/nova-pesquisa/TelaConfiguracao.jsx'
-import TelaConfirmacao from './pages/nova-pesquisa/TelaConfirmacao.jsx'
 
 /*
  * O provider do fluxo é a rota-mãe: o estado nasce ao entrar em
@@ -27,7 +26,6 @@ export default function App() {
           <Route path="carregando" element={<TelaCarregando />} />
           <Route path="revisao" element={<TelaRevisao />} />
           <Route path="configuracao" element={<TelaConfiguracao />} />
-          <Route path="confirmacao" element={<TelaConfirmacao />} />
         </Route>
       </Routes>
     </BrowserRouter>
