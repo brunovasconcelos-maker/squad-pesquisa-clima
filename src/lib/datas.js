@@ -23,6 +23,8 @@ const MESES = [
 
 const MES_CURTO = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 
+const MES_LONGO = MESES.map(([longo]) => longo[0].toUpperCase() + longo.slice(1))
+
 const semAcento = (t) =>
   t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
@@ -58,6 +60,14 @@ export function formatarCurto(iso) {
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return '—'
   return `${d.getDate()} ${MES_CURTO[d.getMonth()]}`
+}
+
+/* "31 Agosto 2026" — o formato que os campos de data da Configuração usam,
+   e que `paraData` sabe ler de volta. */
+export function formatarLongo(data) {
+  const d = new Date(data)
+  if (Number.isNaN(d.getTime())) return ''
+  return `${d.getDate()} ${MES_LONGO[d.getMonth()]} ${d.getFullYear()}`
 }
 
 export function somarDias(data, dias) {

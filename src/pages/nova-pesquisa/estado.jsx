@@ -2,6 +2,7 @@ import { createContext, useContext, useMemo, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { gerarPerguntas } from './bancoDePerguntas.js'
 import { ABERTURA_TEMPLATE, ABERTURA_BRANCO } from './perguntasExemplo.js'
+import { formatarLongo, somarDias } from '../../lib/datas.js'
 
 /*
  * Estado do fluxo "Nova Pesquisa".
@@ -14,6 +15,10 @@ import { ABERTURA_TEMPLATE, ABERTURA_BRANCO } from './perguntasExemplo.js'
  * conjunto maior.
  */
 
+/* Uma semana de antecedência: prazo para revisar e avisar o time antes de a
+   pesquisa sair. */
+const DIAS_ATE_O_ENVIO = 7
+
 export const MENSAGEM_FINAL_PADRAO =
   'Obrigado por dedicar esses minutos pra compartilhar sua visão. Cada resposta ajuda o time de design a crescer e trabalhar melhor, juntos. Até a próxima pesquisa.'
 
@@ -23,29 +28,39 @@ export const MENSAGEM_FINAL_PADRAO =
  *
  * `envio` e `prazo` guardam data e hora como texto solto porque os campos são
  * de texto livre — não há date picker ainda.
+ *
+ * É função, e não constante, por causa das datas: a do Figma era fixa e já
+ * tinha vencido, o que fazia toda pesquisa nova nascer com o envio no
+ * passado. Calculadas na hora em que o fluxo começa, e não na carga do
+ * módulo, para que uma aba deixada aberta a noite toda não ofereça ontem.
  */
-export const CONFIGURACAO_INICIAL = {
-  respostasAnonimas: true,
-  envio: { data: '11 Agosto 2026', hora: '10:30', imediato: false },
-  recorrencia: 'Recorrente',
-  frequencia: 'Mensal',
-  // tipo: 'periodo' usa `periodo`; 'data' usa `data` e `hora`.
-  prazo: {
-    tipo: 'periodo',
-    periodo: '1 semana',
-    data: '11 Agosto 2026',
-    hora: '10:30',
-  },
-  mensagemFinal: MENSAGEM_FINAL_PADRAO,
-  avancadas: {
-    lembrete: 'Diário',
-    barraProgresso: true,
-    embaralhar: false,
-    obrigatorias: true,
-  },
+export function configuracaoInicial(hoje = new Date()) {
+  const envio = somarDias(hoje, DIAS_ATE_O_ENVIO)
+  return {
+    respostasAnonimas: true,
+    envio: { data: formatarLongo(envio), hora: '10:30', imediato: false },
+    recorrencia: 'Recorrente',
+    frequencia: 'Mensal',
+    // tipo: 'periodo' usa `periodo`; 'data' usa `data` e `hora`.
+    prazo: {
+      tipo: 'periodo',
+      periodo: '1 semana',
+      // Só aparece se o usuário trocar para data específica. Uma semana
+      // depois do envio, que é o mesmo que o período padrão ao lado.
+      data: formatarLongo(somarDias(envio, 7)),
+      hora: '10:30',
+    },
+    mensagemFinal: MENSAGEM_FINAL_PADRAO,
+    avancadas: {
+      lembrete: 'Diário',
+      barraProgresso: true,
+      embaralhar: false,
+      obrigatorias: true,
+    },
+  }
 }
 
-const ESTADO_INICIAL = {
+const estadoInicial = () => ({
   nome: '',
   // Começa em "Toda a empresa" porque é o que a tela 1 do Figma mostra. Se o
   // usuário desmarcar tudo no modal, o Continuar volta a travar.
@@ -58,8 +73,8 @@ const ESTADO_INICIAL = {
   // Parágrafo do card de Abertura. Fica no estado, e não como constante da
   // tela, porque agora é editável.
   abertura: ABERTURA_TEMPLATE,
-  configuracao: CONFIGURACAO_INICIAL,
-}
+  configuracao: configuracaoInicial(),
+})
 
 export const GRUPOS = ['Atendimento', 'Vendas', 'Design']
 
@@ -123,7 +138,7 @@ export function usePesquisa() {
 }
 
 export default function PesquisaProvider() {
-  const [pesquisa, setPesquisa] = useState(ESTADO_INICIAL)
+  const [pesquisa, setPesquisa] = useState(estadoInicial)
 
   const valor = useMemo(() => {
     const definir = (campos) => setPesquisa((atual) => ({ ...atual, ...campos }))
