@@ -1,6 +1,10 @@
+/* Acima do miolo e do menu suspenso dos cartões, abaixo dos scrims de
+   modal. Sem isso a coluna da revisão, que tem z-index próprio para cavalgar
+   a faixa de gradiente, pintava por cima da barra. */
 .rodape {
   position: sticky;
   bottom: 0;
+  z-index: 15;
   height: var(--altura-rodape-fluxo);
   flex: none;
   background: var(--cor-fundo);
