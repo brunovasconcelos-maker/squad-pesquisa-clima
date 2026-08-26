@@ -154,6 +154,7 @@ export default function Home() {
             <CartaoPesquisa
               key={p.id}
               pesquisa={paraLinha(p, rotuloParticipantes)}
+              onAbrir={() => navigate(`/pesquisas/${p.id}`)}
               onTransporte={() => aoTransportar(p)}
               onDuplicar={() => aplicar([...pesquisas, duplicar(p)])}
               onCopiarLink={() => aoCopiarLink(p)}

@@ -6,6 +6,14 @@
   padding: var(--espaco-12) var(--espaco-16);
   border-radius: var(--raio-caixa);
   background: var(--cor-superficie);
+  cursor: pointer;
+}
+
+/* A linha é clicável mas não é um link; sem isso o foco de teclado nela
+   ficaria invisível. */
+.cartao:focus-visible {
+  outline: 2px solid var(--cor-aba-ativa);
+  outline-offset: 2px;
 }
 
 .celula {

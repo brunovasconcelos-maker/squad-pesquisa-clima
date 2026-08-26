@@ -34,6 +34,11 @@
   --cor-azul: #0091ff;               /* accent/blue */
   --cor-vermelho: #ff2633;           /* accent/red */
 
+  /* Sublinhado da aba ativa no detalhe da pesquisa. Vem como hex cru do
+     Figma, sem variável própria, e é um azul mais fechado que o accent/blue
+     da lista — por isso token próprio, e não reaproveitar --cor-azul. */
+  --cor-aba-ativa: #0f71b0;
+
   /* Selos de status da lista. O fundo é a mesma cor do texto a 10%, menos o
      laranja, que no Figma vem como um tom sólido próprio. */
   --selo-positivo-fundo: rgba(1, 180, 108, 0.1);

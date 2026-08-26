@@ -28,6 +28,7 @@ const TRANSPORTE = {
 
 export default function CartaoPesquisa({
   pesquisa,
+  onAbrir,
   onTransporte,
   onDuplicar,
   onCopiarLink,
@@ -54,8 +55,24 @@ export default function CartaoPesquisa({
     pesquisa
   const botao = transporte ? TRANSPORTE[transporte] : null
 
+  /* A linha inteira abre a pesquisa. Como é uma div, e não um link, o papel
+     e o teclado entram na mão; os botões de ação ficam numa ilha que não
+     deixa o clique subir. */
+  const aoTeclar = (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return
+    e.preventDefault()
+    onAbrir?.()
+  }
+
   return (
-    <div className={s.cartao}>
+    <div
+      className={s.cartao}
+      role="button"
+      tabIndex={0}
+      aria-label={`Abrir ${nome}`}
+      onClick={onAbrir}
+      onKeyDown={aoTeclar}
+    >
       <span className={`${s.celula} ${s.nome}`} title={nome}>
         {nome}
       </span>
@@ -68,7 +85,12 @@ export default function CartaoPesquisa({
       <span className={`${s.celula} ${s.taxa}`}>{taxa}</span>
       <span className={`${s.celula} ${s.ciclos}`}>{ciclos}</span>
 
-      <div className={s.acoes}>
+      <div
+        className={s.acoes}
+        role="presentation"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
         {botao ? (
           <button
             type="button"
