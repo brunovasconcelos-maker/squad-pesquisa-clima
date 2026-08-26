@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import s from './CartaoPesquisa.module.css'
+import Selo from '../Selo.jsx'
 
 import pauseCircle from '../../assets/icons/PauseCircle.svg'
 import play from '../../assets/icons/Play.svg'
@@ -13,14 +14,6 @@ import more from '../../assets/icons/More.svg'
  *
  * As ações chegam por prop; o cartão só decide quando chamá-las.
  */
-const TONS = {
-  positivo: s.positivo,
-  destaque: s.destaque,
-  acao: s.acao,
-  negativo: s.negativo,
-  padrao: s.padrao,
-}
-
 const TRANSPORTE = {
   pausar: { icone: pauseCircle, rotulo: 'Pausar' },
   iniciar: { icone: play, rotulo: 'Iniciar' },
@@ -79,7 +72,7 @@ export default function CartaoPesquisa({
       <span className={`${s.celula} ${s.publico}`}>{publico}</span>
       <span className={`${s.celula} ${s.tipo}`}>{tipo}</span>
       <span className={s.status}>
-        <span className={`${s.selo} ${TONS[status.tom]}`}>{status.texto}</span>
+        <Selo status={status} />
       </span>
       <span className={`${s.celula} ${s.evento}`}>{evento}</span>
       <span className={`${s.celula} ${s.taxa}`}>{taxa}</span>

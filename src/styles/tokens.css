@@ -39,6 +39,16 @@
      da lista — por isso token próprio, e não reaproveitar --cor-azul. */
   --cor-aba-ativa: #0f71b0;
 
+  /* Aba Geral do detalhe (Figma 8032:1573). */
+  --cor-pipo-fundo: #fbedd0;
+  --cor-pipo-borda: #ba8512;
+  /* Rosca da taxa de resposta. O trilho e o amarelo saem como vetor no Figma
+     e o host de assets está bloqueado neste ambiente, então foram lidos do
+     render — vale confirmar com o design. O verde e o vermelho da escala são
+     os accents que a lista já usa. */
+  --cor-rosca-trilho: #f1f3f3;
+  --cor-rosca-amarelo: #f2de1e;
+
   /* Selos de status da lista. O fundo é a mesma cor do texto a 10%, menos o
      laranja, que no Figma vem como um tom sólido próprio. */
   --selo-positivo-fundo: rgba(1, 180, 108, 0.1);
@@ -62,6 +72,7 @@
   --raio-avatar: 300px;
   --raio-campo: 4px;
   --raio-caixa: 8px;
+  --raio-cartao: 12px;  /* cartões do detalhe */
   --raio-card: 16px;
   --raio-pilula: 360px;
 

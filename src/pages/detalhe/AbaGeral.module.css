@@ -1,0 +1,224 @@
+/* Coluna de 808px centrada, como as telas largas do fluxo. O Figma posiciona
+   por um `left` absoluto que dá exatamente margens iguais. Os 40px de cima
+   são a distância entre a divisória do cabeçalho e o primeiro cartão. */
+.coluna {
+  display: flex;
+  width: var(--largura-miolo-largo);
+  flex-direction: column;
+  margin: 0 auto;
+  padding: var(--espaco-40) 0;
+  gap: var(--espaco-20);
+}
+
+.cartao {
+  display: flex;
+  flex-direction: column;
+  padding: var(--espaco-24);
+  border: 1px solid var(--cor-borda-acao);
+  border-radius: var(--raio-cartao);
+  background: var(--cor-fundo);
+  gap: var(--espaco-24);
+}
+
+/* O selo é filho direto do cartão e não pode esticar na largura toda. */
+.cartaoInfo {
+  align-items: flex-start;
+}
+
+.topoInfo {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.nome {
+  margin: 0;
+  font-size: 20px;
+  font-weight: var(--peso-medio);
+  letter-spacing: -0.4px;
+}
+
+/* O Figma desenha o ícone solto, sem botão em volta: nada de padding. */
+.maisOpcoes {
+  display: flex;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.linhaCampos {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: var(--espaco-24);
+}
+
+.campo {
+  display: flex;
+  flex: 1 0 0;
+  align-items: center;
+  min-width: 0;
+  gap: var(--espaco-24);
+}
+
+/* Coluna fixa de 100px para os valores das duas linhas se alinharem. */
+.rotulo {
+  width: 100px;
+  flex: none;
+  font-size: 14px;
+  font-weight: var(--peso-medio);
+  color: var(--cor-texto-secundario);
+  letter-spacing: -0.08px;
+  line-height: var(--altura-linha);
+}
+
+.valor {
+  font-size: 14px;
+  font-weight: var(--peso-medio);
+  letter-spacing: -0.4px;
+}
+
+/* ---- cartões de taxa e de número ---- */
+
+.faixa {
+  display: flex;
+  align-items: stretch;
+  gap: var(--espaco-20);
+}
+
+.faixa > .cartao {
+  flex: 1 0 0;
+  min-width: 0;
+}
+
+.tituloCartao {
+  margin: 0;
+  font-size: 14px;
+  font-weight: var(--peso-medio);
+  letter-spacing: -0.4px;
+}
+
+.topoTaxa {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espaco-24);
+}
+
+.topoTaxa .tituloCartao {
+  flex: 1 0 0;
+  min-width: 0;
+}
+
+.periodo {
+  display: flex;
+  flex: none;
+  align-items: center;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--cor-texto-secundario);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: var(--peso-medio);
+  gap: var(--espaco-8);
+  letter-spacing: -0.4px;
+  white-space: nowrap;
+}
+
+/* Alinhados pela base: o texto acompanha o pé da rosca, não o centro. */
+.linhaRosca {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--espaco-40);
+}
+
+.textosRosca {
+  display: flex;
+  flex: 1 0 0;
+  flex-direction: column;
+  min-width: 0;
+  gap: var(--espaco-20);
+}
+
+.textoPrincipal,
+.textoApoio {
+  margin: 0;
+  font-size: 14px;
+  font-weight: var(--peso-medio);
+  letter-spacing: -0.4px;
+}
+
+.textoApoio {
+  color: var(--cor-texto-secundario);
+}
+
+.numeroLinha {
+  display: flex;
+  align-items: baseline;
+  gap: var(--espaco-20);
+}
+
+/* leading 1 nos números: o Figma encosta o corpo no pé do cartão. */
+.numeroGrande {
+  font-size: 80px;
+  font-weight: var(--peso-medio);
+  letter-spacing: -0.4px;
+  line-height: 1;
+}
+
+.numeroMedio {
+  font-size: 50px;
+  font-weight: var(--peso-medio);
+  letter-spacing: -0.4px;
+  line-height: 1;
+}
+
+.unidade {
+  font-size: 14px;
+  font-weight: var(--peso-medio);
+  color: var(--cor-texto-secundario);
+  letter-spacing: -0.4px;
+}
+
+.cartaoAvaliacao {
+  justify-content: space-between;
+}
+
+.blocoAvaliacao {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ---- resumo do Pipo ---- */
+
+/* Único bloco em peso normal e com itálico; os outros cartões são todos
+   médio. Raio de 8, e não os 12 dos cartões brancos. */
+.pipo {
+  display: flex;
+  flex-direction: column;
+  padding: var(--espaco-24);
+  border: 1px solid var(--cor-pipo-borda);
+  border-radius: var(--raio-caixa);
+  background: var(--cor-pipo-fundo);
+  font-size: 16px;
+  font-weight: var(--peso-regular);
+  gap: var(--espaco-16);
+  letter-spacing: -0.4px;
+}
+
+.pipo p {
+  margin: 0;
+}
+
+.resumo {
+  font-style: italic;
+}

@@ -119,44 +119,6 @@
   height: 24px;
 }
 
-/* ---- selo de status ---- */
-.selo {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px var(--espaco-12);
-  border-radius: 90px;
-  font-size: 12px;
-  font-weight: var(--peso-medio);
-  line-height: 16px;
-  white-space: nowrap;
-}
-
-.positivo {
-  background: var(--selo-positivo-fundo);
-  color: var(--cor-verde-ativo);
-}
-
-.destaque {
-  background: var(--selo-destaque-fundo);
-  color: var(--cor-azul);
-}
-
-.acao {
-  background: var(--selo-acao-fundo);
-  color: var(--cor-destaque);
-}
-
-.negativo {
-  background: var(--selo-negativo-fundo);
-  color: var(--cor-vermelho);
-}
-
-.padrao {
-  background: var(--selo-padrao-fundo);
-  color: var(--cor-texto-secundario);
-}
-
 /* ---- menu de três pontos ---- */
 .suspenso {
   position: absolute;

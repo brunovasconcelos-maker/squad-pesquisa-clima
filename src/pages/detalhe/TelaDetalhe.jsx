@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
 import { ler } from '../../lib/pesquisas.js'
+import AbaGeral from './AbaGeral.jsx'
+import { EXEMPLOS } from './exemplosGeral.js'
 import s from './TelaDetalhe.module.css'
 
 import close from '../../assets/icons/Close.svg'
@@ -22,6 +24,13 @@ export default function TelaDetalhe() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [ativa, setAtiva] = useState(ABAS[0])
+  const [busca] = useSearchParams()
+
+  /* A aba Geral ainda é desenho: `?exemplo=1..3` escolhe qual das três
+     variações mostrar, para conferir os estados sem ter de fabricar a
+     pesquisa correspondente. Sai quando ela passar a ler dados de verdade. */
+  const escolhido = Number(busca.get('exemplo')) || 1
+  const exemplo = EXEMPLOS[Math.min(Math.max(escolhido, 1), EXEMPLOS.length) - 1]
 
   const pesquisa = useMemo(() => ler().find((p) => p.id === id), [id])
 
@@ -65,7 +74,9 @@ export default function TelaDetalhe() {
         id={`painel-${ativa}`}
         role="tabpanel"
         aria-labelledby={`aba-${ativa}`}
-      />
+      >
+        {ativa === 'Geral' ? <AbaGeral exemplo={exemplo} /> : null}
+      </div>
     </div>
   )
 }
