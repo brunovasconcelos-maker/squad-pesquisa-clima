@@ -1,9 +1,6 @@
-/* Recuo do miolo até o título: no Figma o título começa em 208 e o conteúdo
-   depois da sidebar em 80. */
 .layout {
   min-height: 100vh;
   background: var(--cor-fundo);
-  --recuo-lista: 128px;
 }
 
 /* A sidebar é fixa, então a coluna de conteúdo anda para o lado dela. O
@@ -14,19 +11,33 @@
   min-height: 100vh;
   flex-direction: column;
   margin-left: var(--deslocamento-conteudo);
-  padding-top: 48px;
+  padding: 48px var(--espaco-40) 0;
 }
 
-/* Título e busca ficam numa coluna de 1100 recuada; a linha da tabela sangra
-   até a borda da página, então o recuo dela é padding, não margem. */
+/*
+ * Título, busca, cabeçalho da tabela e linhas dividem a mesma coluna centrada.
+ *
+ * Antes cada bloco tinha 1100px de largura fixa e um recuo de 128 à esquerda.
+ * Isso só parecia centrado em 1440, onde sobravam 128 de um lado e 132 do
+ * outro por coincidência; em 1920 já sobravam 612 à direita contra 128 à
+ * esquerda, e em 2560, 1252. Agora os 1100 são teto e as margens automáticas
+ * repartem o que sobra, então a lista fica no meio da área de conteúdo em
+ * qualquer largura — e em 1440 cai a 2px de onde o Figma a desenha.
+ */
+.cabecalho,
+.tabela,
+.linhas {
+  width: 100%;
+  max-width: var(--largura-lista);
+  margin-right: auto;
+  margin-left: auto;
+}
+
 .cabecalho {
   display: flex;
-  width: 1100px;
-  max-width: calc(100% - var(--recuo-lista) - var(--espaco-40));
   flex-direction: column;
   gap: var(--espaco-32);
   align-items: flex-start;
-  margin-left: var(--recuo-lista);
 }
 
 /* Aviso curto do "Copiar link". Fica preso embaixo, fora do fluxo da lista. */
@@ -121,8 +132,7 @@
   gap: var(--espaco-12);
   align-items: flex-end;
   margin-top: var(--espaco-20);
-  padding: var(--espaco-12) var(--espaco-40) var(--espaco-16)
-    var(--recuo-lista);
+  padding: var(--espaco-12) 0 var(--espaco-16);
   border-bottom: 1px solid var(--cor-borda-acao);
   color: var(--cor-texto-secundario);
   font-size: 14px;
@@ -135,14 +145,9 @@
   flex: none;
 }
 
-/* Mesma coluna do cabeçalho da página: as linhas são cards e não sangram até
-   a borda como a linha de títulos. */
 .linhas {
   display: flex;
-  width: 1100px;
-  max-width: calc(100% - var(--recuo-lista) - var(--espaco-40));
   flex-direction: column;
   gap: var(--espaco-12);
   margin-top: var(--espaco-20);
-  margin-left: var(--recuo-lista);
 }

@@ -100,4 +100,8 @@
   --altura-rodape-fluxo: 80px;
   --largura-miolo: 532px;
   --largura-miolo-largo: 808px;
+  /* Coluna da lista da home. O Figma desenha 1100 numa tela de 1440; aqui ela
+     é teto, e não largura fixa, para a lista centrar na área de conteúdo em
+     vez de ficar presa à esquerda numa tela larga. */
+  --largura-lista: 1100px;
 }
