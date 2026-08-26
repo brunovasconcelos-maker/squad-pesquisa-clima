@@ -62,6 +62,31 @@ export function formatarCurto(iso) {
   return `${d.getDate()} ${MES_CURTO[d.getMonth()]}`
 }
 
+/* "18 Ago 2026" — o formato dos campos do cartão do detalhe. */
+export function formatarMedio(iso) {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return '—'
+  const dia = String(d.getDate()).padStart(2, '0')
+  return `${dia} ${MES_CURTO[d.getMonth()]} ${d.getFullYear()}`
+}
+
+/* "Jul 26" — o rótulo do seletor de período da taxa anterior. */
+export function formatarPeriodo(iso) {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return '—'
+  return `${MES_CURTO[d.getMonth()]} ${String(d.getFullYear()).slice(-2)}`
+}
+
+/* Dias inteiros que faltam de `agora` até `iso`, nunca negativo. */
+export function diasAte(iso, agora = new Date()) {
+  if (!iso) return null
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return null
+  return Math.max(0, Math.ceil((d - agora) / 864e5))
+}
+
 /* "31 Agosto 2026" — o formato que os campos de data da Configuração usam,
    e que `paraData` sabe ler de volta. */
 export function formatarLongo(data) {

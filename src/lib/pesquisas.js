@@ -94,18 +94,30 @@ export function duplicar(p, agora = new Date()) {
     status: 'rascunho',
     ciclos: 0,
     taxa: 0,
+    anterior: undefined,
     cicloInicio: null,
     cicloFim: null,
   }
 }
 
-/* Começa um ciclo agora mesmo — usado pelo Play e pela virada de recorrência. */
+/*
+ * Começa um ciclo agora mesmo — usado pelo Play e pela virada de recorrência.
+ *
+ * Guarda o ciclo que acabou em `anterior` antes de zerar a taxa. Sem isso a
+ * participação do ciclo passado se perderia na virada, e o detalhe não teria
+ * o que comparar. Só existe a partir do segundo ciclo, que é justamente
+ * quando há um anterior.
+ */
 function iniciarCiclo(p, quando) {
   return {
     ...p,
     status: 'rodando',
     ciclos: p.ciclos + 1,
     taxa: 0,
+    taxaEm: quando.toISOString(),
+    ...(p.ciclos > 0
+      ? { anterior: { taxa: p.taxa, inicio: p.cicloInicio, fim: p.cicloFim } }
+      : {}),
     cicloInicio: quando.toISOString(),
     cicloFim: fimDoCiclo(quando, p.configuracao?.prazo)?.toISOString() ?? null,
     atualizadoEm: quando.toISOString(),
@@ -171,13 +183,28 @@ export function avaliar(p, agora = new Date()) {
   return atual
 }
 
-/* Passa a lista pelo motor e sobe a taxa de quem está rodando. */
+/*
+ * Passa a lista pelo motor e sobe a taxa de quem está rodando.
+ *
+ * A subida é presa ao relógio, não à quantidade de vezes que alguém chamou:
+ * `taxaEm` guarda quando subiu pela última vez e só passa de novo depois de um
+ * intervalo cheio. Sem isso a taxa andaria a cada montagem, e ir e voltar
+ * entre a lista e o detalhe — que rodam o mesmo motor — inflaria a simulação
+ * a cada clique.
+ */
 export function avaliarLista(lista, agora = new Date()) {
   let mudou = false
   const nova = lista.map((p) => {
     let atualizada = avaliar(p, agora)
     if (atualizada.status === 'rodando' && atualizada.taxa < 100) {
-      atualizada = { ...atualizada, taxa: sobeTaxa(atualizada.taxa) }
+      const ultima = atualizada.taxaEm ? new Date(atualizada.taxaEm) : null
+      if (!ultima || agora - ultima >= INTERVALO_MS) {
+        atualizada = {
+          ...atualizada,
+          taxa: sobeTaxa(atualizada.taxa),
+          taxaEm: agora.toISOString(),
+        }
+      }
     }
     if (atualizada !== p) mudou = true
     return atualizada

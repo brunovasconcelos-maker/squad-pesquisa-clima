@@ -1,5 +1,15 @@
 import Selo from '../../components/Selo.jsx'
 import Rosca from '../../components/detalhe/Rosca.jsx'
+import { STATUS } from '../../lib/pesquisas.js'
+import {
+  camposDe,
+  taxaAtualDe,
+  taxaAnteriorDe,
+  tempoMedioDe,
+  desistenciaDe,
+  piorAvaliacaoDe,
+  resumoDe,
+} from '../../lib/geral.js'
 import s from './AbaGeral.module.css'
 
 import more from '../../assets/icons/More.svg'
@@ -8,10 +18,13 @@ import caretDown from '../../assets/icons/CaretDown.svg'
 /*
  * Conteúdo da aba Geral (Figma 8032:1573).
  *
- * Visual apenas: tudo vem de `exemplosGeral.js`, nada é calculado e nada lê a
- * pesquisa de verdade. Os botões — o de três pontos e o seletor de período —
- * estão no lugar mas ainda não fazem nada, como os da linha da lista quando
- * ela era só desenho.
+ * A pesquisa vem inteira por prop; o que cada bloco mostra sai de `lib/geral.js`.
+ * Datas, status, tipo, ciclos e a taxa que o motor sobe são reais; tempo médio,
+ * desistências, as notas por pergunta e o texto do Pipo continuam simulados,
+ * porque não há backend coletando resposta nenhuma.
+ *
+ * Os botões — o de três pontos e o seletor de período — estão no lugar mas
+ * ainda não fazem nada.
  */
 function Campo({ rotulo, valor }) {
   return (
@@ -59,62 +72,74 @@ function CartaoNumero({ titulo, valor, unidade }) {
   )
 }
 
-export default function AbaGeral({ exemplo }) {
+export default function AbaGeral({ pesquisa }) {
+  const campos = camposDe(pesquisa)
+  const atual = taxaAtualDe(pesquisa)
+  const anterior = taxaAnteriorDe(pesquisa)
+  const piorAvaliacao = piorAvaliacaoDe(pesquisa)
+  const tempoMedio = tempoMedioDe(pesquisa)
+  const desistencia = desistenciaDe(pesquisa)
+
   return (
     <div className={s.coluna}>
       <section className={`${s.cartao} ${s.cartaoInfo}`}>
         <div className={s.topoInfo}>
-          <h2 className={s.nome}>{exemplo.nome}</h2>
+          <h2 className={s.nome}>{pesquisa.nome}</h2>
           <button type="button" className={s.maisOpcoes} aria-label="Mais opções">
             <img src={more} alt="" width={24} height={24} />
           </button>
         </div>
 
-        <Selo status={exemplo.status} />
+        <Selo status={STATUS[pesquisa.status]} />
 
         {/* Quatro campos em duas linhas de dois: os dois primeiros mudam de
             rótulo conforme o status, "Tipo" e "Ciclos" aparecem sempre. */}
         <div className={s.linhaCampos}>
-          <Campo {...exemplo.campos[0]} />
-          <Campo {...exemplo.campos[1]} />
+          <Campo {...campos[0]} />
+          <Campo {...campos[1]} />
         </div>
         <div className={s.linhaCampos}>
-          <Campo {...exemplo.campos[2]} />
-          <Campo {...exemplo.campos[3]} />
+          <Campo {...campos[2]} />
+          <Campo {...campos[3]} />
         </div>
       </section>
 
       <div className={s.faixa}>
-        <CartaoTaxa dados={exemplo.atual} />
-        {exemplo.anterior ? <CartaoTaxa dados={exemplo.anterior} /> : null}
+        <CartaoTaxa dados={atual} />
+        {anterior ? <CartaoTaxa dados={anterior} /> : null}
       </div>
 
       <section className={s.pipo}>
         <p>Resumo do Pipo</p>
-        <p className={s.resumo}>{exemplo.resumo}</p>
+        <p className={s.resumo}>{resumoDe(pesquisa, atual, anterior)}</p>
       </section>
 
       <div className={`${s.faixa} ${s.faixaNumeros}`}>
         <CartaoNumero
           titulo="Tempo médio de resposta"
-          valor={exemplo.tempoMedio.valor}
-          unidade={exemplo.tempoMedio.unidade}
+          valor={tempoMedio.valor}
+          unidade={tempoMedio.unidade}
         />
         <CartaoNumero
           titulo="Taxa de desistência"
-          valor={exemplo.desistencia.valor}
-          unidade={exemplo.desistencia.unidade}
+          valor={desistencia.valor}
+          unidade={desistencia.unidade}
         />
-        {/* O terceiro empilha número e pergunta, e usa um corpo menor: o
+        {/* Sem pergunta de nota não há pior nota, e o cartão some em vez de
+            mostrar um número inventado.
+
+            O terceiro empilha número e pergunta, e usa um corpo menor: o
             Figma desenha 50px aqui contra os 80px dos vizinhos, que é o que
             deixa um "2,5" caber sem espremer o cartão. */}
-        <section className={`${s.cartao} ${s.cartaoAvaliacao}`}>
-          <p className={s.tituloCartao}>Pior avaliação</p>
-          <div className={s.blocoAvaliacao}>
-            <span className={s.numeroMedio}>{exemplo.piorAvaliacao.valor}</span>
-            <span className={s.unidade}>{exemplo.piorAvaliacao.pergunta}</span>
-          </div>
-        </section>
+        {piorAvaliacao ? (
+          <section className={`${s.cartao} ${s.cartaoAvaliacao}`}>
+            <p className={s.tituloCartao}>Pior avaliação</p>
+            <div className={s.blocoAvaliacao}>
+              <span className={s.numeroMedio}>{piorAvaliacao.valor}</span>
+              <span className={s.unidade}>{piorAvaliacao.pergunta}</span>
+            </div>
+          </section>
+        ) : null}
       </div>
     </div>
   )
