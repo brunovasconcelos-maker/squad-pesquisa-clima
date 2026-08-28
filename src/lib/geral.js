@@ -31,7 +31,7 @@ export function totalDeParticipantes({ todaEmpresa, grupos = [] } = {}) {
  * para a mesma pesquisa, que é o que segura os valores simulados no lugar
  * entre um render e outro, e entre uma sessão e outra.
  */
-function semente(texto) {
+export function semente(texto) {
   let h = 0x811c9dc5
   for (let i = 0; i < texto.length; i += 1) {
     h ^= texto.charCodeAt(i)
@@ -40,7 +40,7 @@ function semente(texto) {
   return h
 }
 
-const entre = (texto, min, max) => min + (semente(texto) % (max - min + 1))
+export const entre = (texto, min, max) => min + (semente(texto) % (max - min + 1))
 
 /* ---- campos do cartão de informações ---- */
 
@@ -98,6 +98,16 @@ export function camposDe(p) {
 /* ---- cartões de taxa de resposta ---- */
 
 const responderam = (taxa, total) => Math.round((taxa / 100) * total)
+
+/*
+ * Quantas pessoas responderam — o mesmo número que a rosca do Geral traduz em
+ * porcentagem. A aba Respostas conta as respostas de exemplo a partir daqui,
+ * para as duas abas não contarem coisas diferentes sobre a mesma pesquisa.
+ */
+export function totalDeRespostas(p) {
+  if (p.status === 'agendada' || p.status === 'rascunho') return 0
+  return responderam(p.taxa ?? 0, totalDeParticipantes(p.participantes))
+}
 
 export function taxaAtualDe(p, agora = new Date()) {
   const total = totalDeParticipantes(p.participantes)

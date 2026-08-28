@@ -4,6 +4,7 @@ import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
 import { ler, gravar, avaliarLista, INTERVALO_MS } from '../../lib/pesquisas.js'
 import AbaGeral from './AbaGeral.jsx'
 import AbaPerguntas from './AbaPerguntas.jsx'
+import AbaRespostas from './AbaRespostas.jsx'
 import s from './TelaDetalhe.module.css'
 
 import close from '../../assets/icons/Close.svg'
@@ -105,6 +106,7 @@ export default function TelaDetalhe() {
         {ativa === 'Perguntas' ? (
           <AbaPerguntas pesquisa={pesquisa} onAlterar={alterar} />
         ) : null}
+        {ativa === 'Respostas' ? <AbaRespostas pesquisa={pesquisa} /> : null}
       </div>
     </div>
   )
