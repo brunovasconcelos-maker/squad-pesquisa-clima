@@ -5,6 +5,8 @@ import { historicoDe, ordenar, COLUNAS } from '../../lib/historico.js'
 import s from './AbaHistorico.module.css'
 
 import caretRight from '../../assets/icons/CaretRight.svg'
+import arrowsDownUp from '../../assets/icons/ArrowsDownUp.svg'
+import warning from '../../assets/icons/Warning.svg'
 
 /*
  * Aba Histórico (Figma 8032:1828).
@@ -13,11 +15,10 @@ import caretRight from '../../assets/icons/CaretRight.svg'
  * lista é do que já fechou. Os dados vêm de lib/historico.js e são simulados,
  * menos a contagem e a numeração dos ciclos, que saem da pesquisa.
  *
- * Faltam dois ícones e os dois lugares ficam reservados, sem substituto:
- *  - ArrowsDownUp, o alternador das colunas ordenáveis. A ordenação funciona
- *    pelo próprio cabeçalho; a coluna ativa se distingue pela cor do rótulo,
- *    que é o que dá para fazer com o que existe.
- *  - Warning, ao lado da data de um ciclo encerrado antes do prazo.
+ * O arquivo desenha o mesmo ArrowsDownUp neutro nas quatro colunas, sem
+ * estado de ativa nem de direção. A coluna em uso fica com o rótulo em preto
+ * em vez de cinza — é a distinção que dá para fazer sem inventar um ícone que
+ * o arquivo não tem.
  *
  * A seta da direita substitui o menu de três pontos do arquivo, a pedido: ela
  * só diz que a linha abre. É o CaretRight do projeto — não há uma seta reta
@@ -63,8 +64,15 @@ export default function AbaHistorico({ pesquisa }) {
           const conteudo = (
             <>
               <span className={s.rotuloColuna}>{coluna.nome}</span>
-              {/* Reservado para o ArrowsDownUp, que ainda não está no projeto. */}
-              {coluna.ordenavel ? <span className={s.espacoIcone} /> : null}
+              {coluna.ordenavel ? (
+                <img
+                  className={s.icone16}
+                  src={arrowsDownUp}
+                  alt=""
+                  width={16}
+                  height={16}
+                />
+              ) : null}
             </>
           )
           return coluna.ordenavel ? (
@@ -109,13 +117,19 @@ export default function AbaHistorico({ pesquisa }) {
             <span className={`${s.celula} ${s.fim}`}>
               {ciclo.encerrado}
               {ciclo.cedo ? (
-                /* O aviso e a explicação andam juntos; sem o ícone, o que
-                   sobra é o título nativo até o arquivo chegar. */
+                /* O balão abre no hover; o title nativo cobre o teclado e o
+                   leitor de tela, que não passam por aqui. */
                 <span
                   className={s.aviso}
                   title="Encerrado antes do prazo: a pesquisa foi pausada durante o ciclo."
                 >
-                  <span className={s.espacoIcone} />
+                  <img
+                    className={s.icone16}
+                    src={warning}
+                    alt="Encerrado antes do prazo"
+                    width={16}
+                    height={16}
+                  />
                   <span className={s.balao} role="tooltip">
                     Encerrado antes do prazo: a pesquisa foi pausada durante o
                     ciclo.

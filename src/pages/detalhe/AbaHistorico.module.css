@@ -55,9 +55,7 @@ button.coluna {
   text-overflow: ellipsis;
 }
 
-/* Reserva os 16px do ícone que falta, para a linha não andar quando ele
-   chegar. */
-.espacoIcone {
+.icone16 {
   display: block;
   width: 16px;
   height: 16px;
