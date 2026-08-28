@@ -16,6 +16,7 @@ import { rotuloParticipantes } from '../nova-pesquisa/estado.jsx'
 import { formatarComDia, paraData } from '../../lib/datas.js'
 
 import caretRight from '../../assets/icons/CaretRight.svg'
+import link from '../../assets/icons/Link.svg'
 
 /*
  * Aba "Configurações" do detalhe (Figma 8072:6532) — só o visual.
@@ -135,9 +136,7 @@ export default function AbaConfiguracoes() {
         rodape={
           <Botao variante="contorno">
             Copiar link da pesquisa
-            {/* Falta o ícone Link.svg em src/assets/icons. O vão de 24px
-                fica reservado para o arquivo entrar sem mexer na pílula. */}
-            <span className={s.vaoDeIcone} aria-hidden="true" />
+            <img className={s.iconeDoLink} src={link} alt="" width={24} height={24} />
           </Botao>
         }
       >

@@ -39,9 +39,8 @@
   gap: var(--espaco-16);
 }
 
-/* O ícone Link.svg ainda não está em src/assets/icons. O vão guarda os 24px
-   dele para a pílula já nascer com a largura final. */
-.vaoDeIcone {
+/* O ícone da pílula: 24px, do lado direito do texto. */
+.iconeDoLink {
   display: block;
   width: 24px;
   height: 24px;
