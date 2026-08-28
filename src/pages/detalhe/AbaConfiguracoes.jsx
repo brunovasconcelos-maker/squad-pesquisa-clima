@@ -6,7 +6,7 @@ import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
 import Interruptor from '../../components/fluxo/Interruptor.jsx'
 import LinhaResumo from '../../components/fluxo/LinhaResumo.jsx'
 import ModalConfirmar from '../../components/fluxo/ModalConfirmar.jsx'
-import ModalFluxo from '../../components/fluxo/ModalFluxo.jsx'
+import ModalCapa from './ModalCapa.jsx'
 import ModalParticipantes from '../nova-pesquisa/ModalParticipantes.jsx'
 import {
   ModalDataEnvio,
@@ -15,6 +15,7 @@ import {
   ModalPrazo,
 } from '../nova-pesquisa/ModaisConfiguracao.jsx'
 import { rotuloParticipantes } from '../nova-pesquisa/estado.jsx'
+import { estiloDaCapa } from '../../lib/capa.js'
 import { formatarComDia } from '../../lib/datas.js'
 import { proximoEnvioDe } from '../../lib/geral.js'
 import {
@@ -62,12 +63,6 @@ const REPETICAO = {
   Anual: 'Todo ano',
 }
 
-/* Enquanto ninguém escolheu uma cor, a capa é o gradiente da Revisão
-   (Figma 8065:4916). O seletor devolve um hex sólido, e é ele que fica
-   guardado em `capa` a partir daí. */
-const CAPA_PADRAO = 'linear-gradient(96.57deg, #d2cffb 10.98%, #5c52ed 90.35%)'
-const COR_PADRAO = '#5c52ed'
-
 function textoDePrazo(prazo) {
   if (!prazo) return '—'
   return prazo.tipo === 'data' ? `${prazo.data}, as ${prazo.hora}` : prazo.periodo
@@ -99,32 +94,6 @@ function LinhaInterruptor({ rotulo, ligado, desabilitado = false, onAlternar }) 
         />
       }
     />
-  )
-}
-
-/* Seletor livre de cor para a capa. Sem spec própria no Figma: a casca é a
-   dos outros modais e o miolo é o input de cor do navegador, com a amostra
-   grande ao lado para ver a escolha antes de salvar. */
-function ModalCapa({ valor, onSalvar, onFechar }) {
-  const [cor, setCor] = useState(valor)
-  return (
-    <ModalFluxo
-      titulo="Capa"
-      onVoltar={onFechar}
-      onFechar={onFechar}
-      onSalvar={() => onSalvar(cor)}
-    >
-      <div className={s.blocoCapa}>
-        <span className={s.amostraGrande} style={{ background: cor }} />
-        <input
-          className={s.seletorDeCor}
-          type="color"
-          value={cor}
-          aria-label="Cor da capa"
-          onChange={(e) => setCor(e.target.value)}
-        />
-      </div>
-    </ModalFluxo>
   )
 }
 
@@ -217,8 +186,6 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
       ? 'Imediatamente'
       : formatarComDia(proximoEnvioDe(pesquisa))
 
-  const capa = pesquisa.capa || CAPA_PADRAO
-
   return (
     <div className={s.coluna}>
       <Cartao
@@ -297,7 +264,7 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
           rotulo="Capa"
           controle={
             <div className={s.controleDaCapa}>
-              <span className={s.amostra} style={{ background: capa }} />
+              <span className={s.amostra} style={estiloDaCapa(pesquisa.capa)} />
               <IconeBotao
                 src={caretRight}
                 rotulo="Abrir Capa"
@@ -380,9 +347,9 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
 
       {modal === 'capa' ? (
         <ModalCapa
-          valor={pesquisa.capa || COR_PADRAO}
-          onSalvar={(cor) => {
-            onAlterar((p) => ({ ...p, capa: cor }))
+          valor={pesquisa.capa}
+          onSalvar={(capa) => {
+            onAlterar((p) => ({ ...p, capa }))
             fechar()
           }}
           onFechar={fechar}
