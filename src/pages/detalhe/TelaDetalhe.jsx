@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
 import { ler, gravar, avaliarLista, INTERVALO_MS } from '../../lib/pesquisas.js'
 import AbaGeral from './AbaGeral.jsx'
+import AbaPerguntas from './AbaPerguntas.jsx'
 import s from './TelaDetalhe.module.css'
 
 import close from '../../assets/icons/Close.svg'
@@ -41,6 +42,22 @@ export default function TelaDetalhe() {
   }, [])
 
   const pesquisa = pesquisas?.find((p) => p.id === id)
+
+  /* Grava junto com o setState, como a home: a lista em memória e a guardada
+     não podem divergir, senão um F5 desfaz a última edição. */
+  const alterar = useCallback(
+    (transformar) =>
+      setPesquisas((lista) => {
+        const proxima = lista.map((p) =>
+          p.id === id
+            ? { ...transformar(p), atualizadoEm: new Date().toISOString() }
+            : p,
+        )
+        gravar(proxima)
+        return proxima
+      }),
+    [id],
+  )
 
   /* Link velho ou pesquisa deletada: volta para a lista em vez de mostrar um
      cabeçalho sem nome. `pesquisas` nulo é a primeira renderização, antes de
@@ -85,6 +102,9 @@ export default function TelaDetalhe() {
         aria-labelledby={`aba-${ativa}`}
       >
         {ativa === 'Geral' ? <AbaGeral pesquisa={pesquisa} /> : null}
+        {ativa === 'Perguntas' ? (
+          <AbaPerguntas pesquisa={pesquisa} onAlterar={alterar} />
+        ) : null}
       </div>
     </div>
   )
