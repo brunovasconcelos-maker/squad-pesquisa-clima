@@ -1,0 +1,93 @@
+/* Coluna de 532px centrada, a mesma largura de miolo do fluxo de criação. O
+   Figma posiciona por um `left` absoluto que dá margens iguais; os 40px de
+   cima são a distância entre a divisória do cabeçalho e o primeiro cartão. */
+.coluna {
+  display: flex;
+  width: var(--largura-miolo);
+  flex-direction: column;
+  margin: 0 auto;
+  padding: var(--espaco-40) 0;
+  gap: var(--espaco-16);
+}
+
+/* Cartão do Figma: 24px de padding, 24px entre título, lista e rodapé. O
+   `align-items: center` é o que centra a pílula "Copiar link da pesquisa" —
+   por isso o título e a lista precisam esticar sozinhos. */
+.cartao {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--espaco-24);
+  border: 1px solid var(--cor-borda-acao);
+  border-radius: var(--raio-cartao);
+  background: var(--cor-fundo);
+  gap: var(--espaco-24);
+}
+
+.secao {
+  align-self: stretch;
+  margin: 0;
+  font-size: 20px;
+  font-weight: var(--peso-medio);
+  letter-spacing: -0.4px;
+}
+
+.linhas {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: var(--espaco-16);
+}
+
+/* O ícone Link.svg ainda não está em src/assets/icons. O vão guarda os 24px
+   dele para a pílula já nascer com a largura final. */
+.vaoDeIcone {
+  display: block;
+  width: 24px;
+  height: 24px;
+  flex: none;
+}
+
+/* A capa põe a amostra antes da seta, e as duas ocupam o lugar que nas
+   outras linhas é só da seta. */
+.controleDaCapa {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--espaco-8);
+}
+
+/* Amostra da capa: 32px de lado, cantos de 4px. */
+.amostra {
+  display: block;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: var(--raio-campo);
+}
+
+/* No modal a mesma amostra aparece grande, para a cor escolhida dar para ver
+   antes de salvar. */
+.blocoCapa {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-16);
+}
+
+.amostraGrande {
+  display: block;
+  width: 80px;
+  height: 80px;
+  flex: none;
+  border-radius: var(--raio-caixa);
+}
+
+.seletorDeCor {
+  width: 80px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--cor-borda-acao);
+  border-radius: var(--raio-campo);
+  background: var(--cor-fundo);
+  cursor: pointer;
+}

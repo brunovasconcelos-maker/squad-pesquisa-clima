@@ -23,6 +23,14 @@
   color: var(--cor-texto-invertido);
 }
 
+/* Variante contornada (Figma 8072:6569): mesma pílula, só que com a borda
+   de ação no lugar do fundo. O padding volta a 12/16 porque a borda de 1px
+   já entra na altura de 40px. */
+.contorno {
+  padding: 11px 15px;
+  border: 1px solid var(--cor-borda-acao);
+}
+
 /* Variante desabilitada do Figma (8060:4681): fundo e texto apagados. */
 .botao:disabled {
   cursor: default;

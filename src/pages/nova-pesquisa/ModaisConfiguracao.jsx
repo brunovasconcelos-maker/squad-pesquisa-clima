@@ -239,7 +239,7 @@ export function ModalMensagemFinal({ valor, onSalvar, onFechar }) {
 /* Sem spec própria: três opções que cobrem os casos usuais de lembrete. */
 const LEMBRETES = ['Diário', 'Semanal', 'Nunca']
 
-function ModalLembrete({ valor, onSalvar, onFechar }) {
+export function ModalLembrete({ valor, onSalvar, onFechar }) {
   const [rascunho, setRascunho] = useState(valor)
   return (
     <ModalFluxo

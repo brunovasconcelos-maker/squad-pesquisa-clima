@@ -6,7 +6,8 @@ export default function Botao({
   onClick,
   children,
 }) {
-  const classe = variante === 'marca' ? `${s.botao} ${s.marca}` : s.botao
+  const extra = variante === 'marca' ? s.marca : variante === 'contorno' ? s.contorno : ''
+  const classe = extra ? `${s.botao} ${extra}` : s.botao
   return (
     <button
       type="button"

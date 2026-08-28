@@ -71,6 +71,17 @@ export function formatarMedio(iso) {
   return `${dia} ${MES_CURTO[d.getMonth()]} ${d.getFullYear()}`
 }
 
+const DIA_CURTO = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+
+/* "Sex 14 Ago 2026" — o formato da lista de Datas nas Configurações, que põe
+   o dia da semana antes da data para dar a noção de quando o envio cai. */
+export function formatarComDia(iso) {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return '—'
+  return `${DIA_CURTO[d.getDay()]} ${formatarMedio(iso)}`
+}
+
 /* "Jul 26" — o rótulo do seletor de período da taxa anterior. */
 export function formatarPeriodo(iso) {
   if (!iso) return '—'

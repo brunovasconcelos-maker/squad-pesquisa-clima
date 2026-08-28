@@ -8,6 +8,7 @@ import AbaGeral from './AbaGeral.jsx'
 import AbaPerguntas from './AbaPerguntas.jsx'
 import AbaRespostas from './AbaRespostas.jsx'
 import AbaHistorico from './AbaHistorico.jsx'
+import AbaConfiguracoes from './AbaConfiguracoes.jsx'
 import s from './TelaDetalhe.module.css'
 
 import close from '../../assets/icons/Close.svg'
@@ -15,7 +16,7 @@ import close from '../../assets/icons/Close.svg'
 /*
  * Detalhe de uma pesquisa (Figma 8151:11666).
  *
- * Cabeçalho, abas e o conteúdo da aba ativa. Só a Geral existe por enquanto.
+ * Cabeçalho, abas e o conteúdo da aba ativa.
  *
  * Roda o motor de status igual à home — na carga e a cada 30s — porque as
  * datas e a taxa que a Geral mostra são as mesmas que ele faz andar. Sem
@@ -134,6 +135,7 @@ export default function TelaDetalhe() {
           <AbaRespostas pesquisa={pesquisa} onAlterar={alterar} />
         ) : null}
         {ativa === 'Histórico' ? <AbaHistorico pesquisa={pesquisa} /> : null}
+        {ativa === 'Configurações' ? <AbaConfiguracoes /> : null}
       </div>
     </div>
   )
