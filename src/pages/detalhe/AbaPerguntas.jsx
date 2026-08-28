@@ -4,6 +4,7 @@ import ModalConfirmar from '../../components/fluxo/ModalConfirmar.jsx'
 import EditorPergunta from '../nova-pesquisa/EditorPergunta.jsx'
 import EditorAbertura from '../nova-pesquisa/EditorAbertura.jsx'
 import { pausar } from '../../lib/pesquisas.js'
+import { registrar } from '../../lib/alteracoes.js'
 import s from './AbaPerguntas.module.css'
 
 /*
@@ -17,12 +18,16 @@ import s from './AbaPerguntas.module.css'
  * deixarem de ser comparáveis. Os botões continuam acesos, porque desabilitar
  * sem explicar não diz o que fazer; quem clica recebe a saída, que é pausar.
  *
- * Editar deveria virar registro no Histórico. Essa aba ainda não existe, e a
- * gravação dela vem junto — não há nada de meio caminho aqui.
+ * Toda mudança aqui é anotada no registro de alterações, que é o que a coluna
+ * Atividade do Histórico conta. A anotação vai junto com a mudança, na mesma
+ * gravação: se fossem duas, um F5 no meio deixaria uma sem a outra.
  */
 export default function AbaPerguntas({ pesquisa, onAlterar }) {
   const [emEdicao, setEmEdicao] = useState(false)
-  const [aberturaAberta, setAberturaAberta] = useState(false)
+  /* Guarda como a abertura estava ao abrir o editor. Ele escreve a cada
+     tecla, então a anotação sai uma vez só, no fim, e só se algo mudou de
+     verdade — cancelar devolve o original e nada é anotado. */
+  const [aberturaAberta, setAberturaAberta] = useState(null)
   const [aRemover, setARemover] = useState(null)
   const [pedindoPausa, setPedindoPausa] = useState(false)
 
@@ -41,12 +46,17 @@ export default function AbaPerguntas({ pesquisa, onAlterar }) {
   const salvarPergunta = (pergunta) =>
     onAlterar((p) => {
       const existe = p.perguntas.some((q) => q.id === pergunta.id)
-      return {
+      const comPergunta = {
         ...p,
         perguntas: existe
           ? p.perguntas.map((q) => (q.id === pergunta.id ? pergunta : q))
           : [...p.perguntas, pergunta],
       }
+      return registrar(
+        comPergunta,
+        existe ? 'editou' : 'adicionou',
+        pergunta.enunciado,
+      )
     })
 
   return (
@@ -55,7 +65,9 @@ export default function AbaPerguntas({ pesquisa, onAlterar }) {
         nome={pesquisa.nome}
         abertura={pesquisa.abertura}
         perguntas={pesquisa.perguntas || []}
-        onEditarAbertura={seDerParaMexer(() => setAberturaAberta(true))}
+        onEditarAbertura={seDerParaMexer(() =>
+          setAberturaAberta({ nome: pesquisa.nome, abertura: pesquisa.abertura }),
+        )}
         onEditarPergunta={(pergunta) =>
           seDerParaMexer(() => setEmEdicao(pergunta))()
         }
@@ -84,10 +96,16 @@ export default function AbaPerguntas({ pesquisa, onAlterar }) {
           texto={`"${aRemover.enunciado}" sai da pesquisa. Não dá para desfazer.`}
           rotuloConfirmar="Deletar"
           onConfirmar={() => {
-            onAlterar((p) => ({
-              ...p,
-              perguntas: p.perguntas.filter((q) => q.id !== aRemover.id),
-            }))
+            onAlterar((p) =>
+              registrar(
+                {
+                  ...p,
+                  perguntas: p.perguntas.filter((q) => q.id !== aRemover.id),
+                },
+                'removeu',
+                aRemover.enunciado,
+              ),
+            )
             setARemover(null)
           }}
           onCancelar={() => setARemover(null)}
@@ -99,7 +117,15 @@ export default function AbaPerguntas({ pesquisa, onAlterar }) {
           nome={pesquisa.nome}
           abertura={pesquisa.abertura}
           definir={(campos) => onAlterar((p) => ({ ...p, ...campos }))}
-          onFechar={() => setAberturaAberta(false)}
+          onFechar={() => {
+            onAlterar((p) =>
+              p.nome === aberturaAberta.nome &&
+              p.abertura === aberturaAberta.abertura
+                ? p
+                : registrar(p, 'editou', 'Abertura'),
+            )
+            setAberturaAberta(null)
+          }}
         />
       ) : null}
 

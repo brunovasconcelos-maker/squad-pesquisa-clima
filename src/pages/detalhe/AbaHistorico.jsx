@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Rosca from '../../components/detalhe/Rosca.jsx'
 import { historicoDe, ordenar, COLUNAS } from '../../lib/historico.js'
+import { fraseDeAtividade } from '../../lib/alteracoes.js'
 import s from './AbaHistorico.module.css'
 
 import caretRight from '../../assets/icons/CaretRight.svg'
@@ -148,8 +149,7 @@ export default function AbaHistorico({ pesquisa }) {
                 <>
                   <span className={s.ponto} />
                   <span className={s.textoAtividade}>
-                    Sofreu {ciclo.alteracoes}{' '}
-                    {ciclo.alteracoes === 1 ? 'alteração' : 'alterações'}
+                    {fraseDeAtividade(ciclo.alteracoes)}
                   </span>
                 </>
               ) : null}

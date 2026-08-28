@@ -2,6 +2,7 @@ import { entre, semente, totalDeParticipantes } from './geral.js'
 import { formatarMedio, proximoCiclo, somarDias } from './datas.js'
 import { ehRecorrente } from './pesquisas.js'
 import { gerarValor } from './respostas.js'
+import { alteracoesDoCiclo } from './alteracoes.js'
 
 /*
  * Ciclos já encerrados de uma pesquisa.
@@ -93,8 +94,6 @@ function criarCiclo(p, numero, inicio) {
     fim: fim.toISOString(),
     taxa,
     cedo,
-    /* Alterações nas perguntas durante o ciclo. */
-    alteracoes: semente(`${chave}:alt`) % 3 === 0 ? 1 : 0,
     convidados: CONVIDADOS,
     perguntas,
     respostas,
@@ -134,6 +133,10 @@ export function historicoDe(p) {
     envio: formatarMedio(c.inicio),
     encerrado: formatarMedio(c.fim),
     taxa: taxaDoCiclo(c),
+    /* Contado do registro de alterações, não guardado no ciclo: quem edita
+       hoje uma pesquisa cujo ciclo ainda não fechou precisa ver o número
+       subir quando ele fechar. */
+    alteracoes: alteracoesDoCiclo(p, c.numero).length,
   }))
 }
 
