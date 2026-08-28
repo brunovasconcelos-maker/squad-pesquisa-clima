@@ -7,6 +7,7 @@ import s from './AbaRespostas.module.css'
 import more from '../../assets/icons/More.svg'
 import caretDown from '../../assets/icons/CaretDown.svg'
 import trash from '../../assets/icons/Trash.svg'
+import downloadSimple from '../../assets/icons/DownloadSimple.svg'
 
 /*
  * Aba Respostas (Figma 8032:1809 e 8036:2383).
@@ -19,11 +20,6 @@ import trash from '../../assets/icons/Trash.svg'
  * O total sai de `totalDeRespostas`, o mesmo número que a rosca da aba Geral
  * traduz em porcentagem, para as duas abas não discordarem sobre a mesma
  * pesquisa.
- *
- * Falta o ícone de download: o Figma usa DownloadSimple e não há equivalente
- * em src/assets/icons — o TrayArrowDown do projeto é outro desenho, uma
- * bandeja fechada com a seta dentro. O lugar dele fica vazio até o arquivo
- * chegar, em vez de entrar um ícone que diz outra coisa.
  */
 const SUBABAS = ['Por pergunta', 'Individual']
 
@@ -153,7 +149,9 @@ export default function AbaRespostas({ pesquisa }) {
               <div className={s.setas}>
                 <Seta direcao="anterior" rotulo="Resposta anterior" />
                 <Seta direcao="proxima" rotulo="Próxima resposta" />
-                {/* DownloadSimple ainda não está em src/assets/icons. */}
+                <button type="button" className={s.acaoIcone} aria-label="Baixar resposta">
+                  <img src={downloadSimple} alt="" width={24} height={24} />
+                </button>
                 <button type="button" className={s.acaoIcone} aria-label="Deletar resposta">
                   <img src={trash} alt="" width={24} height={24} />
                 </button>
