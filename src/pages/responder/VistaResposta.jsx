@@ -1,8 +1,5 @@
-import { useParams } from 'react-router-dom'
 import RodapeFluxo from '../../components/fluxo/RodapeFluxo.jsx'
 import { estiloDaCapa } from '../../lib/capa.js'
-import { ler } from '../../lib/pesquisas.js'
-import { PESQUISA_EXEMPLO } from './exemplo.js'
 import s from './Responder.module.css'
 
 /*
@@ -17,13 +14,6 @@ import s from './Responder.module.css'
  * espaço dos 8px continua reservado quando ela some, senão os botões subiriam
  * e a barra deixaria de ter os 80px do Figma.
  */
-export function usePesquisaDaVista() {
-  const { id } = useParams()
-  /* Sem pesquisa guardada com esse id, a vista mostra o exemplo do Figma em
-     vez de uma tela vazia: por enquanto ela é conteúdo de exemplo. */
-  return ler().find((p) => p.id === id) || PESQUISA_EXEMPLO
-}
-
 export default function VistaResposta({
   pesquisa,
   progresso = null,
@@ -53,12 +43,21 @@ export default function VistaResposta({
 
 /* A barra de baixo das perguntas é a mesma do fluxo de criação: mesma altura,
    mesma trilha de 8px cortada na borda, mesmos Voltar e Continuar. */
-export function RodapeDaVista({ progresso, ultima }) {
+export function RodapeDaVista({
+  progresso,
+  ultima,
+  travado,
+  onVoltar,
+  onContinuar,
+}) {
   return (
     <RodapeFluxo
       progresso={progresso ?? 0}
       mostrarProgresso={progresso !== null}
       rotuloContinuar={ultima ? 'Finalizar' : 'Continuar'}
+      continuarDesabilitado={travado}
+      onVoltar={onVoltar}
+      onContinuar={onContinuar}
     />
   )
 }

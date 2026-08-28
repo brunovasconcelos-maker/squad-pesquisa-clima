@@ -1,4 +1,5 @@
-import VistaResposta, { usePesquisaDaVista } from './VistaResposta.jsx'
+import VistaResposta from './VistaResposta.jsx'
+import { useResposta } from './RespostaProvider.jsx'
 import s from './Responder.module.css'
 
 /* O nome do arquivo é o da layer do Figma, como manda a convenção do
@@ -12,8 +13,7 @@ import pipo from '../../assets/images/7T7nCfyZ97uiZuW6Yue_3_VWS87PuS 1@2x.png'
  * Sem botão nenhum: acabou.
  */
 export default function TelaFim() {
-  const pesquisa = usePesquisaDaVista()
-  const mostrarProgresso = Boolean(pesquisa.configuracao?.avancadas?.barraProgresso)
+  const { pesquisa, mostrarProgresso } = useResposta()
 
   return (
     <VistaResposta pesquisa={pesquisa} progresso={mostrarProgresso ? 1 : null}>

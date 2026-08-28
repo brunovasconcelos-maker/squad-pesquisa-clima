@@ -1,7 +1,8 @@
+import { useNavigate, useParams } from 'react-router-dom'
 import Botao from '../../components/fluxo/Botao.jsx'
-import VistaResposta, { usePesquisaDaVista } from './VistaResposta.jsx'
+import VistaResposta from './VistaResposta.jsx'
+import { useResposta } from './RespostaProvider.jsx'
 import { EMAIL_EXEMPLO } from './exemplo.js'
-import { temObrigatorias } from './obrigatorias.js'
 import s from './Responder.module.css'
 
 import eyeClosed from '../../assets/icons/EyeClosed.svg'
@@ -9,13 +10,15 @@ import eyeClosed from '../../assets/icons/EyeClosed.svg'
 /*
  * Primeira tela de quem responde (Figma 8073:7375).
  *
- * O e-mail e o "Mudar conta" são decorativos: não há login nesta vista, e o
- * link não leva a lugar nenhum ainda.
+ * O e-mail e o "Mudar conta" são decorativos: não há login nesta vista.
  */
 export default function TelaAbertura() {
-  const pesquisa = usePesquisaDaVista()
+  const { pesquisa, perguntas, mostrarProgresso, obrigatoria } = useResposta()
+  const navigate = useNavigate()
+  const { id } = useParams()
+
   const anonimas = Boolean(pesquisa.configuracao?.respostasAnonimas)
-  const mostrarProgresso = Boolean(pesquisa.configuracao?.avancadas?.barraProgresso)
+  const temObrigatoria = perguntas.some(obrigatoria)
 
   return (
     <VistaResposta pesquisa={pesquisa} progresso={mostrarProgresso ? 0 : null}>
@@ -43,13 +46,19 @@ export default function TelaAbertura() {
           </div>
         ) : null}
 
-        {temObrigatorias(pesquisa) ? (
+        {temObrigatoria ? (
           <p className={s.notaObrigatoria}>*Indica uma pergunta obrigatória</p>
         ) : null}
       </section>
 
       <div className={s.acaoCentral}>
-        <Botao variante="marca">Começar pesquisa</Botao>
+        <Botao
+          variante="marca"
+          desabilitado={perguntas.length === 0}
+          onClick={() => navigate(`/responder/${id}/pergunta/1`)}
+        >
+          Começar pesquisa
+        </Botao>
       </div>
     </VistaResposta>
   )

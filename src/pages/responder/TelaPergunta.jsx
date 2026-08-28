@@ -1,38 +1,42 @@
-import { useParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { CorpoDaPergunta } from '../../components/perguntas/ListaDePerguntas.jsx'
-import VistaResposta, { RodapeDaVista, usePesquisaDaVista } from './VistaResposta.jsx'
-import { ehObrigatoria } from './obrigatorias.js'
+import VistaResposta, { RodapeDaVista } from './VistaResposta.jsx'
+import { temResposta, useResposta } from './RespostaProvider.jsx'
 import s from './Responder.module.css'
 import p from '../../components/perguntas/ListaDePerguntas.module.css'
 
 /*
  * Uma pergunta por tela (Figma 8073:7467).
  *
- * O corpo é o mesmo `CorpoDaPergunta` da lista do fluxo — alvos vazios,
- * campos com placeholder, estrelas —, que é exatamente o estado de uma
- * pergunta antes de alguém responder. O cartão também é o mesmo desenho, sem
- * os botões de editar e apagar, que aqui não existem.
+ * O corpo é o mesmo `CorpoDaPergunta` da lista do fluxo, agora respondível —
+ * os alvos e os campos são os mesmos, muda só quem responde a eles. O cartão
+ * também é o mesmo desenho, sem os botões de editar e apagar.
  *
- * A divisória embaixo do enunciado não vem: o Figma desenha o bloco do
- * enunciado sem linha nesta vista, ao contrário da lista do administrador.
+ * A divisória embaixo do enunciado não vem: nesta vista o Figma desenha o
+ * bloco do enunciado sem linha, ao contrário da lista do administrador.
  *
- * Navegar entre perguntas ainda não é ligado — o número vem da URL.
+ * A posição vem da URL, e a ordem vem da sessão — que pode estar embaralhada.
  */
 export default function TelaPergunta() {
-  const pesquisa = usePesquisaDaVista()
-  const { numero } = useParams()
+  const { pesquisa, perguntas, valores, responder, enviar, mostrarProgresso, obrigatoria } =
+    useResposta()
+  const navigate = useNavigate()
+  const { id, numero } = useParams()
 
-  const perguntas = pesquisa.perguntas || []
-  const indice = Math.min(Math.max(Number(numero) || 1, 1), perguntas.length) - 1
+  const posicao = Number(numero)
+  /* Número fora da lista (URL digitada à mão, pergunta apagada): volta para
+     a abertura em vez de mostrar uma tela vazia. */
+  if (!Number.isInteger(posicao) || posicao < 1 || posicao > perguntas.length) {
+    return <Navigate to={`/responder/${id}`} replace />
+  }
+
+  const indice = posicao - 1
   const pergunta = perguntas[indice]
-  const mostrarProgresso = Boolean(pesquisa.configuracao?.avancadas?.barraProgresso)
-
-  if (!pergunta) return null
-
   const ultima = indice === perguntas.length - 1
-  /* A trilha anda por pergunta respondida: a primeira tela já mostra um
-     passo dado, e a última chega cheia no Finalizar. */
   const progresso = (indice + 1) / perguntas.length
+  const travado = obrigatoria(pergunta) && !temResposta(valores[pergunta.id])
+
+  const irPara = (destino) => navigate(`/responder/${id}${destino}`)
 
   return (
     <VistaResposta
@@ -41,24 +45,29 @@ export default function TelaPergunta() {
         <RodapeDaVista
           progresso={mostrarProgresso ? progresso : null}
           ultima={ultima}
+          travado={travado}
+          onVoltar={() => irPara(indice === 0 ? '' : `/pergunta/${posicao - 1}`)}
+          onContinuar={() => (ultima ? enviar() : irPara(`/pergunta/${posicao + 1}`))}
         />
       }
     >
       <section className={p.cartao}>
         <div className={p.topoCartao}>
-          <p className={p.rotuloPergunta}>Pergunta {indice + 1}:</p>
+          <p className={p.rotuloPergunta}>Pergunta {posicao}:</p>
         </div>
 
         <div className={s.linhaEnunciado}>
           <p className={p.enunciado}>
             {pergunta.enunciado}
-            {ehObrigatoria(pergunta, pesquisa) ? (
-              <span className={s.asterisco}>*</span>
-            ) : null}
+            {obrigatoria(pergunta) ? <span className={s.asterisco}>*</span> : null}
           </p>
         </div>
 
-        <CorpoDaPergunta pergunta={pergunta} />
+        <CorpoDaPergunta
+          pergunta={pergunta}
+          valor={valores[pergunta.id]}
+          onResponder={(valor) => responder(pergunta.id, valor)}
+        />
       </section>
     </VistaResposta>
   )

@@ -190,6 +190,27 @@ const comTaxaDaLista = (p, respostas) => ({
   ),
 })
 
+/*
+ * Uma resposta de verdade, enviada pela vista de quem responde. Entra na
+ * mesma lista das simuladas e sobe a taxa junto, pela mesma regra da
+ * exclusão: a rosca do Geral e a contagem da aba Respostas contam a mesma
+ * coisa, então uma não pode andar sem a outra.
+ *
+ * Quem chama sincroniza antes: sem isso, escrever a taxa a partir do
+ * tamanho da lista jogaria fora o que o motor já tinha subido e ninguém
+ * ainda materializou.
+ */
+export function adicionarResposta(p, valores, agora = new Date()) {
+  return comTaxaDaLista(p, [
+    ...(p.respostas || []),
+    {
+      id: `${p.id}_r${agora.getTime().toString(36)}`,
+      em: agora.toISOString(),
+      valores,
+    },
+  ])
+}
+
 export function removerResposta(p, idResposta) {
   return comTaxaDaLista(
     p,

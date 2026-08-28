@@ -10,6 +10,7 @@ import TelaRevisao from './pages/nova-pesquisa/TelaRevisao.jsx'
 import TelaConfiguracao from './pages/nova-pesquisa/TelaConfiguracao.jsx'
 import TelaDetalhe from './pages/detalhe/TelaDetalhe.jsx'
 import TelaCiclo from './pages/detalhe/TelaCiclo.jsx'
+import RespostaProvider from './pages/responder/RespostaProvider.jsx'
 import TelaAbertura from './pages/responder/TelaAbertura.jsx'
 import TelaPerguntaResposta from './pages/responder/TelaPergunta.jsx'
 import TelaFim from './pages/responder/TelaFim.jsx'
@@ -39,14 +40,14 @@ export default function App() {
         </Route>
 
         {/* Vista de quem responde: fora do app interno, sem sidebar nem abas.
-            Cada tela é uma rota porque é assim que dá para ver as três antes
-            de a navegação entre perguntas existir. */}
-        <Route path="/responder/:id" element={<TelaAbertura />} />
-        <Route
-          path="/responder/:id/pergunta/:numero"
-          element={<TelaPerguntaResposta />}
-        />
-        <Route path="/responder/:id/fim" element={<TelaFim />} />
+            O provider é a rota-mãe, como no fluxo de criação — é ele que
+            segura a ordem das perguntas e o que já foi respondido enquanto
+            se navega entre elas. */}
+        <Route path="/responder/:id" element={<RespostaProvider />}>
+          <Route index element={<TelaAbertura />} />
+          <Route path="pergunta/:numero" element={<TelaPerguntaResposta />} />
+          <Route path="fim" element={<TelaFim />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   )

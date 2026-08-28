@@ -234,3 +234,15 @@
   font-weight: var(--peso-regular);
   letter-spacing: -0.4px;
 }
+
+/* Degrau e opção viram botão na vista de quem responde. A geometria é a
+   mesma; o que muda é só o que o navegador põe por conta própria num
+   <button>. */
+.alvo {
+  border: none;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+}

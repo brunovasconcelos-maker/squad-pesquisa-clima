@@ -4,7 +4,9 @@ import { LIMITE_CURTA, LIMITE_LONGA } from '../../pages/nova-pesquisa/bancoDePer
 import pencilSimpleLine from '../../assets/icons/PencilSimpleLine.svg'
 import trash from '../../assets/icons/Trash.svg'
 import circle from '../../assets/icons/Circle.svg'
+import radioButton from '../../assets/icons/RadioButton.svg'
 import square from '../../assets/icons/Square.svg'
+import checkSquare from '../../assets/icons/CheckSquare.svg'
 import star from '../../assets/icons/Star.svg'
 import plus from '../../assets/icons/Plus.svg'
 
@@ -33,28 +35,73 @@ function Icone({ src, rotulo, onClick }) {
   )
 }
 
-/* Coluna de um degrau: o número em cima, o alvo embaixo. Serve tanto para a
-   escala de nota quanto para as estrelas — muda só o ícone. */
-function Degrau({ numero, icone }) {
-  return (
-    <div className={s.degrau}>
+/*
+ * Coluna de um degrau: o número em cima, o alvo embaixo. Serve tanto para a
+ * escala de nota quanto para as estrelas — muda só o ícone.
+ *
+ * Com `onEscolher` vira botão: é a mesma coluna, clicável, que a vista de
+ * quem responde usa.
+ */
+function Degrau({ numero, icone, marcado = false, rotulo, onEscolher }) {
+  const conteudo = (
+    <>
       <p className={s.numeroDegrau}>{numero}</p>
       <img className={s.icone} src={icone} alt="" width={24} height={24} />
-    </div>
+    </>
+  )
+  if (!onEscolher) return <div className={s.degrau}>{conteudo}</div>
+  return (
+    <button
+      type="button"
+      className={`${s.degrau} ${s.alvo}`}
+      role="radio"
+      aria-checked={marcado}
+      aria-label={rotulo ?? String(numero)}
+      onClick={onEscolher}
+    >
+      {conteudo}
+    </button>
   )
 }
 
-function ListaDeOpcoes({ opcoes, temOutro, icone }) {
+function ListaDeOpcoes({
+  opcoes,
+  temOutro,
+  icone,
+  iconeMarcado,
+  marcadas = [],
+  onAlternar,
+}) {
   const linhas = temOutro ? [...opcoes, 'Outro'] : opcoes
   return (
-    <div className={s.opcoes}>
-      {linhas.map((opcao, indice) => (
-        // eslint-disable-next-line react/no-array-index-key
-        <div key={`${opcao}-${indice}`} className={s.opcao}>
-          <img className={s.icone} src={icone} alt="" width={24} height={24} />
-          <p className={s.textoOpcao}>{opcao}</p>
-        </div>
-      ))}
+    <div className={s.opcoes} role={onAlternar ? 'group' : undefined}>
+      {linhas.map((opcao, indice) => {
+        const marcada = marcadas.includes(indice)
+        const arte = marcada && iconeMarcado ? iconeMarcado : icone
+        const dentro = (
+          <>
+            <img className={s.icone} src={arte} alt="" width={24} height={24} />
+            <p className={s.textoOpcao}>{opcao}</p>
+          </>
+        )
+        return onAlternar ? (
+          <button
+            type="button"
+            // eslint-disable-next-line react/no-array-index-key
+            key={`${opcao}-${indice}`}
+            className={`${s.opcao} ${s.alvo}`}
+            aria-pressed={marcada}
+            onClick={() => onAlternar(indice)}
+          >
+            {dentro}
+          </button>
+        ) : (
+          // eslint-disable-next-line react/no-array-index-key
+          <div key={`${opcao}-${indice}`} className={s.opcao}>
+            {dentro}
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -62,20 +109,38 @@ function ListaDeOpcoes({ opcoes, temOutro, icone }) {
 /*
  * O corpo muda com o tipo; o cabeçalho e o enunciado são iguais em todos.
  *
- * Exportado porque a vista de quem responde desenha a mesma pergunta por
- * fora desta lista: os alvos vazios, os campos com placeholder e as estrelas
- * são exatamente o que ela precisa mostrar antes de alguém responder.
+ * Exportado porque a vista de quem responde desenha a mesma pergunta: os
+ * alvos, os campos e a escala são os mesmos, muda só quem responde a eles.
+ *
+ * Sem `onResponder` é o desenho da pergunta — alvos vazios e campos com
+ * placeholder, que é o que a lista do administrador mostra. Com
+ * `onResponder`, os mesmos alvos viram botões e os campos passam a ser
+ * controlados: é a mesma geometria, agora respondível.
+ *
+ * Estrelas responde na escala numerada de Circle/RadioButton, e não em
+ * estrelas: não existe no projeto uma estrela cheia que faça par com a
+ * vazia, e é a mesma escolha que CorpoDaResposta já fez para mostrar uma
+ * resposta de estrelas.
  */
-export function CorpoDaPergunta({ pergunta }) {
+export function CorpoDaPergunta({ pergunta, valor, onResponder }) {
+  const responder = typeof onResponder === 'function' ? onResponder : null
+  const escolher = (n) => (responder ? () => responder(n) : undefined)
+
   switch (pergunta.tipo) {
     case 'nota': {
-      const degraus = Array.from({ length: pergunta.maximo + 1 }, (_, i) => i)
+      const degraus = Array.from({ length: (pergunta.maximo ?? 5) + 1 }, (_, i) => i)
       return (
-        <div className={s.escala}>
+        <div className={s.escala} role={responder ? 'radiogroup' : undefined}>
           <p className={s.pontaEscala}>{pergunta.pontaEsquerda}</p>
           <div className={s.degraus}>
             {degraus.map((n) => (
-              <Degrau key={n} numero={n} icone={circle} />
+              <Degrau
+                key={n}
+                numero={n}
+                icone={responder && valor === n ? radioButton : circle}
+                marcado={valor === n}
+                onEscolher={escolher(n)}
+              />
             ))}
           </div>
           <p className={s.pontaEscala}>{pergunta.pontaDireita}</p>
@@ -88,6 +153,9 @@ export function CorpoDaPergunta({ pergunta }) {
           opcoes={pergunta.opcoes}
           temOutro={pergunta.temOutro}
           icone={circle}
+          iconeMarcado={radioButton}
+          marcadas={valor === undefined || valor === null ? [] : [valor]}
+          onAlternar={responder ? (i) => responder(i) : undefined}
         />
       )
     case 'escolhaMultipla':
@@ -96,6 +164,19 @@ export function CorpoDaPergunta({ pergunta }) {
           opcoes={pergunta.opcoes}
           temOutro={pergunta.temOutro}
           icone={square}
+          iconeMarcado={checkSquare}
+          marcadas={valor || []}
+          onAlternar={
+            responder
+              ? (i) => {
+                  const atuais = valor || []
+                  const proximas = atuais.includes(i)
+                    ? atuais.filter((x) => x !== i)
+                    : [...atuais, i]
+                  responder(proximas.sort((a, b) => a - b))
+                }
+              : undefined
+          }
         />
       )
     case 'respostaCurta':
@@ -107,6 +188,9 @@ export function CorpoDaPergunta({ pergunta }) {
             maxLength={LIMITE_CURTA}
             placeholder="Resposta curta..."
             aria-label="Resposta curta"
+            {...(responder
+              ? { value: valor ?? '', onChange: (e) => responder(e.target.value) }
+              : {})}
           />
         </div>
       )
@@ -119,15 +203,27 @@ export function CorpoDaPergunta({ pergunta }) {
             maxLength={LIMITE_LONGA}
             placeholder="Resposta longa..."
             aria-label="Resposta longa"
+            {...(responder
+              ? { value: valor ?? '', onChange: (e) => responder(e.target.value) }
+              : {})}
           />
         </div>
       )
     case 'estrelas':
       return (
-        <div className={`${s.escala} ${s.escalaCentrada}`}>
+        <div
+          className={`${s.escala} ${s.escalaCentrada}`}
+          role={responder ? 'radiogroup' : undefined}
+        >
           <div className={s.degraus}>
             {ESTRELAS.map((n) => (
-              <Degrau key={n} numero={n} icone={star} />
+              <Degrau
+                key={n}
+                numero={n}
+                icone={responder ? (valor === n ? radioButton : circle) : star}
+                marcado={valor === n}
+                onEscolher={escolher(n)}
+              />
             ))}
           </div>
         </div>
