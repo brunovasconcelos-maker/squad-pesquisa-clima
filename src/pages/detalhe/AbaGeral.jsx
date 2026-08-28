@@ -1,4 +1,5 @@
 import Selo from '../../components/Selo.jsx'
+import { estiloDaCapa } from '../../lib/capa.js'
 import Rosca from '../../components/detalhe/Rosca.jsx'
 import { STATUS } from '../../lib/pesquisas.js'
 import {
@@ -81,66 +82,72 @@ export default function AbaGeral({ pesquisa }) {
   const desistencia = desistenciaDe(pesquisa)
 
   return (
-    <div className={s.coluna}>
-      <section className={`${s.cartao} ${s.cartaoInfo}`}>
-        <div className={s.topoInfo}>
-          <h2 className={s.nome}>{pesquisa.nome}</h2>
-          <button type="button" className={s.maisOpcoes} aria-label="Mais opções">
-            <img src={more} alt="" width={24} height={24} />
-          </button>
+    <>
+      {/* A capa da pesquisa, do mesmo jeito que a Revisão a mostra: faixa de
+          200px com os cartões cavalgando os últimos 140px dela. */}
+      <div className={s.capa} style={estiloDaCapa(pesquisa.capa)} />
+
+      <div className={s.coluna}>
+        <section className={`${s.cartao} ${s.cartaoInfo}`}>
+          <div className={s.topoInfo}>
+            <h2 className={s.nome}>{pesquisa.nome}</h2>
+            <button type="button" className={s.maisOpcoes} aria-label="Mais opções">
+              <img src={more} alt="" width={24} height={24} />
+            </button>
+          </div>
+
+          <Selo status={STATUS[pesquisa.status]} />
+
+          {/* Quatro campos em duas linhas de dois: os dois primeiros mudam de
+              rótulo conforme o status, "Tipo" e "Ciclos" aparecem sempre. */}
+          <div className={s.linhaCampos}>
+            <Campo {...campos[0]} />
+            <Campo {...campos[1]} />
+          </div>
+          <div className={s.linhaCampos}>
+            <Campo {...campos[2]} />
+            <Campo {...campos[3]} />
+          </div>
+        </section>
+
+        <div className={s.faixa}>
+          <CartaoTaxa dados={atual} />
+          {anterior ? <CartaoTaxa dados={anterior} /> : null}
         </div>
 
-        <Selo status={STATUS[pesquisa.status]} />
+        <section className={s.pipo}>
+          <p>Resumo do Pipo</p>
+          <p className={s.resumo}>{resumoDe(pesquisa, atual, anterior)}</p>
+        </section>
 
-        {/* Quatro campos em duas linhas de dois: os dois primeiros mudam de
-            rótulo conforme o status, "Tipo" e "Ciclos" aparecem sempre. */}
-        <div className={s.linhaCampos}>
-          <Campo {...campos[0]} />
-          <Campo {...campos[1]} />
-        </div>
-        <div className={s.linhaCampos}>
-          <Campo {...campos[2]} />
-          <Campo {...campos[3]} />
-        </div>
-      </section>
+        <div className={`${s.faixa} ${s.faixaNumeros}`}>
+          <CartaoNumero
+            titulo="Tempo médio de resposta"
+            valor={tempoMedio.valor}
+            unidade={tempoMedio.unidade}
+          />
+          <CartaoNumero
+            titulo="Taxa de desistência"
+            valor={desistencia.valor}
+            unidade={desistencia.unidade}
+          />
+          {/* Sem pergunta de nota não há pior nota, e o cartão some em vez de
+              mostrar um número inventado.
 
-      <div className={s.faixa}>
-        <CartaoTaxa dados={atual} />
-        {anterior ? <CartaoTaxa dados={anterior} /> : null}
+              O terceiro empilha número e pergunta, e usa um corpo menor: o
+              Figma desenha 50px aqui contra os 80px dos vizinhos, que é o que
+              deixa um "2,5" caber sem espremer o cartão. */}
+          {piorAvaliacao ? (
+            <section className={`${s.cartao} ${s.cartaoAvaliacao}`}>
+              <p className={s.tituloCartao}>Pior avaliação</p>
+              <div className={s.blocoAvaliacao}>
+                <span className={s.numeroMedio}>{piorAvaliacao.valor}</span>
+                <span className={s.unidade}>{piorAvaliacao.pergunta}</span>
+              </div>
+            </section>
+          ) : null}
+        </div>
       </div>
-
-      <section className={s.pipo}>
-        <p>Resumo do Pipo</p>
-        <p className={s.resumo}>{resumoDe(pesquisa, atual, anterior)}</p>
-      </section>
-
-      <div className={`${s.faixa} ${s.faixaNumeros}`}>
-        <CartaoNumero
-          titulo="Tempo médio de resposta"
-          valor={tempoMedio.valor}
-          unidade={tempoMedio.unidade}
-        />
-        <CartaoNumero
-          titulo="Taxa de desistência"
-          valor={desistencia.valor}
-          unidade={desistencia.unidade}
-        />
-        {/* Sem pergunta de nota não há pior nota, e o cartão some em vez de
-            mostrar um número inventado.
-
-            O terceiro empilha número e pergunta, e usa um corpo menor: o
-            Figma desenha 50px aqui contra os 80px dos vizinhos, que é o que
-            deixa um "2,5" caber sem espremer o cartão. */}
-        {piorAvaliacao ? (
-          <section className={`${s.cartao} ${s.cartaoAvaliacao}`}>
-            <p className={s.tituloCartao}>Pior avaliação</p>
-            <div className={s.blocoAvaliacao}>
-              <span className={s.numeroMedio}>{piorAvaliacao.valor}</span>
-              <span className={s.unidade}>{piorAvaliacao.pergunta}</span>
-            </div>
-          </section>
-        ) : null}
-      </div>
-    </div>
+    </>
   )
 }

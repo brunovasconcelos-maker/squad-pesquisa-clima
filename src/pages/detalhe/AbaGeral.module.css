@@ -1,12 +1,22 @@
+/* A capa da pesquisa, no mesmo desenho da faixa da Revisão: 200px logo
+   abaixo do cabeçalho, com os cartões subindo 140px para cavalgar os
+   últimos 60px dela. O fundo vem do estado (lib/capa.js). */
+.capa {
+  height: 200px;
+  flex: none;
+}
+
 /* Coluna de 808px centrada, como as telas largas do fluxo. O Figma posiciona
-   por um `left` absoluto que dá exatamente margens iguais. Os 40px de cima
-   são a distância entre a divisória do cabeçalho e o primeiro cartão. */
+   por um `left` absoluto que dá exatamente margens iguais. Sem padding em
+   cima: quem afasta do cabeçalho agora é a capa. */
 .coluna {
+  position: relative;
+  z-index: 1;
   display: flex;
   width: var(--largura-miolo-largo);
   flex-direction: column;
-  margin: 0 auto;
-  padding: var(--espaco-40) 0;
+  margin: -140px auto 0;
+  padding-bottom: var(--espaco-40);
   gap: var(--espaco-20);
 }
 
