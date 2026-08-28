@@ -75,9 +75,7 @@
   gap: var(--espaco-12);
 }
 
-/* O ícone EyeClosed.svg ainda não está em src/assets/icons. O vão guarda os
-   24px dele para a linha já nascer com a largura final. */
-.vaoDeIcone {
+.iconeAnonimo {
   display: block;
   width: 24px;
   height: 24px;
@@ -123,14 +121,16 @@
   color: var(--cor-vermelho);
 }
 
-/* Falta a ilustração do Pipo na espreguiçadeira em src/assets/images. O vão
-   guarda os 580x324 do Figma para o arquivo entrar sem mexer no resto. */
-.vaoDaIlustracao {
+/* A caixa do Figma tem 580x324 e o arquivo é o @2x dela; o `contain` guarda
+   a proporção do desenho dentro dela. */
+.ilustracao {
+  display: block;
   width: 580px;
   height: 324px;
   flex: none;
   align-self: center;
   margin-top: var(--espaco-24);
+  object-fit: contain;
 }
 
 /* Nas telas sem Voltar/Continuar a barra de baixo é só a trilha de 8px. A

@@ -4,6 +4,8 @@ import { EMAIL_EXEMPLO } from './exemplo.js'
 import { temObrigatorias } from './obrigatorias.js'
 import s from './Responder.module.css'
 
+import eyeClosed from '../../assets/icons/EyeClosed.svg'
+
 /*
  * Primeira tela de quem responde (Figma 8073:7375).
  *
@@ -28,9 +30,13 @@ export default function TelaAbertura() {
 
         {anonimas ? (
           <div className={s.linhaAnonima}>
-            {/* Falta o ícone EyeClosed.svg em src/assets/icons. O vão de 24px
-                fica reservado para o arquivo entrar sem mexer na linha. */}
-            <span className={s.vaoDeIcone} aria-hidden="true" />
+            <img
+              className={s.iconeAnonimo}
+              src={eyeClosed}
+              alt=""
+              width={24}
+              height={24}
+            />
             <p className={s.notaAnonima}>
               Não se preocupe, suas respostas serão anônimas
             </p>

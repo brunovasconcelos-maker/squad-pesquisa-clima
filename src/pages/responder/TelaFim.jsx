@@ -1,6 +1,10 @@
 import VistaResposta, { usePesquisaDaVista } from './VistaResposta.jsx'
 import s from './Responder.module.css'
 
+/* O nome do arquivo é o da layer do Figma, como manda a convenção do
+   projeto — é o @2x da caixa de 580x324 da tela. */
+import pipo from '../../assets/images/7T7nCfyZ97uiZuW6Yue_3_VWS87PuS 1@2x.png'
+
 /*
  * Tela final (Figma 8082:8325). O texto do cartão é a mensagem final que a
  * pesquisa tem configurada; abaixo dele vem a ilustração do Pipo.
@@ -18,10 +22,13 @@ export default function TelaFim() {
         <p className={s.paragrafo}>{pesquisa.configuracao?.mensagemFinal}</p>
       </section>
 
-      {/* Falta a ilustração do Pipo na espreguiçadeira em src/assets/images —
-          a única do projeto é a Pipo-Loading, que é outro desenho. O vão de
-          580x324 do Figma fica reservado para o arquivo entrar no lugar. */}
-      <div className={s.vaoDaIlustracao} aria-hidden="true" />
+      <img
+        className={s.ilustracao}
+        src={pipo}
+        alt="Pipo descansando numa espreguiçadeira"
+        width={580}
+        height={324}
+      />
     </VistaResposta>
   )
 }
