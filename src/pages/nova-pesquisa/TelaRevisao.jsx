@@ -7,6 +7,8 @@ import ListaDePerguntas from '../../components/perguntas/ListaDePerguntas.jsx'
 import EditorPergunta from './EditorPergunta.jsx'
 import EditorAbertura from './EditorAbertura.jsx'
 import ModalConfirmarVoltar from './ModalConfirmarVoltar.jsx'
+import ModalCapa from '../../components/ModalCapa.jsx'
+import { estiloDaCapa } from '../../lib/capa.js'
 import { usePesquisa } from './estado.jsx'
 
 /*
@@ -33,6 +35,7 @@ export default function TelaRevisao() {
   const [emEdicao, setEmEdicao] = useState(false)
   const [aberturaAberta, setAberturaAberta] = useState(false)
   const [confirmandoVoltar, setConfirmandoVoltar] = useState(false)
+  const [capaAberta, setCapaAberta] = useState(false)
 
   const ehBranco = pesquisa.template === 'blank'
   /* O branco volta para a escolha de template e não tem o que perder; o
@@ -46,8 +49,14 @@ export default function TelaRevisao() {
         onFechar={() => navigate('/')}
       />
 
-      <div className={s.faixa}>
-        <button type="button" className={s.editarCapa}>
+      {/* A faixa é a capa: o que for escolhido aqui é o que a pesquisa leva
+          para o localStorage quando o fluxo terminar. */}
+      <div className={s.faixa} style={estiloDaCapa(pesquisa.capa)}>
+        <button
+          type="button"
+          className={s.editarCapa}
+          onClick={() => setCapaAberta(true)}
+        >
           Editar Capa
         </button>
       </div>
@@ -69,6 +78,17 @@ export default function TelaRevisao() {
         onVoltar={() => (ehBranco ? voltar() : setConfirmandoVoltar(true))}
         onContinuar={() => navigate('../configuracao')}
       />
+
+      {capaAberta ? (
+        <ModalCapa
+          valor={pesquisa.capa}
+          onSalvar={(capa) => {
+            definir({ capa })
+            setCapaAberta(false)
+          }}
+          onFechar={() => setCapaAberta(false)}
+        />
+      ) : null}
 
       {confirmandoVoltar ? (
         <ModalConfirmarVoltar

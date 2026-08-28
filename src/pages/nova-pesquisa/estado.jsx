@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { gerarPerguntas } from './bancoDePerguntas.js'
 import { ABERTURA_TEMPLATE, ABERTURA_BRANCO } from './perguntasExemplo.js'
 import { formatarLongo, somarDias } from '../../lib/datas.js'
+import { CAPA_PADRAO } from '../../lib/capa.js'
 
 /*
  * Estado do fluxo "Nova Pesquisa".
@@ -73,6 +74,9 @@ const estadoInicial = () => ({
   // Parágrafo do card de Abertura. Fica no estado, e não como constante da
   // tela, porque agora é editável.
   abertura: ABERTURA_TEMPLATE,
+  // A faixa da Revisão nasce com o gradiente do Figma e é editável ali
+  // mesmo, pelo botão "Editar Capa".
+  capa: CAPA_PADRAO,
   configuracao: configuracaoInicial(),
 })
 

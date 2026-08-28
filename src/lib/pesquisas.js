@@ -70,6 +70,7 @@ export function criarDoFluxo(pesquisa, agora = new Date()) {
     participantes: pesquisa.participantes,
     template: pesquisa.template,
     abertura: pesquisa.abertura,
+    capa: pesquisa.capa,
     prompt: pesquisa.prompt,
     quantidade: pesquisa.quantidade,
     perguntas: pesquisa.perguntas,

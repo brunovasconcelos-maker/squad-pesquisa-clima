@@ -6,7 +6,7 @@ import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
 import Interruptor from '../../components/fluxo/Interruptor.jsx'
 import LinhaResumo from '../../components/fluxo/LinhaResumo.jsx'
 import ModalConfirmar from '../../components/fluxo/ModalConfirmar.jsx'
-import ModalCapa from './ModalCapa.jsx'
+import ModalCapa from '../../components/ModalCapa.jsx'
 import ModalParticipantes from '../nova-pesquisa/ModalParticipantes.jsx'
 import {
   ModalDataEnvio,

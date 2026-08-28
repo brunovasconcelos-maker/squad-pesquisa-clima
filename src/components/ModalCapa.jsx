@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import ModalFluxo from '../../components/fluxo/ModalFluxo.jsx'
+import ModalFluxo from './fluxo/ModalFluxo.jsx'
 import {
   COR_PADRAO,
   CAPA_PADRAO,
@@ -10,7 +10,7 @@ import {
   normalizarCapa,
   recortarParaCapa,
   sobraDaCaixa,
-} from '../../lib/capa.js'
+} from '../lib/capa.js'
 import s from './ModalCapa.module.css'
 
 /*

@@ -5,17 +5,14 @@
   background: var(--cor-fundo);
 }
 
-/* Ângulo, paradas e cores saem do Figma (8065:4916). */
+/* O fundo vem do estado (lib/capa.js) — cor, gradiente ou imagem —, e por
+   isso não está aqui. Os 200px de altura é que fixam a proporção da capa,
+   a mesma que o recorte da imagem respeita. */
 .faixa {
   position: relative;
   height: 200px;
   flex: none;
   overflow: hidden;
-  background: linear-gradient(
-    96.57deg,
-    #d2cffb 10.98%,
-    #5c52ed 90.35%
-  );
 }
 
 /* No Figma o botão fica em left 1289 de 1440 — a mesma folga de 40px da
