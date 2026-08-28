@@ -219,3 +219,63 @@
   font-weight: var(--peso-medio);
   letter-spacing: -0.4px;
 }
+
+/* Nas pontas da lista a seta desliga: continua no lugar, sem convidar ao
+   clique. */
+.seta:disabled,
+.itemSuspenso:disabled {
+  cursor: default;
+  opacity: 0.3;
+}
+
+.vazio {
+  margin: 0;
+  color: var(--cor-texto-secundario);
+  font-size: 16px;
+  font-weight: var(--peso-regular);
+  letter-spacing: -0.4px;
+}
+
+/* ---- lista de perguntas do seletor ---- */
+
+.envoltorioLista {
+  position: relative;
+  width: 100%;
+}
+
+/* Rola quando a pesquisa tem muitas perguntas — são até 20. */
+.listaPerguntas {
+  position: absolute;
+  top: calc(100% + var(--espaco-8));
+  right: 0;
+  left: 0;
+  z-index: 5;
+  display: flex;
+  max-height: 320px;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: var(--espaco-8);
+  border: 1px solid var(--cor-borda-acao);
+  border-radius: var(--raio-caixa);
+  background: var(--cor-fundo);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.itemLista {
+  padding: var(--espaco-12);
+  border: none;
+  border-radius: var(--raio-campo);
+  background: none;
+  color: var(--cor-texto);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: var(--peso-medio);
+  letter-spacing: -0.08px;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.itemAtual {
+  background: var(--cor-superficie);
+}

@@ -100,12 +100,13 @@ export function camposDe(p) {
 const responderam = (taxa, total) => Math.round((taxa / 100) * total)
 
 /*
- * Quantas pessoas responderam — o mesmo número que a rosca do Geral traduz em
- * porcentagem. A aba Respostas conta as respostas de exemplo a partir daqui,
- * para as duas abas não contarem coisas diferentes sobre a mesma pesquisa.
+ * Quantas pessoas responderam. Depois que a aba Respostas sincroniza, quem
+ * manda é a lista guardada — é ela que sobrevive a uma exclusão. Antes disso,
+ * ou numa pesquisa que nunca teve a aba aberta, vale o que a taxa diz.
  */
 export function totalDeRespostas(p) {
   if (p.status === 'agendada' || p.status === 'rascunho') return 0
+  if (p.respostas) return p.respostas.length
   return responderam(p.taxa ?? 0, totalDeParticipantes(p.participantes))
 }
 

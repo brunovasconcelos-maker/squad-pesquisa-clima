@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
 import { ler, gravar, avaliarLista, INTERVALO_MS } from '../../lib/pesquisas.js'
+import { sincronizar } from '../../lib/respostas.js'
 import AbaGeral from './AbaGeral.jsx'
 import AbaPerguntas from './AbaPerguntas.jsx'
 import AbaRespostas from './AbaRespostas.jsx'
@@ -31,16 +32,28 @@ export default function TelaDetalhe() {
   const [ativa, setAtiva] = useState(ABAS[0])
   const [pesquisas, setPesquisas] = useState(null)
 
+  /* O motor roda aqui como na home, e logo depois as respostas simuladas
+     desta pesquisa acertam o passo com a taxa que ele acabou de subir — as
+     duas abas contam a mesma coisa, então não podem sincronizar em momentos
+     diferentes. Só esta pesquisa: as outras sincronizam quando forem abertas. */
   useEffect(() => {
     const rodar = () => {
       const { lista, mudou } = avaliarLista(ler())
-      setPesquisas(lista)
-      if (mudou) gravar(lista)
+      let proxima = lista
+      let precisaGravar = mudou
+      const antes = lista.find((p) => p.id === id)
+      const depois = antes && sincronizar(antes)
+      if (depois && depois !== antes) {
+        proxima = lista.map((p) => (p.id === id ? depois : p))
+        precisaGravar = true
+      }
+      setPesquisas(proxima)
+      if (precisaGravar) gravar(proxima)
     }
     rodar()
     const t = setInterval(rodar, INTERVALO_MS)
     return () => clearInterval(t)
-  }, [])
+  }, [id])
 
   const pesquisa = pesquisas?.find((p) => p.id === id)
 
@@ -106,7 +119,9 @@ export default function TelaDetalhe() {
         {ativa === 'Perguntas' ? (
           <AbaPerguntas pesquisa={pesquisa} onAlterar={alterar} />
         ) : null}
-        {ativa === 'Respostas' ? <AbaRespostas pesquisa={pesquisa} /> : null}
+        {ativa === 'Respostas' ? (
+          <AbaRespostas pesquisa={pesquisa} onAlterar={alterar} />
+        ) : null}
       </div>
     </div>
   )
