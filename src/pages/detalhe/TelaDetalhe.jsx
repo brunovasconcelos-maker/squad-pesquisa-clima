@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
 import { ler, gravar, avaliarLista, INTERVALO_MS } from '../../lib/pesquisas.js'
 import { sincronizar } from '../../lib/respostas.js'
+import { sincronizarHistorico } from '../../lib/historico.js'
 import AbaGeral from './AbaGeral.jsx'
 import AbaPerguntas from './AbaPerguntas.jsx'
 import AbaRespostas from './AbaRespostas.jsx'
@@ -24,13 +25,20 @@ import close from '../../assets/icons/Close.svg'
  * A aba fica em estado local, e não na URL, porque trocar de aba não é um
  * passo de navegação: voltar no browser deve sair do detalhe, não desfazer o
  * clique na aba. Mesma decisão dos modais do fluxo.
+ *
+ * Chegar numa aba específica é outra coisa — é navegação —, e vem pelo state
+ * da rota: é assim que a tela do ciclo devolve a pessoa ao Histórico. Num F5
+ * o state se perde e a tela abre no Geral, como qualquer visita direta.
  */
 const ABAS = ['Geral', 'Perguntas', 'Respostas', 'Histórico', 'Configurações']
 
 export default function TelaDetalhe() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const [ativa, setAtiva] = useState(ABAS[0])
+  const { state } = useLocation()
+  const [ativa, setAtiva] = useState(
+    ABAS.includes(state?.aba) ? state.aba : ABAS[0],
+  )
   const [pesquisas, setPesquisas] = useState(null)
 
   /* O motor roda aqui como na home, e logo depois as respostas simuladas
@@ -43,7 +51,9 @@ export default function TelaDetalhe() {
       let proxima = lista
       let precisaGravar = mudou
       const antes = lista.find((p) => p.id === id)
-      const depois = antes && sincronizar(antes)
+      /* Respostas do ciclo em curso e histórico dos que fecharam: os dois
+         acertam o passo com o motor que acabou de rodar. */
+      const depois = antes && sincronizarHistorico(sincronizar(antes))
       if (depois && depois !== antes) {
         proxima = lista.map((p) => (p.id === id ? depois : p))
         precisaGravar = true

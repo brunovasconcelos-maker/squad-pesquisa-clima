@@ -17,6 +17,10 @@ import plus from '../../assets/icons/Plus.svg'
  * que permite ao detalhe interceptar os cliques quando a pesquisa está
  * rodando sem duplicar nada disto.
  *
+ * Em `somenteLeitura` os botões somem — não desabilitados, ausentes. É como a
+ * tela do ciclo mostra as perguntas de um ciclo fechado: aquilo já foi
+ * perguntado e não há o que editar.
+ *
  * O vermelho do Trash vem do próprio SVG (#FF2633), não de CSS.
  */
 const ESTRELAS = [1, 2, 3, 4, 5]
@@ -131,6 +135,7 @@ export default function ListaDePerguntas({
   nome,
   abertura,
   perguntas,
+  somenteLeitura = false,
   onEditarAbertura,
   onEditarPergunta,
   onRemoverPergunta,
@@ -141,11 +146,13 @@ export default function ListaDePerguntas({
       <section className={s.cartao}>
         <div className={s.topoCartao}>
           <p className={s.rotuloAbertura}>Abertura</p>
-          <Icone
-            src={pencilSimpleLine}
-            rotulo="Editar abertura"
-            onClick={onEditarAbertura}
-          />
+          {somenteLeitura ? null : (
+            <Icone
+              src={pencilSimpleLine}
+              rotulo="Editar abertura"
+              onClick={onEditarAbertura}
+            />
+          )}
         </div>
         <div className={s.linha}>
           <p className={s.nomePesquisa}>{nome || 'Nova Pesquisa'}</p>
@@ -159,18 +166,20 @@ export default function ListaDePerguntas({
         <section key={pergunta.id} className={s.cartao}>
           <div className={s.topoCartao}>
             <p className={s.rotuloPergunta}>Pergunta {indice + 1}:</p>
-            <div className={s.acoes}>
-              <Icone
-                src={pencilSimpleLine}
-                rotulo={`Editar pergunta ${indice + 1}`}
-                onClick={() => onEditarPergunta(pergunta)}
-              />
-              <Icone
-                src={trash}
-                rotulo={`Excluir pergunta ${indice + 1}`}
-                onClick={() => onRemoverPergunta(pergunta)}
-              />
-            </div>
+            {somenteLeitura ? null : (
+              <div className={s.acoes}>
+                <Icone
+                  src={pencilSimpleLine}
+                  rotulo={`Editar pergunta ${indice + 1}`}
+                  onClick={() => onEditarPergunta(pergunta)}
+                />
+                <Icone
+                  src={trash}
+                  rotulo={`Excluir pergunta ${indice + 1}`}
+                  onClick={() => onRemoverPergunta(pergunta)}
+                />
+              </div>
+            )}
           </div>
           <div className={s.linha}>
             <p className={s.enunciado}>{pergunta.enunciado}</p>
@@ -179,10 +188,12 @@ export default function ListaDePerguntas({
         </section>
       ))}
 
-      <button type="button" className={s.adicionar} onClick={onAdicionar}>
-        <span className={s.textoAdicionar}>Adicionar pergunta</span>
-        <img className={s.icone} src={plus} alt="" width={24} height={24} />
-      </button>
+      {somenteLeitura ? null : (
+        <button type="button" className={s.adicionar} onClick={onAdicionar}>
+          <span className={s.textoAdicionar}>Adicionar pergunta</span>
+          <img className={s.icone} src={plus} alt="" width={24} height={24} />
+        </button>
+      )}
     </>
   )
 }

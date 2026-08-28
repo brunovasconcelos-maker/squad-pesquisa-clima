@@ -331,3 +331,60 @@
   padding-bottom: 0;
   cursor: pointer;
 }
+
+.vazio {
+  margin: 0;
+  color: var(--cor-texto-secundario);
+  font-size: 16px;
+  font-weight: var(--peso-regular);
+  letter-spacing: -0.4px;
+}
+
+/* ---- folha das perguntas do ciclo ---- */
+
+/* Cobre a tela como os modais do fluxo, mas alta: a lista de perguntas é
+   longa e precisa rolar dentro dela. */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--espaco-40);
+  background: var(--cor-scrim);
+}
+
+.folha {
+  display: flex;
+  width: min(880px, 100%);
+  max-height: 100%;
+  flex-direction: column;
+  border-radius: var(--raio-cartao);
+  background: var(--cor-fundo);
+  overflow: hidden;
+}
+
+.cabecalhoFolha {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--espaco-20) var(--espaco-24);
+  border-bottom: 1px solid var(--cor-borda-acao);
+}
+
+.tituloFolha {
+  margin: 0;
+  font-size: 20px;
+  font-weight: var(--peso-medio);
+  letter-spacing: -0.4px;
+}
+
+.corpoFolha {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-16);
+  overflow-y: auto;
+  padding: var(--espaco-24);
+}

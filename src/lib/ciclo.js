@@ -1,49 +1,37 @@
 import { semente } from './geral.js'
-import { gerarValor } from './respostas.js'
-import { historicoDe } from './historico.js'
+import { historicoDe, taxaDoCiclo } from './historico.js'
 
 /*
  * O que a tela de um ciclo mostra.
  *
- * Tudo simulado: o motor não guarda respostas por ciclo, só as do ciclo em
- * curso. As respostas de exemplo saem do mesmo gerador da aba Respostas, com
- * o número do ciclo entrando na chave — assim cada ciclo tem as suas e elas
- * não mudam entre visitas.
+ * Tudo vem do que está guardado em `historico`: as perguntas como estavam
+ * naquele ciclo e as respostas dele. Nada é gerado aqui — quem cria é
+ * lib/historico.js, uma vez só, quando o ciclo fecha.
  *
- * O ciclo em si (datas, taxa) vem de lib/historico.js, que é o que a tabela
- * do Histórico já mostra: as duas telas não podem discordar sobre o mesmo
- * ciclo.
+ * É o mesmo registro que a tabela do Histórico lê, então as duas telas não
+ * podem discordar sobre o mesmo ciclo.
  */
 
-/* Convidados do ciclo — o Figma mostra "25|32", respondentes e convidados. */
-const CONVIDADOS = 32
-
 export function cicloDe(pesquisa, numero) {
-  const doHistorico = historicoDe(pesquisa).find(
+  const ciclo = historicoDe(pesquisa).find(
     (c) => String(c.numero) === String(numero),
   )
-  if (!doHistorico) return null
-
-  const responderam = Math.round((doHistorico.taxa / 100) * CONVIDADOS)
-  return { ...doHistorico, convidados: CONVIDADOS, responderam }
+  if (!ciclo) return null
+  return { ...ciclo, responderam: ciclo.respostas?.length ?? 0 }
 }
 
-/* As respostas daquele ciclo, uma por pessoa. */
-export function respostasDoCiclo(pesquisa, ciclo) {
-  return Array.from({ length: ciclo.responderam }, (_, i) => ({
-    id: `${pesquisa.id}_c${ciclo.numero}_r${i}`,
-    valores: Object.fromEntries(
-      (pesquisa.perguntas || []).map((q) => [
-        q.id,
-        gerarValor(
-          `${pesquisa.id}:c${ciclo.numero}:r${i}:${q.id}`,
-          q,
-          pesquisa.template,
-        ),
-      ]),
+/* Apaga as respostas de um ciclo sem tirar o ciclo do histórico. A taxa cai
+   junto porque é derivada delas — ver taxaDoCiclo. */
+export function limparRespostasDoCiclo(pesquisa, numero) {
+  return {
+    ...pesquisa,
+    historico: (pesquisa.historico || []).map((c) =>
+      String(c.numero) === String(numero) ? { ...c, respostas: [] } : c,
     ),
-  }))
+  }
 }
+
+export { taxaDoCiclo }
 
 /* ---- distribuição para o gráfico ---- */
 

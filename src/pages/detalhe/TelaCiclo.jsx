@@ -7,10 +7,14 @@ import {
   PorPergunta,
   Individual,
 } from '../../components/respostas/LeituraDeRespostas.jsx'
-import { ler } from '../../lib/pesquisas.js'
+import ListaDePerguntas from '../../components/perguntas/ListaDePerguntas.jsx'
+import ModalConfirmar from '../../components/fluxo/ModalConfirmar.jsx'
+import { ler, gravar } from '../../lib/pesquisas.js'
+import { sincronizarHistorico } from '../../lib/historico.js'
+import { paraCsv, nomeDeArquivo, baixar } from '../../lib/respostas.js'
 import {
   cicloDe,
-  respostasDoCiclo,
+  limparRespostasDoCiclo,
   distribuicaoDe,
   ehDeEscolha,
   trechosDe,
@@ -29,10 +33,9 @@ import eye from '../../assets/icons/Eye.svg'
 /*
  * Detalhe de um ciclo encerrado (Figma 8115:9814, 8115:9995 e 8115:10143).
  *
- * Visual apenas. As respostas são simuladas e presas ao id da pesquisa mais o
- * número do ciclo; o menu do topo, o baixar e o deletar do navegador e o
- * "Ver mais" estão no lugar e não fazem nada. As setas e o seletor da leitura
- * andam, porque vêm prontos do componente que a aba Respostas já usa.
+ * Tudo vem do ciclo guardado em `historico`: as perguntas como estavam
+ * naquele momento e as respostas dele. Editar a pesquisa hoje não mexe no que
+ * foi perguntado há três meses, e apagar as respostas de um ciclo dura.
  *
  * A seta de voltar é o CaretRight girado meia volta — o mesmo desenho que o
  * arquivo usa como CaretLeft, que o projeto não tem separado.
@@ -42,8 +45,10 @@ const SUBABAS = ['Geral', 'Por pergunta', 'Individual']
 /* Uma pergunta na leitura Geral: gráfico quando é de escolha, resumo do Pipo
    mais os trechos quando é aberta. */
 function CartaoDaPergunta({ pesquisa, ciclo, pergunta, respostas }) {
+  const [expandido, setExpandido] = useState(false)
   const deEscolha = ehDeEscolha(pergunta)
   const trechos = deEscolha ? [] : trechosDe(pergunta, respostas)
+  const visiveis = expandido ? trechos : trechos.slice(0, LIMITE_TRECHOS)
 
   return (
     <section className={s.cartao}>
@@ -63,15 +68,22 @@ function CartaoDaPergunta({ pesquisa, ciclo, pergunta, respostas }) {
           </div>
 
           <div className={s.trechos}>
-            {trechos.slice(0, LIMITE_TRECHOS).map((texto, i) => (
+            {visiveis.map((texto, i) => (
               // eslint-disable-next-line react/no-array-index-key
               <p key={i} className={s.trecho}>
                 {texto}
               </p>
             ))}
             {trechos.length > LIMITE_TRECHOS ? (
-              <button type="button" className={s.verMais}>
-                Ver mais
+              <button
+                type="button"
+                className={s.verMais}
+                aria-expanded={expandido}
+                onClick={() => setExpandido((aberto) => !aberto)}
+              >
+                {expandido
+                  ? 'Ver menos'
+                  : `Ver mais (${trechos.length - LIMITE_TRECHOS})`}
               </button>
             ) : null}
           </div>
@@ -87,9 +99,36 @@ export default function TelaCiclo() {
   const [pesquisas, setPesquisas] = useState(null)
   const [subaba, setSubaba] = useState(SUBABAS[0])
   const [menuAberto, setMenuAberto] = useState(false)
+  const [vendoPerguntas, setVendoPerguntas] = useState(false)
+  const [confirmacao, setConfirmacao] = useState(null)
   const envoltorioMenu = useRef(null)
 
-  useEffect(() => setPesquisas(ler()), [])
+  /* Sincroniza o histórico ao entrar, como o detalhe faz: quem chega direto
+     por link precisa do ciclo guardado tanto quanto quem veio da tabela. */
+  useEffect(() => {
+    const lista = ler()
+    const antes = lista.find((x) => x.id === id)
+    const depois = antes && sincronizarHistorico(antes)
+    if (depois && depois !== antes) {
+      const proxima = lista.map((x) => (x.id === id ? depois : x))
+      gravar(proxima)
+      setPesquisas(proxima)
+      return
+    }
+    setPesquisas(lista)
+  }, [id])
+
+  /* Grava junto com o setState, como a home e o detalhe. */
+  const alterar = (transformar) =>
+    setPesquisas((lista) => {
+      const proxima = lista.map((x) =>
+        x.id === id
+          ? { ...transformar(x), atualizadoEm: new Date().toISOString() }
+          : x,
+      )
+      gravar(proxima)
+      return proxima
+    })
 
   useEffect(() => {
     if (!menuAberto) return undefined
@@ -113,9 +152,32 @@ export default function TelaCiclo() {
 
   if (!pesquisa || !ciclo) return null
 
-  const perguntas = pesquisa.perguntas || []
-  const respostas = respostasDoCiclo(pesquisa, ciclo)
-  const voltar = () => navigate(`/pesquisas/${id}`)
+  /* As perguntas são as do ciclo, não as de hoje. */
+  const perguntas = ciclo.perguntas || []
+  const respostas = ciclo.respostas || []
+  /* Voltar cai na aba de onde a pessoa veio. A aba não está na URL de
+     propósito, então vai pelo state da navegação — num F5 o detalhe volta a
+     abrir no Geral, como sempre. */
+  const voltar = () =>
+    navigate(`/pesquisas/${id}`, { state: { aba: 'Histórico' } })
+
+  const baixarRespostas = () => {
+    setMenuAberto(false)
+    baixar(
+      nomeDeArquivo(pesquisa, `ciclo-${ciclo.numero}`),
+      paraCsv({ ...pesquisa, perguntas }, respostas),
+    )
+  }
+
+  const pedirExclusao = () => {
+    setMenuAberto(false)
+    setConfirmacao({
+      titulo: 'Deletar as respostas deste ciclo?',
+      texto: `As ${respostas.length} respostas do ciclo ${ciclo.numero} são apagadas e a taxa dele volta a zero. O ciclo continua no histórico. Não dá para desfazer.`,
+      rotulo: 'Deletar',
+      aoConfirmar: () => alterar((x) => limparRespostasDoCiclo(x, ciclo.numero)),
+    })
+  }
 
   return (
     <div className={s.tela}>
@@ -145,11 +207,25 @@ export default function TelaCiclo() {
               </button>
               {menuAberto ? (
                 <div className={s.suspenso} role="menu">
-                  <button type="button" className={s.itemSuspenso} role="menuitem">
+                  <button
+                    type="button"
+                    className={s.itemSuspenso}
+                    role="menuitem"
+                    disabled={!ciclo.respostas?.length}
+                    onClick={baixarRespostas}
+                  >
                     <img src={downloadSimple} alt="" width={24} height={24} />
                     Baixar Respostas
                   </button>
-                  <button type="button" className={s.itemSuspenso} role="menuitem">
+                  <button
+                    type="button"
+                    className={s.itemSuspenso}
+                    role="menuitem"
+                    onClick={() => {
+                      setMenuAberto(false)
+                      setVendoPerguntas(true)
+                    }}
+                  >
                     <img src={eye} alt="" width={24} height={24} />
                     Ver perguntas completas
                   </button>
@@ -157,6 +233,8 @@ export default function TelaCiclo() {
                     type="button"
                     className={`${s.itemSuspenso} ${s.destrutivo}`}
                     role="menuitem"
+                    disabled={!ciclo.respostas?.length}
+                    onClick={pedirExclusao}
                   >
                     <img src={trash} alt="" width={24} height={24} />
                     Deletar Respostas
@@ -203,7 +281,13 @@ export default function TelaCiclo() {
           </div>
         </section>
 
-        {subaba === 'Geral' ? (
+        {!respostas.length ? (
+          <section className={s.cartao}>
+            <p className={s.vazio}>
+              Este ciclo não tem respostas guardadas.
+            </p>
+          </section>
+        ) : subaba === 'Geral' ? (
           perguntas.map((pergunta) => (
             <CartaoDaPergunta
               key={pergunta.id}
@@ -219,6 +303,46 @@ export default function TelaCiclo() {
           <Individual perguntas={perguntas} respostas={respostas} />
         )}
       </div>
+
+      {/* As perguntas como foram feitas naquele ciclo. Sem editar nem excluir:
+          é histórico. */}
+      {vendoPerguntas ? (
+        <div className={s.scrim}>
+          <div className={s.folha} role="dialog" aria-label={`Perguntas do ciclo ${ciclo.numero}`}>
+            <header className={s.cabecalhoFolha}>
+              <p className={s.tituloFolha}>
+                Perguntas do ciclo {ciclo.numero}
+              </p>
+              <IconeBotao
+                src={close}
+                rotulo="Fechar"
+                onClick={() => setVendoPerguntas(false)}
+              />
+            </header>
+            <div className={s.corpoFolha}>
+              <ListaDePerguntas
+                nome={pesquisa.nome}
+                abertura={pesquisa.abertura}
+                perguntas={perguntas}
+                somenteLeitura
+              />
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {confirmacao ? (
+        <ModalConfirmar
+          titulo={confirmacao.titulo}
+          texto={confirmacao.texto}
+          rotuloConfirmar={confirmacao.rotulo}
+          onConfirmar={() => {
+            confirmacao.aoConfirmar()
+            setConfirmacao(null)
+          }}
+          onCancelar={() => setConfirmacao(null)}
+        />
+      ) : null}
     </div>
   )
 }

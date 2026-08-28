@@ -1,22 +1,27 @@
-import { entre, semente } from './geral.js'
+import { entre, semente, totalDeParticipantes } from './geral.js'
 import { formatarMedio, proximoCiclo, somarDias } from './datas.js'
 import { ehRecorrente } from './pesquisas.js'
+import { gerarValor } from './respostas.js'
 
 /*
  * Ciclos já encerrados de uma pesquisa.
  *
- * Simulado. O motor não guarda histórico — ele carrega um ciclo por vez e o
- * anterior só sobrevive em `anterior`, com a taxa e as datas. O que falta
- * (alterações nas perguntas, encerramento antes do prazo) só existirá quando
- * a aba Perguntas passar a registrar, que é um passo à parte.
+ * Simulado — o motor não guarda histórico, ele carrega um ciclo por vez —, mas
+ * guardado: cada ciclo entra em `historico` com as perguntas como estavam
+ * naquele momento e as respostas daquele ciclo. Sem isso, editar uma pergunta
+ * hoje reescreveria o que foi perguntado há três meses, e apagar as respostas
+ * de um ciclo não duraria até o próximo render.
+ *
+ * `sincronizar` só acrescenta o que falta e nunca mexe no que já está lá. É a
+ * mesma regra das respostas do ciclo em curso, pelo mesmo motivo.
  *
  * O que não é simulado é quantos ciclos existem e a numeração deles: sai de
  * `ciclos`, o mesmo número que o cartão do Geral mostra. O ciclo em curso
  * nunca entra — a lista é do que já fechou.
- *
- * Datas e taxas são presas ao id, como o resto do simulado do projeto, então
- * não dançam entre visitas.
  */
+
+/* Convidados de um ciclo. O Figma mostra "25|32". */
+export const CONVIDADOS = 32
 
 /* Quantos ciclos já fecharam: todos menos o que está rodando agora. */
 export function ciclosFechados(p) {
@@ -44,50 +49,100 @@ function iniciosAnteriores(p, quantos) {
   return datas
 }
 
-export function historicoDe(p) {
+/* Um ciclo novo: datas, taxa, o retrato das perguntas e as respostas dele. */
+function criarCiclo(p, numero, inicio) {
+  const chave = `${p.id}:ciclo${numero}`
+
+  /* Uma faixa por ciclo, espalhadas pela escala de cor em vez de todas na
+     mesma. O resto sai do hash. */
+  const faixas = [
+    [82, 100],
+    [70, 79],
+    [22, 45],
+    [88, 100],
+    [60, 78],
+  ]
+  const [min, max] = faixas[numero % faixas.length]
+  const taxa = entre(`${chave}:taxa`, min, max)
+
+  /* Encerrado antes do prazo: a pesquisa foi pausada no meio do ciclo.
+     Acontece em um a cada quatro, e aí o ciclo dura 2 dias em vez do prazo
+     inteiro. */
+  const cedo = semente(`${chave}:cedo`) % 4 === 0
+  const fim = somarDias(inicio, cedo ? 2 : 7)
+
+  /* O retrato das perguntas: cópia, não referência. Editar a pesquisa depois
+     não pode mudar o que foi perguntado neste ciclo. */
+  const perguntas = (p.perguntas || []).map((q) => ({ ...q }))
+
+  const responderam = Math.round((taxa / 100) * CONVIDADOS)
+  const respostas = Array.from({ length: responderam }, (_, i) => ({
+    id: `${p.id}_c${numero}_r${i}`,
+    valores: Object.fromEntries(
+      perguntas.map((q) => [
+        q.id,
+        gerarValor(`${chave}:r${i}:${q.id}`, q, p.template),
+      ]),
+    ),
+  }))
+
+  return {
+    id: `${p.id}_c${numero}`,
+    numero,
+    inicio: inicio.toISOString(),
+    fim: fim.toISOString(),
+    taxa,
+    cedo,
+    /* Alterações nas perguntas durante o ciclo. */
+    alteracoes: semente(`${chave}:alt`) % 3 === 0 ? 1 : 0,
+    convidados: CONVIDADOS,
+    perguntas,
+    respostas,
+  }
+}
+
+/*
+ * Acerta o histórico guardado com quantos ciclos já fecharam. Devolve a
+ * própria pesquisa quando não há nada a fazer, para quem chama saber que não
+ * precisa gravar.
+ */
+export function sincronizarHistorico(p) {
+  if (!p) return p
   const quantos = ciclosFechados(p)
-  if (!quantos) return []
+  const atuais = p.historico || []
+  if (quantos === atuais.length) return p
+  if (quantos < atuais.length) {
+    // Perdeu ciclos (uma cópia, por exemplo): fica com os mais antigos.
+    return { ...p, historico: atuais.slice(atuais.length - quantos) }
+  }
 
   const inicios = iniciosAnteriores(p, quantos)
-
-  return inicios.map((inicio, passo) => {
+  const novos = []
+  for (let passo = 0; passo < quantos; passo += 1) {
     const numero = quantos - passo
-    const chave = `${p.id}:ciclo${numero}`
+    const guardado = atuais.find((c) => c.numero === numero)
+    novos.push(guardado || criarCiclo(p, numero, inicios[passo]))
+  }
+  return { ...p, historico: novos }
+}
 
-    /* Uma faixa por ciclo, espalhadas pela escala de cor em vez de todas na
-       mesma. O resto sai do hash. */
-    const faixas = [
-      [82, 100],
-      [70, 79],
-      [22, 45],
-      [88, 100],
-      [60, 78],
-    ]
-    const [min, max] = faixas[numero % faixas.length]
-    const taxa = entre(`${chave}:taxa`, min, max)
+/* A lista para a tabela, do mais novo para o mais velho, já com as datas
+   escritas do jeito que a tela mostra. */
+export function historicoDe(p) {
+  return (p.historico || []).map((c) => ({
+    ...c,
+    envio: formatarMedio(c.inicio),
+    encerrado: formatarMedio(c.fim),
+    taxa: taxaDoCiclo(c),
+  }))
+}
 
-    /* Encerrado antes do prazo: a pesquisa foi pausada no meio do ciclo.
-       Acontece em um a cada quatro, e aí o ciclo dura 2 dias em vez do prazo
-       inteiro. */
-    const cedo = semente(`${chave}:cedo`) % 4 === 0
-    const duracao = cedo ? 2 : 7
-    const fim = somarDias(inicio, duracao)
-
-    /* Alterações nas perguntas durante o ciclo. */
-    const alteracoes = semente(`${chave}:alt`) % 3 === 0 ? 1 : 0
-
-    return {
-      id: `${p.id}_c${numero}`,
-      numero,
-      inicio: inicio.toISOString(),
-      fim: fim.toISOString(),
-      envio: formatarMedio(inicio.toISOString()),
-      encerrado: formatarMedio(fim.toISOString()),
-      taxa,
-      cedo,
-      alteracoes,
-    }
-  })
+/* A taxa que a tabela mostra vem das respostas guardadas, não do número que
+   sorteou o ciclo: apagar as respostas tem de derrubar a taxa junto, senão a
+   linha do Histórico diria 71% para um ciclo com zero respostas. */
+export function taxaDoCiclo(ciclo) {
+  const convidados = ciclo.convidados || CONVIDADOS
+  return Math.round(((ciclo.respostas?.length ?? 0) / convidados) * 100)
 }
 
 /* ---- ordenação ---- */
