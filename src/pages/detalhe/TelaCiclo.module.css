@@ -1,0 +1,39 @@
+.tela {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  background: var(--cor-fundo);
+}
+
+/* Mesmo cabeçalho do detalhe, sem as abas: 20 em cima, nada embaixo, e a
+   divisória fechando. */
+.cabecalho {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--espaco-20) var(--espaco-40);
+  border-bottom: 1px solid var(--cor-borda-acao);
+  background: var(--cor-fundo);
+}
+
+.titulo {
+  min-width: 0;
+  margin: 0;
+  font-size: 20px;
+  font-weight: var(--peso-medio);
+  letter-spacing: -0.26px;
+  line-height: var(--altura-linha);
+  overflow-wrap: break-word;
+}
+
+.acoes {
+  display: flex;
+  flex: none;
+  justify-content: flex-end;
+}
+
+/* Vazio de propósito: a tela do ciclo é o passo seguinte. */
+.miolo {
+  flex: 1;
+}

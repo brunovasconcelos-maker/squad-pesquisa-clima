@@ -6,6 +6,7 @@ import { sincronizar } from '../../lib/respostas.js'
 import AbaGeral from './AbaGeral.jsx'
 import AbaPerguntas from './AbaPerguntas.jsx'
 import AbaRespostas from './AbaRespostas.jsx'
+import AbaHistorico from './AbaHistorico.jsx'
 import s from './TelaDetalhe.module.css'
 
 import close from '../../assets/icons/Close.svg'
@@ -122,6 +123,7 @@ export default function TelaDetalhe() {
         {ativa === 'Respostas' ? (
           <AbaRespostas pesquisa={pesquisa} onAlterar={alterar} />
         ) : null}
+        {ativa === 'Histórico' ? <AbaHistorico pesquisa={pesquisa} /> : null}
       </div>
     </div>
   )
