@@ -41,21 +41,6 @@
   letter-spacing: -0.4px;
 }
 
-.rotuloCartao {
-  margin: 0;
-  font-size: 16px;
-  font-weight: var(--peso-medio);
-  letter-spacing: -0.4px;
-  white-space: nowrap;
-}
-
-.enunciado {
-  margin: 0;
-  font-size: 16px;
-  font-weight: var(--peso-medio);
-  letter-spacing: -0.4px;
-}
-
 /* ---- menu de três pontos ---- */
 
 .envoltorioMenu {
@@ -64,10 +49,10 @@
 }
 
 /* O Figma desenha o ícone solto, sem botão em volta. */
-.maisOpcoes,
-.acaoIcone,
-.seta {
+.maisOpcoes {
   display: flex;
+  width: 24px;
+  height: 24px;
   flex: none;
   align-items: center;
   justify-content: center;
@@ -75,17 +60,6 @@
   border: none;
   background: none;
   cursor: pointer;
-}
-
-.maisOpcoes,
-.acaoIcone {
-  width: 24px;
-  height: 24px;
-}
-
-.seta {
-  width: 20px;
-  height: 20px;
 }
 
 /* Mesmo suspenso da linha da lista: 168 de largura mínima, sombra e borda. */
@@ -124,6 +98,11 @@
   color: var(--cor-vermelho);
 }
 
+.itemSuspenso:disabled {
+  cursor: default;
+  opacity: 0.3;
+}
+
 /* ---- sub-abas ---- */
 
 .subabas {
@@ -159,123 +138,10 @@
   border-bottom-color: var(--cor-aba-ativa);
 }
 
-/* ---- navegador de pergunta / de pessoa ---- */
-
-/* O card do navegador individual só tem a linha de cima. */
-.cartaoNavegador {
-  gap: 0;
-}
-
-.topoNavegador {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.setas {
-  display: flex;
-  align-items: center;
-  gap: var(--espaco-24);
-}
-
-.icone20 {
-  display: block;
-  width: 20px;
-  height: 20px;
-}
-
-/* O Chevron do Figma aponta para baixo; as setas do navegador são ele
-   girado, como o arquivo faz. */
-.paraEsquerda {
-  transform: rotate(90deg);
-}
-
-.paraDireita {
-  transform: rotate(-90deg);
-}
-
-/* Large-Input: a mesma caixa dos campos do fluxo, agora como seletor. */
-.seletor {
-  display: flex;
-  width: 100%;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 10px;
-  padding: var(--espaco-16);
-  border: 1px solid var(--cor-borda-acao);
-  border-radius: var(--raio-caixa);
-  background: none;
-  cursor: pointer;
-  font-family: inherit;
-  text-align: left;
-}
-
-.textoSeletor {
-  flex: 1 0 0;
-  min-width: 0;
-  color: var(--cor-texto);
-  font-size: 16px;
-  font-weight: var(--peso-medio);
-  letter-spacing: -0.4px;
-}
-
-/* Nas pontas da lista a seta desliga: continua no lugar, sem convidar ao
-   clique. */
-.seta:disabled,
-.itemSuspenso:disabled {
-  cursor: default;
-  opacity: 0.3;
-}
-
 .vazio {
   margin: 0;
   color: var(--cor-texto-secundario);
   font-size: 16px;
   font-weight: var(--peso-regular);
   letter-spacing: -0.4px;
-}
-
-/* ---- lista de perguntas do seletor ---- */
-
-.envoltorioLista {
-  position: relative;
-  width: 100%;
-}
-
-/* Rola quando a pesquisa tem muitas perguntas — são até 20. */
-.listaPerguntas {
-  position: absolute;
-  top: calc(100% + var(--espaco-8));
-  right: 0;
-  left: 0;
-  z-index: 5;
-  display: flex;
-  max-height: 320px;
-  flex-direction: column;
-  overflow-y: auto;
-  padding: var(--espaco-8);
-  border: 1px solid var(--cor-borda-acao);
-  border-radius: var(--raio-caixa);
-  background: var(--cor-fundo);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-}
-
-.itemLista {
-  padding: var(--espaco-12);
-  border: none;
-  border-radius: var(--raio-campo);
-  background: none;
-  color: var(--cor-texto);
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: var(--peso-medio);
-  letter-spacing: -0.08px;
-  line-height: 1.4;
-  text-align: left;
-}
-
-.itemAtual {
-  background: var(--cor-superficie);
 }

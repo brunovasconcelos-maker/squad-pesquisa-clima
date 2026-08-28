@@ -106,7 +106,9 @@ function pesosDeEscala(quantidade) {
 const pesosDeOpcoes = (quantidade) =>
   Array.from({ length: quantidade }, (_, i) => Math.max(1, quantidade - i + 2))
 
-function responder(chave, pergunta, template) {
+/* Um valor de resposta a partir de uma chave. Exportado porque a tela do
+   ciclo gera os dela com a mesma regra, só trocando a chave. */
+export function gerarValor(chave, pergunta, template) {
   switch (pergunta.tipo) {
     case 'nota': {
       const passos = (pergunta.maximo ?? 5) + 1
@@ -148,7 +150,7 @@ function criarResposta(p, ordem) {
     valores: Object.fromEntries(
       (p.perguntas || []).map((q) => [
         q.id,
-        responder(`${chaveBase}:${q.id}`, q, p.template),
+        gerarValor(`${chaveBase}:${q.id}`, q, p.template),
       ]),
     ),
   }
