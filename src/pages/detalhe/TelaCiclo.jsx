@@ -24,6 +24,7 @@ import caretRight from '../../assets/icons/CaretRight.svg'
 import more from '../../assets/icons/More.svg'
 import downloadSimple from '../../assets/icons/DownloadSimple.svg'
 import trash from '../../assets/icons/Trash.svg'
+import eye from '../../assets/icons/Eye.svg'
 
 /*
  * Detalhe de um ciclo encerrado (Figma 8115:9814, 8115:9995 e 8115:10143).
@@ -32,9 +33,6 @@ import trash from '../../assets/icons/Trash.svg'
  * número do ciclo; o menu do topo, o baixar e o deletar do navegador e o
  * "Ver mais" estão no lugar e não fazem nada. As setas e o seletor da leitura
  * andam, porque vêm prontos do componente que a aba Respostas já usa.
- *
- * Falta o ícone de olho do "Ver perguntas completas": não há equivalente em
- * src/assets/icons, e o lugar dele fica reservado.
  *
  * A seta de voltar é o CaretRight girado meia volta — o mesmo desenho que o
  * arquivo usa como CaretLeft, que o projeto não tem separado.
@@ -152,8 +150,7 @@ export default function TelaCiclo() {
                     Baixar Respostas
                   </button>
                   <button type="button" className={s.itemSuspenso} role="menuitem">
-                    {/* Reservado para o Eye, que ainda não está no projeto. */}
-                    <span className={s.espacoIcone} />
+                    <img src={eye} alt="" width={24} height={24} />
                     Ver perguntas completas
                   </button>
                   <button
