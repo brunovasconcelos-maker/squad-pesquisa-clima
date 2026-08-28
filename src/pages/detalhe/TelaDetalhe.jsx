@@ -135,7 +135,9 @@ export default function TelaDetalhe() {
           <AbaRespostas pesquisa={pesquisa} onAlterar={alterar} />
         ) : null}
         {ativa === 'Histórico' ? <AbaHistorico pesquisa={pesquisa} /> : null}
-        {ativa === 'Configurações' ? <AbaConfiguracoes /> : null}
+        {ativa === 'Configurações' ? (
+          <AbaConfiguracoes pesquisa={pesquisa} onAlterar={alterar} />
+        ) : null}
       </div>
     </div>
   )

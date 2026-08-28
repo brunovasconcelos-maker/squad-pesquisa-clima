@@ -2,6 +2,7 @@ import {
   formatarMedio,
   formatarPeriodo,
   diasAte,
+  paraData,
   proximoCiclo,
 } from './datas.js'
 import { ehRecorrente } from './pesquisas.js'
@@ -93,6 +94,27 @@ export function camposDe(p) {
   })()
 
   return [...par, tipo, ciclos]
+}
+
+/*
+ * A data do próximo envio, que a lista de Datas das Configurações mostra.
+ *
+ * Depende do status, como os campos do cartão: agendada ainda não saiu, então
+ * vale a data marcada; com ciclo em curso ou entre ciclos, vale o próximo
+ * salto de frequência — e uma Única não tem próximo. Fora disso não há ciclo
+ * nenhum, e o que resta é a data configurada, que é o que o modal edita.
+ */
+export function proximoEnvioDe(p) {
+  if (p.status === 'agendada') return p.cicloInicio
+  if (p.status === 'rodando' || p.status === 'aguardando') {
+    if (!ehRecorrente(p) || !p.cicloInicio) return null
+    return proximoCiclo(
+      new Date(p.cicloInicio),
+      p.configuracao?.frequencia,
+    ).toISOString()
+  }
+  const marcada = paraData(p.configuracao?.envio?.data, p.configuracao?.envio?.hora)
+  return marcada ? marcada.toISOString() : null
 }
 
 /* ---- cartões de taxa de resposta ---- */

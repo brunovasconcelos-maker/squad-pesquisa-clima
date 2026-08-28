@@ -28,3 +28,10 @@
   border-radius: 100px;
   background: var(--cor-fundo);
 }
+
+/* Sem spec no Figma. Desligado e apagado: "Aceitando respostas" não quer
+   dizer nada enquanto o formulário não está publicado. */
+.desabilitado {
+  opacity: 0.4;
+  cursor: default;
+}

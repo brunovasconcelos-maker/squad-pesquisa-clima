@@ -132,6 +132,53 @@ export function pausar(p, agora = new Date()) {
   return { ...p, status: 'naoAtiva', atualizadoEm: agora.toISOString() }
 }
 
+/* No ar (o interruptor "Publicar formulário") e recebendo respostas (o
+   "Aceitando respostas"). São dois estados derivados do mesmo status: o
+   formulário publicado é o que tem ciclo, com ou sem ele correndo agora. */
+const PUBLICADAS = ['agendada', 'rodando', 'aguardando']
+
+export const estaPublicada = (p) => PUBLICADAS.includes(p.status)
+
+export const aceitandoRespostas = (p) => p.status === 'rodando'
+
+/*
+ * Republica uma pesquisa que estava fora do ar. Volta a existir, mas sem
+ * receber respostas: quem quiser isso liga o outro interruptor.
+ *
+ * O relógio do ciclo é reancorado em `agora`. Com a âncora velha, o motor
+ * veria o próximo ciclo já vencido e começaria a receber respostas sozinho —
+ * exatamente o que republicar não deve fazer.
+ */
+export function publicar(p, agora = new Date()) {
+  return {
+    ...p,
+    status: 'aguardando',
+    cicloInicio: agora.toISOString(),
+    cicloFim: null,
+    atualizadoEm: agora.toISOString(),
+  }
+}
+
+/*
+ * Fecha o ciclo em curso sem tirar a pesquisa do ar — a mesma virada que o
+ * motor faz quando o prazo vence, só que agora. O fim vai para `cicloFim`
+ * porque é ele que diz quando o ciclo acabou de verdade, e não o prazo que
+ * não chegou a vencer.
+ */
+export function encerrarCiclo(p, agora = new Date()) {
+  return {
+    ...p,
+    status: 'aguardando',
+    cicloFim: agora.toISOString(),
+    atualizadoEm: agora.toISOString(),
+  }
+}
+
+/* O link que a pessoa recebe para responder. Ainda é a própria rota do
+   detalhe: não existe tela de resposta. */
+export const linkDaPesquisa = (p) =>
+  `${window.location.origin}${import.meta.env.BASE_URL}pesquisas/${p.id}`
+
 const sobeTaxa = (taxa) =>
   Math.min(
     100,
@@ -171,7 +218,11 @@ export function avaliar(p, agora = new Date()) {
     }
 
     if (atual.status === 'aguardando') {
-      if (!inicio) return atual
+      /* Só recorrente volta a rodar sozinha. O motor nunca põe uma Única em
+         "aguardando" — ela vai de rodando para encerrada —, mas o
+         interruptor "Aceitando respostas" põe, e aí ela não pode reabrir um
+         ciclo sozinha um mês depois. */
+      if (!inicio || !ehRecorrente(atual)) return atual
       const proximo = proximoCiclo(inicio, atual.configuracao?.frequencia)
       if (agora < proximo) return atual
       atual = iniciarCiclo(atual, proximo)

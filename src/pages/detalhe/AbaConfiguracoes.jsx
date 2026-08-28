@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import s from './AbaConfiguracoes.module.css'
+import Aviso from '../../components/Aviso.jsx'
 import Botao from '../../components/fluxo/Botao.jsx'
+import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
 import Interruptor from '../../components/fluxo/Interruptor.jsx'
 import LinhaResumo from '../../components/fluxo/LinhaResumo.jsx'
-import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
+import ModalConfirmar from '../../components/fluxo/ModalConfirmar.jsx'
 import ModalFluxo from '../../components/fluxo/ModalFluxo.jsx'
 import ModalParticipantes from '../nova-pesquisa/ModalParticipantes.jsx'
 import {
@@ -13,22 +15,38 @@ import {
   ModalPrazo,
 } from '../nova-pesquisa/ModaisConfiguracao.jsx'
 import { rotuloParticipantes } from '../nova-pesquisa/estado.jsx'
-import { formatarComDia, paraData } from '../../lib/datas.js'
+import { formatarComDia } from '../../lib/datas.js'
+import { proximoEnvioDe } from '../../lib/geral.js'
+import {
+  aceitandoRespostas,
+  encerrarCiclo,
+  estaPublicada,
+  forcarInicio,
+  linkDaPesquisa,
+  pausar,
+  publicar,
+} from '../../lib/pesquisas.js'
+import { sincronizar } from '../../lib/respostas.js'
+import { sincronizarHistorico } from '../../lib/historico.js'
 
 import caretRight from '../../assets/icons/CaretRight.svg'
 import link from '../../assets/icons/Link.svg'
 
 /*
- * Aba "Configurações" do detalhe (Figma 8072:6532) — só o visual.
+ * Aba "Configurações" do detalhe (Figma 8072:6532), ligada à pesquisa
+ * guardada.
  *
- * Os valores são o exemplo do Figma, guardados em estado local: nada aqui
- * lê nem grava a pesquisa ainda. Os interruptores também são estáticos de
- * propósito — ligar/desligar mexe no status da pesquisa e vem depois.
+ * Os dois primeiros interruptores não guardam booleanos: eles leem e escrevem
+ * o `status`. Publicado é ter ciclo — agendada, rodando ou aguardando —, e
+ * aceitar respostas é estar rodando. Guardar isso à parte criaria uma segunda
+ * verdade que poderia discordar do selo da home.
  *
- * O que já funciona é abrir os modais, e eles são os mesmos do fluxo de
- * criação: "Participantes", "Data e Hora de Envio", "Frequência", "Prazo
- * pra respostas" e "Enviar lembrete". Salvar num deles atualiza só a linha
- * na tela, para o modal não parecer quebrado; a gravação é do próximo passo.
+ * Por isso os dois pedem confirmação: cada um vira o status da pesquisa. O
+ * texto do "Aceitando respostas" ligando é o mesmo do Play da home, porque a
+ * ação é a mesma — força o início de um ciclo agora.
+ *
+ * O resto são campos da configuração, editados pelos mesmos modais do fluxo
+ * de criação e gravados no mesmo lugar que ele grava.
  *
  * O Figma escreve "Apresentaçao" sem o til — aqui vai "Apresentação".
  */
@@ -44,19 +62,15 @@ const REPETICAO = {
   Anual: 'Todo ano',
 }
 
-/* O mesmo gradiente da faixa da Revisão (Figma 8065:4916). O seletor de cor
-   devolve um hex sólido, então a capa é uma string de background: cabe o
-   gradiente de fábrica e a cor escolhida. */
+/* Enquanto ninguém escolheu uma cor, a capa é o gradiente da Revisão
+   (Figma 8065:4916). O seletor devolve um hex sólido, e é ele que fica
+   guardado em `capa` a partir daí. */
 const CAPA_PADRAO = 'linear-gradient(96.57deg, #d2cffb 10.98%, #5c52ed 90.35%)'
 const COR_PADRAO = '#5c52ed'
 
-const EXEMPLO = {
-  participantes: { todaEmpresa: true, grupos: [] },
-  envio: { imediato: false, data: '14 Agosto 2026', hora: '09:00' },
-  frequencia: 'Mensal',
-  prazo: { tipo: 'periodo', periodo: '1 semana', data: '', hora: '' },
-  lembrete: 'Diário',
-  capa: { fundo: CAPA_PADRAO, cor: COR_PADRAO },
+function textoDePrazo(prazo) {
+  if (!prazo) return '—'
+  return prazo.tipo === 'data' ? `${prazo.data}, as ${prazo.hora}` : prazo.periodo
 }
 
 /* Um cartão da coluna: título, as linhas e o que vier de rodapé (a pílula
@@ -72,13 +86,18 @@ function Cartao({ titulo, rodape, children }) {
   )
 }
 
-/* Interruptor estático: a linha inteira existe, só a troca de estado é que
-   não. Sem `onAlternar` ele não muda nada ao ser clicado. */
-function LinhaInterruptor({ rotulo, ligado }) {
+function LinhaInterruptor({ rotulo, ligado, desabilitado = false, onAlternar }) {
   return (
     <LinhaResumo
       rotulo={rotulo}
-      controle={<Interruptor ligado={ligado} rotulo={rotulo} />}
+      controle={
+        <Interruptor
+          ligado={ligado}
+          desabilitado={desabilitado}
+          rotulo={rotulo}
+          onAlternar={onAlternar}
+        />
+      }
     />
   )
 }
@@ -87,13 +106,13 @@ function LinhaInterruptor({ rotulo, ligado }) {
    dos outros modais e o miolo é o input de cor do navegador, com a amostra
    grande ao lado para ver a escolha antes de salvar. */
 function ModalCapa({ valor, onSalvar, onFechar }) {
-  const [cor, setCor] = useState(valor.cor)
+  const [cor, setCor] = useState(valor)
   return (
     <ModalFluxo
       titulo="Capa"
       onVoltar={onFechar}
       onFechar={onFechar}
-      onSalvar={() => onSalvar({ fundo: cor, cor })}
+      onSalvar={() => onSalvar(cor)}
     >
       <div className={s.blocoCapa}>
         <span className={s.amostraGrande} style={{ background: cor }} />
@@ -109,43 +128,137 @@ function ModalCapa({ valor, onSalvar, onFechar }) {
   )
 }
 
-export default function AbaConfiguracoes() {
-  const [valores, setValores] = useState(EXEMPLO)
+export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
   const [modal, setModal] = useState(null)
+  const [confirmacao, setConfirmacao] = useState(null)
+  const [aviso, setAviso] = useState('')
+  const limparAviso = useCallback(() => setAviso(''), [])
+
+  const c = pesquisa.configuracao || {}
+  const avancadas = c.avancadas || {}
+  const publicada = estaPublicada(pesquisa)
+  const aceitando = aceitandoRespostas(pesquisa)
 
   const fechar = () => setModal(null)
-  /* Todo modal termina igual: guarda o campo no exemplo e fecha. */
-  const salvar = (campo) => (valor) => {
-    setValores((v) => ({ ...v, [campo]: valor }))
+
+  /* Grava um campo da configuração e fecha o modal — o mesmo par que a tela
+     de Configuração do fluxo usa. */
+  const salvarConfig = (campos) => {
+    onAlterar((p) => ({ ...p, configuracao: { ...p.configuracao, ...campos } }))
     fechar()
   }
 
-  const envio = valores.envio
-  const textoDoEnvio = envio.imediato
-    ? 'Imediatamente'
-    : formatarComDia(paraData(envio.data, envio.hora)?.toISOString())
+  const salvarAvancada = (campos) =>
+    onAlterar((p) => ({
+      ...p,
+      configuracao: {
+        ...p.configuracao,
+        avancadas: { ...p.configuracao?.avancadas, ...campos },
+      },
+    }))
 
-  const prazo = valores.prazo
-  const textoDoPrazo =
-    prazo.tipo === 'data' ? `${prazo.data}, as ${prazo.hora}` : prazo.periodo
+  /* Depois de uma virada de status, as respostas e o histórico acertam o
+     passo na mesma gravação. Se esperassem o próximo giro do motor, a aba
+     Respostas passaria até 30s mostrando o ciclo que acabou de fechar. */
+  const comMotor = (transformar) => (p) =>
+    sincronizarHistorico(sincronizar(transformar(p)))
+
+  const aoPublicar = () => {
+    if (publicada) {
+      setConfirmacao({
+        titulo: 'Tirar do ar?',
+        texto: `"${pesquisa.nome}" sai do ar e passa a "Não ativa". O link de resposta deixa de funcionar — quem abrir vê uma página de erro — e ela também para de aceitar respostas.`,
+        rotulo: 'Tirar do ar',
+        aoConfirmar: () => onAlterar(comMotor((p) => pausar(p))),
+      })
+      return
+    }
+    setConfirmacao({
+      titulo: 'Publicar de novo?',
+      texto: `"${pesquisa.nome}" volta ao ar como "Ativa | Aguardando": o link funciona outra vez, mas ela ainda não recebe respostas. Para voltar a receber, ligue também "Aceitando respostas".`,
+      rotulo: 'Publicar',
+      aoConfirmar: () => onAlterar(comMotor((p) => publicar(p))),
+    })
+  }
+
+  const aoAceitar = () => {
+    if (aceitando) {
+      setConfirmacao({
+        titulo: 'Encerrar o ciclo?',
+        texto: `O ciclo em curso de "${pesquisa.nome}" fecha agora e ela passa a "Ativa | Aguardando". A pesquisa continua no ar, mas para de receber respostas até o próximo ciclo.`,
+        rotulo: 'Encerrar ciclo',
+        aoConfirmar: () => onAlterar(comMotor((p) => encerrarCiclo(p))),
+      })
+      return
+    }
+    // Mesmo texto do Play da home: a ação é a mesma.
+    setConfirmacao({
+      titulo: 'Iniciar agora?',
+      texto: `"${pesquisa.nome}" começa imediatamente e passa a receber respostas, ignorando a data de envio agendada. Um novo ciclo é iniciado a partir de agora.`,
+      rotulo: 'Iniciar',
+      aoConfirmar: () => onAlterar(comMotor((p) => forcarInicio(p))),
+    })
+  }
+
+  const aoCopiarLink = async () => {
+    try {
+      await navigator.clipboard.writeText(linkDaPesquisa(pesquisa))
+      setAviso('Link copiado')
+    } catch {
+      // Sem permissão de área de transferência (contexto inseguro, por ex.).
+      setAviso('Não foi possível copiar o link')
+    }
+  }
+
+  /* "Imediatamente" só faz sentido enquanto não há ciclo: com um em curso, o
+     que importa é quando sai o próximo. */
+  const textoDoEnvio =
+    !publicada && c.envio?.imediato
+      ? 'Imediatamente'
+      : formatarComDia(proximoEnvioDe(pesquisa))
+
+  const capa = pesquisa.capa || CAPA_PADRAO
 
   return (
     <div className={s.coluna}>
       <Cartao
         titulo="Opções publicadas"
         rodape={
-          <Botao variante="contorno">
+          <Botao variante="contorno" onClick={aoCopiarLink}>
             Copiar link da pesquisa
             <img className={s.iconeDoLink} src={link} alt="" width={24} height={24} />
           </Botao>
         }
       >
-        <LinhaInterruptor rotulo="Publicar formulário" ligado />
-        <LinhaInterruptor rotulo="Aceitando respostas" ligado />
-        <LinhaInterruptor rotulo="Respostas anônimas" ligado />
+        <LinhaInterruptor
+          rotulo="Publicar formulário"
+          ligado={publicada}
+          onAlternar={aoPublicar}
+        />
+        {/* Fora do ar, aceitar respostas não quer dizer nada: o interruptor
+            fica desligado e apagado até o formulário voltar. */}
+        <LinhaInterruptor
+          rotulo="Aceitando respostas"
+          ligado={aceitando}
+          desabilitado={!publicada}
+          onAlternar={aoAceitar}
+        />
+        <LinhaInterruptor
+          rotulo="Respostas anônimas"
+          ligado={Boolean(c.respostasAnonimas)}
+          onAlternar={() =>
+            onAlterar((p) => ({
+              ...p,
+              configuracao: {
+                ...p.configuracao,
+                respostasAnonimas: !p.configuracao?.respostasAnonimas,
+              },
+            }))
+          }
+        />
         <LinhaResumo
           rotulo="Participantes"
-          valor={rotuloParticipantes(valores.participantes)}
+          valor={rotuloParticipantes(pesquisa.participantes || {})}
           onAbrir={() => setModal('participantes')}
         />
       </Cartao>
@@ -158,17 +271,21 @@ export default function AbaConfiguracoes() {
         />
         <LinhaResumo
           rotulo="Repetir"
-          valor={REPETICAO[valores.frequencia] ?? valores.frequencia}
+          valor={
+            c.recorrencia === 'Recorrente'
+              ? (REPETICAO[c.frequencia] ?? c.frequencia)
+              : 'Não repete'
+          }
           onAbrir={() => setModal('frequencia')}
         />
         <LinhaResumo
           rotulo="Aceitar resposta"
-          valor={textoDoPrazo}
+          valor={textoDePrazo(c.prazo)}
           onAbrir={() => setModal('prazo')}
         />
         <LinhaResumo
           rotulo="Enviar lembrete"
-          valor={valores.lembrete}
+          valor={avancadas.lembrete || '—'}
           onAbrir={() => setModal('lembrete')}
         />
       </Cartao>
@@ -180,10 +297,7 @@ export default function AbaConfiguracoes() {
           rotulo="Capa"
           controle={
             <div className={s.controleDaCapa}>
-              <span
-                className={s.amostra}
-                style={{ background: valores.capa.fundo }}
-              />
+              <span className={s.amostra} style={{ background: capa }} />
               <IconeBotao
                 src={caretRight}
                 rotulo="Abrir Capa"
@@ -192,56 +306,101 @@ export default function AbaConfiguracoes() {
             </div>
           }
         />
-        <LinhaInterruptor rotulo="Mostrar barra de progresso" ligado />
-        <LinhaInterruptor rotulo="Embaralhar perguntas" ligado={false} />
-        <LinhaInterruptor rotulo="Tornar as perguntas obrigatórias por padrão" ligado />
+        <LinhaInterruptor
+          rotulo="Mostrar barra de progresso"
+          ligado={Boolean(avancadas.barraProgresso)}
+          onAlternar={() =>
+            salvarAvancada({ barraProgresso: !avancadas.barraProgresso })
+          }
+        />
+        <LinhaInterruptor
+          rotulo="Embaralhar perguntas"
+          ligado={Boolean(avancadas.embaralhar)}
+          onAlternar={() => salvarAvancada({ embaralhar: !avancadas.embaralhar })}
+        />
+        <LinhaInterruptor
+          rotulo="Tornar as perguntas obrigatórias por padrão"
+          ligado={Boolean(avancadas.obrigatorias)}
+          onAlternar={() =>
+            salvarAvancada({ obrigatorias: !avancadas.obrigatorias })
+          }
+        />
       </Cartao>
 
       {modal === 'participantes' ? (
         <ModalParticipantes
-          selecao={valores.participantes}
-          onSalvar={salvar('participantes')}
+          selecao={pesquisa.participantes}
+          onSalvar={(participantes) => {
+            onAlterar((p) => ({ ...p, participantes }))
+            fechar()
+          }}
           onFechar={fechar}
         />
       ) : null}
 
       {modal === 'envio' ? (
         <ModalDataEnvio
-          valor={valores.envio}
-          onSalvar={salvar('envio')}
+          valor={c.envio}
+          onSalvar={(envio) => salvarConfig({ envio })}
           onFechar={fechar}
         />
       ) : null}
 
       {modal === 'frequencia' ? (
         <ModalFrequencia
-          valor={valores.frequencia}
-          onSalvar={salvar('frequencia')}
+          valor={c.frequencia}
+          /* Escolher de quanto em quanto tempo repete é dizer que repete:
+             uma Única vira recorrente aqui, senão a linha voltaria a mostrar
+             "Não repete" logo depois de escolher "Todo mês". */
+          onSalvar={(frequencia) =>
+            salvarConfig({ frequencia, recorrencia: 'Recorrente' })
+          }
           onFechar={fechar}
         />
       ) : null}
 
       {modal === 'prazo' ? (
         <ModalPrazo
-          valor={valores.prazo}
-          onSalvar={salvar('prazo')}
+          valor={c.prazo}
+          onSalvar={(prazo) => salvarConfig({ prazo })}
           onFechar={fechar}
         />
       ) : null}
 
       {modal === 'lembrete' ? (
         <ModalLembrete
-          valor={valores.lembrete}
-          onSalvar={salvar('lembrete')}
+          valor={avancadas.lembrete}
+          onSalvar={(lembrete) => {
+            salvarAvancada({ lembrete })
+            fechar()
+          }}
           onFechar={fechar}
         />
       ) : null}
 
       {modal === 'capa' ? (
         <ModalCapa
-          valor={valores.capa}
-          onSalvar={salvar('capa')}
+          valor={pesquisa.capa || COR_PADRAO}
+          onSalvar={(cor) => {
+            onAlterar((p) => ({ ...p, capa: cor }))
+            fechar()
+          }}
           onFechar={fechar}
+        />
+      ) : null}
+
+      <Aviso texto={aviso} onSumir={limparAviso} />
+
+      {confirmacao ? (
+        <ModalConfirmar
+          titulo={confirmacao.titulo}
+          texto={confirmacao.texto}
+          rotuloConfirmar={confirmacao.rotulo}
+          onConfirmar={() => {
+            confirmacao.aoConfirmar()
+            setConfirmacao(null)
+          }}
+          onCancelar={() => setConfirmacao(null)}
         />
       ) : null}
     </div>

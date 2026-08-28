@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar.jsx'
 import CartaoPesquisa from '../components/lista/CartaoPesquisa.jsx'
 import ModalConfirmar from '../components/fluxo/ModalConfirmar.jsx'
+import Aviso from '../components/Aviso.jsx'
 import { rotuloParticipantes } from './nova-pesquisa/estado.jsx'
 import {
   ler,
@@ -13,6 +14,7 @@ import {
   pausar,
   paraLinha,
   botaoDe,
+  linkDaPesquisa,
   INTERVALO_MS,
 } from '../lib/pesquisas.js'
 import s from './Home.module.css'
@@ -52,6 +54,7 @@ export default function Home() {
   const [pesquisas, setPesquisas] = useState([])
   const [confirmacao, setConfirmacao] = useState(null)
   const [aviso, setAviso] = useState('')
+  const limparAviso = useCallback(() => setAviso(''), [])
 
   /* Grava junto com o setState: a lista em memória e a guardada não podem
      divergir, senão um F5 desfaz a última ação. */
@@ -70,12 +73,6 @@ export default function Home() {
     const id = setInterval(rodar, INTERVALO_MS)
     return () => clearInterval(id)
   }, [])
-
-  useEffect(() => {
-    if (!aviso) return undefined
-    const id = setTimeout(() => setAviso(''), 2500)
-    return () => clearTimeout(id)
-  }, [aviso])
 
   const trocar = (id, transformar) =>
     aplicar(pesquisas.map((p) => (p.id === id ? transformar(p) : p)))
@@ -103,9 +100,8 @@ export default function Home() {
     })
 
   const aoCopiarLink = async (p) => {
-    const link = `${window.location.origin}${import.meta.env.BASE_URL}pesquisas/${p.id}`
     try {
-      await navigator.clipboard.writeText(link)
+      await navigator.clipboard.writeText(linkDaPesquisa(p))
       setAviso('Link copiado')
     } catch {
       // Sem permissão de área de transferência (contexto inseguro, por ex.).
@@ -164,7 +160,7 @@ export default function Home() {
         </div>
       </div>
 
-      {aviso ? <div className={s.aviso} role="status">{aviso}</div> : null}
+      <Aviso texto={aviso} onSumir={limparAviso} />
 
       {confirmacao ? (
         <ModalConfirmar
