@@ -175,10 +175,10 @@ export function encerrarCiclo(p, agora = new Date()) {
   }
 }
 
-/* O link que a pessoa recebe para responder. Ainda é a própria rota do
-   detalhe: não existe tela de resposta. */
+/* O link que a pessoa recebe para responder — a vista de quem responde, não
+   o detalhe interno. */
 export const linkDaPesquisa = (p) =>
-  `${window.location.origin}${import.meta.env.BASE_URL}pesquisas/${p.id}`
+  `${window.location.origin}${import.meta.env.BASE_URL}responder/${p.id}`
 
 const sobeTaxa = (taxa) =>
   Math.min(

@@ -10,10 +10,16 @@ import TelaRevisao from './pages/nova-pesquisa/TelaRevisao.jsx'
 import TelaConfiguracao from './pages/nova-pesquisa/TelaConfiguracao.jsx'
 import TelaDetalhe from './pages/detalhe/TelaDetalhe.jsx'
 import TelaCiclo from './pages/detalhe/TelaCiclo.jsx'
+import TelaAbertura from './pages/responder/TelaAbertura.jsx'
+import TelaPerguntaResposta from './pages/responder/TelaPergunta.jsx'
+import TelaFim from './pages/responder/TelaFim.jsx'
 
 /*
  * O provider do fluxo é a rota-mãe: o estado nasce ao entrar em
  * /pesquisas/nova e morre ao sair, sem virar estado global.
+ *
+ * /responder é a vista de quem responde e não compartilha moldura nenhuma
+ * com o app interno: quem abre o link não administra a pesquisa.
  */
 export default function App() {
   return (
@@ -31,6 +37,16 @@ export default function App() {
           <Route path="revisao" element={<TelaRevisao />} />
           <Route path="configuracao" element={<TelaConfiguracao />} />
         </Route>
+
+        {/* Vista de quem responde: fora do app interno, sem sidebar nem abas.
+            Cada tela é uma rota porque é assim que dá para ver as três antes
+            de a navegação entre perguntas existir. */}
+        <Route path="/responder/:id" element={<TelaAbertura />} />
+        <Route
+          path="/responder/:id/pergunta/:numero"
+          element={<TelaPerguntaResposta />}
+        />
+        <Route path="/responder/:id/fim" element={<TelaFim />} />
       </Routes>
     </BrowserRouter>
   )

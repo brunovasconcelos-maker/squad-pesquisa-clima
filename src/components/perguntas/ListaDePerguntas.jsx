@@ -59,8 +59,14 @@ function ListaDeOpcoes({ opcoes, temOutro, icone }) {
   )
 }
 
-/* O corpo muda com o tipo; o cabeçalho e o enunciado são iguais em todos. */
-function CorpoDaPergunta({ pergunta }) {
+/*
+ * O corpo muda com o tipo; o cabeçalho e o enunciado são iguais em todos.
+ *
+ * Exportado porque a vista de quem responde desenha a mesma pergunta por
+ * fora desta lista: os alvos vazios, os campos com placeholder e as estrelas
+ * são exatamente o que ela precisa mostrar antes de alguém responder.
+ */
+export function CorpoDaPergunta({ pergunta }) {
   switch (pergunta.tipo) {
     case 'nota': {
       const degraus = Array.from({ length: pergunta.maximo + 1 }, (_, i) => i)

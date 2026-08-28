@@ -1,0 +1,151 @@
+.tela {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  background: var(--cor-fundo);
+}
+
+/* A capa da pesquisa, largura toda e 200px de altura, como no resto do
+   projeto. O fundo vem do estado (lib/capa.js). */
+.capa {
+  height: 200px;
+  flex: none;
+}
+
+/* Coluna de 808px centrada. O cartão começa em 140 no Figma e a capa acaba
+   em 200: sobe 60px para cavalgar o fim dela. */
+.coluna {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: var(--largura-miolo-largo);
+  flex: 1;
+  flex-direction: column;
+  margin: -60px auto 0;
+  padding-bottom: var(--espaco-24);
+}
+
+.cartao {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: var(--espaco-24);
+  border: 1px solid var(--cor-borda-acao);
+  border-radius: var(--raio-cartao);
+  background: var(--cor-fundo);
+  gap: var(--espaco-24);
+}
+
+/* A tela final centraliza título e mensagem; as outras alinham à esquerda. */
+.cartaoCentrado {
+  align-items: stretch;
+  text-align: center;
+}
+
+.nome {
+  width: 100%;
+  margin: 0;
+  font-size: 40px;
+  font-weight: var(--peso-medio);
+  line-height: normal;
+}
+
+.paragrafo {
+  width: 100%;
+  margin: 0;
+  font-size: 16px;
+  font-weight: var(--peso-regular);
+  letter-spacing: -0.4px;
+  line-height: normal;
+}
+
+.email {
+  font-weight: var(--peso-semibold);
+}
+
+/* Tem cara de link e ainda não leva a lugar nenhum: por isso é um span, e
+   não um <a> sem destino. */
+.mudarConta {
+  color: var(--cor-azul);
+}
+
+.linhaAnonima {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-12);
+}
+
+/* O ícone EyeClosed.svg ainda não está em src/assets/icons. O vão guarda os
+   24px dele para a linha já nascer com a largura final. */
+.vaoDeIcone {
+  display: block;
+  width: 24px;
+  height: 24px;
+  flex: none;
+}
+
+.notaAnonima {
+  margin: 0;
+  color: var(--cor-texto-secundario);
+  font-size: 16px;
+  font-weight: var(--peso-regular);
+  letter-spacing: -0.4px;
+  white-space: nowrap;
+}
+
+.notaObrigatoria {
+  margin: 0;
+  color: var(--cor-vermelho);
+  font-size: 16px;
+  font-weight: var(--peso-regular);
+  letter-spacing: -0.4px;
+}
+
+/* O Figma põe o "Começar pesquisa" bem abaixo do cartão, perto do fim da
+   tela: ele desce com o espaço que sobrar. */
+.acaoCentral {
+  display: flex;
+  margin-top: auto;
+  padding-top: var(--espaco-40);
+  justify-content: center;
+}
+
+/* Mesma caixa do enunciado da lista do administrador, sem a divisória: nesta
+   vista o Figma desenha o bloco sem linha embaixo. */
+.linhaEnunciado {
+  display: flex;
+  width: 100%;
+  align-items: flex-end;
+  padding: var(--espaco-16) 0;
+}
+
+.asterisco {
+  color: var(--cor-vermelho);
+}
+
+/* Falta a ilustração do Pipo na espreguiçadeira em src/assets/images. O vão
+   guarda os 580x324 do Figma para o arquivo entrar sem mexer no resto. */
+.vaoDaIlustracao {
+  width: 580px;
+  height: 324px;
+  flex: none;
+  align-self: center;
+  margin-top: var(--espaco-24);
+}
+
+/* Nas telas sem Voltar/Continuar a barra de baixo é só a trilha de 8px. A
+   ponta esquerda começa 4px para fora para o raio ser cortado na borda,
+   igual à do fluxo. */
+.trilhaSozinha {
+  height: 8px;
+  flex: none;
+  overflow: hidden;
+  background: var(--cor-superficie);
+}
+
+.trilhaPreenchida {
+  height: 8px;
+  margin-left: -4px;
+  border-radius: var(--raio-pilula);
+  background: var(--cor-marca);
+}

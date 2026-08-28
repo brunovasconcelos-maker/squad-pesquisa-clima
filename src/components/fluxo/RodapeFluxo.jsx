@@ -11,6 +11,7 @@ import Botao from './Botao.jsx'
  */
 export default function RodapeFluxo({
   progresso,
+  mostrarProgresso = true,
   mostrarContinuar = true,
   rotuloContinuar = 'Continuar',
   mostrarPular = false,
@@ -21,11 +22,15 @@ export default function RodapeFluxo({
 }) {
   return (
     <div className={s.rodape}>
-      <div className={s.progresso}>
-        <div
-          className={s.progressoPreenchido}
-          style={{ width: `calc(${progresso * 100}% + 4px)` }}
-        />
+      {/* Sem trilha à mostra o vão continua: são os 8px que, com os 72 dos
+          botões, dão os 80px da barra. */}
+      <div className={`${s.progresso} ${mostrarProgresso ? '' : s.progressoOculto}`}>
+        {mostrarProgresso ? (
+          <div
+            className={s.progressoPreenchido}
+            style={{ width: `calc(${progresso * 100}% + 4px)` }}
+          />
+        ) : null}
       </div>
       <div className={s.acoes}>
         <Botao onClick={onVoltar}>Voltar</Botao>
