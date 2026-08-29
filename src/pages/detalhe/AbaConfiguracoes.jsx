@@ -23,12 +23,11 @@ import {
   encerrarCiclo,
   estaPublicada,
   forcarInicio,
+  despublicar,
   linkDaPesquisa,
-  pausar,
   publicar,
 } from '../../lib/pesquisas.js'
-import { sincronizar } from '../../lib/respostas.js'
-import { sincronizarHistorico } from '../../lib/historico.js'
+import { acertarPasso } from '../../lib/acertar.js'
 
 import caretRight from '../../assets/icons/CaretRight.svg'
 import link from '../../assets/icons/Link.svg'
@@ -126,19 +125,13 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
       },
     }))
 
-  /* Depois de uma virada de status, as respostas e o histórico acertam o
-     passo na mesma gravação. Se esperassem o próximo giro do motor, a aba
-     Respostas passaria até 30s mostrando o ciclo que acabou de fechar. */
-  const comMotor = (transformar) => (p) =>
-    sincronizarHistorico(sincronizar(transformar(p)))
-
   const aoPublicar = () => {
     if (publicada) {
       setConfirmacao({
         titulo: 'Tirar do ar?',
         texto: `"${pesquisa.nome}" sai do ar e passa a "Não ativa". O link de resposta deixa de funcionar — quem abrir vê uma página de erro — e ela também para de aceitar respostas.`,
         rotulo: 'Tirar do ar',
-        aoConfirmar: () => onAlterar(comMotor((p) => pausar(p))),
+        aoConfirmar: () => onAlterar((p) => acertarPasso(despublicar(p))),
       })
       return
     }
@@ -146,7 +139,7 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
       titulo: 'Publicar de novo?',
       texto: `"${pesquisa.nome}" volta ao ar como "Ativa | Aguardando": o link funciona outra vez, mas ela ainda não recebe respostas. Para voltar a receber, ligue também "Aceitando respostas".`,
       rotulo: 'Publicar',
-      aoConfirmar: () => onAlterar(comMotor((p) => publicar(p))),
+      aoConfirmar: () => onAlterar((p) => acertarPasso(publicar(p))),
     })
   }
 
@@ -156,7 +149,7 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
         titulo: 'Encerrar o ciclo?',
         texto: `O ciclo em curso de "${pesquisa.nome}" fecha agora e ela passa a "Ativa | Aguardando". A pesquisa continua no ar, mas para de receber respostas até o próximo ciclo.`,
         rotulo: 'Encerrar ciclo',
-        aoConfirmar: () => onAlterar(comMotor((p) => encerrarCiclo(p))),
+        aoConfirmar: () => onAlterar((p) => acertarPasso(encerrarCiclo(p))),
       })
       return
     }
@@ -165,7 +158,7 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
       titulo: 'Iniciar agora?',
       texto: `"${pesquisa.nome}" começa imediatamente e passa a receber respostas, ignorando a data de envio agendada. Um novo ciclo é iniciado a partir de agora.`,
       rotulo: 'Iniciar',
-      aoConfirmar: () => onAlterar(comMotor((p) => forcarInicio(p))),
+      aoConfirmar: () => onAlterar((p) => acertarPasso(forcarInicio(p))),
     })
   }
 

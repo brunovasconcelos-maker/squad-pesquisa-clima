@@ -11,7 +11,7 @@ import {
   avaliarLista,
   duplicar,
   forcarInicio,
-  pausar,
+  encerrarCiclo,
   paraLinha,
   botaoDe,
   linkDaPesquisa,
@@ -78,8 +78,11 @@ export default function Home() {
     aplicar(pesquisas.map((p) => (p.id === id ? transformar(p) : p)))
 
   const aoTransportar = (p) => {
+    /* Pausar fecha o ciclo em curso e deixa a pesquisa em "Ativa |
+       Aguardando": ela continua no ar, entre ciclos. Sair do ar é outra
+       ação, e mora no interruptor "Publicar formulário". */
     if (botaoDe(p) === 'pausar') {
-      trocar(p.id, (atual) => pausar(atual))
+      trocar(p.id, (atual) => encerrarCiclo(atual))
       return
     }
     // Iniciar sobrescreve a data agendada, então pede confirmação.

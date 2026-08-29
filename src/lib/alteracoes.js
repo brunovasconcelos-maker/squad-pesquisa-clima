@@ -6,24 +6,23 @@
  * cada mudança na abertura — entra num registro, guardado junto da pesquisa e
  * separado por ciclo.
  *
- * A que ciclo uma alteração pertence:
+ * A que ciclo uma alteração pertence: só "rodando" tem ciclo aberto, e a
+ * alteração é dele. Em qualquer outro status — aguardando, não ativa,
+ * encerrada, agendada ou rascunho — o ciclo `ciclos` já fechou e está no
+ * Histórico com as datas e a taxa dele; o que se edita agora vale para o
+ * próximo, `ciclos + 1`.
  *
- *  - Rodando ou pausada, o ciclo `ciclos` está aberto e a alteração é dele.
- *    Pausada é o caso normal, porque a aba Perguntas exige pausar antes de
- *    editar: quem edita interrompeu o ciclo em curso, e é esse que sofreu a
- *    alteração.
- *  - Aguardando, encerrada, agendada ou rascunho, não há ciclo aberto: o que
- *    se edita agora vale para o próximo, `ciclos + 1`.
+ * É a mesma conta de `ciclosFechados`, e tem de ser: anotar uma alteração num
+ * ciclo que a tabela já mostra como encerrado diria que ele mudou depois de
+ * ter acabado.
  *
  * O registro fica no formato { "3": [...], "4": [...] } para uma alteração
  * nunca migrar de ciclo depois de anotada.
  */
 
-const COM_CICLO_ABERTO = ['rodando', 'naoAtiva']
-
 export function cicloEmAberto(p) {
   const atual = p.ciclos ?? 0
-  if (COM_CICLO_ABERTO.includes(p.status) && atual >= 1) return atual
+  if (p.status === 'rodando' && atual >= 1) return atual
   return atual + 1
 }
 

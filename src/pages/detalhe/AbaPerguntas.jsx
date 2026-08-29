@@ -3,7 +3,8 @@ import ListaDePerguntas from '../../components/perguntas/ListaDePerguntas.jsx'
 import ModalConfirmar from '../../components/fluxo/ModalConfirmar.jsx'
 import EditorPergunta from '../nova-pesquisa/EditorPergunta.jsx'
 import EditorAbertura from '../nova-pesquisa/EditorAbertura.jsx'
-import { pausar } from '../../lib/pesquisas.js'
+import { encerrarCiclo } from '../../lib/pesquisas.js'
+import { acertarPasso } from '../../lib/acertar.js'
 import { registrar } from '../../lib/alteracoes.js'
 import s from './AbaPerguntas.module.css'
 
@@ -80,10 +81,12 @@ export default function AbaPerguntas({ pesquisa, onAlterar }) {
       {pedindoPausa ? (
         <ModalConfirmar
           titulo="Pausar para editar?"
-          texto="A pesquisa está rodando e já foi enviada. Mudar as perguntas agora deixaria as respostas de antes e as de depois sem comparação, então é preciso pausar antes de editar."
+          texto={'A pesquisa está rodando e já foi enviada. Mudar as perguntas agora deixaria as respostas de antes e as de depois sem comparação, então é preciso pausar antes de editar. Ela continua no ar, em "Ativa | Aguardando", e o ciclo em curso fecha agora.'}
           rotuloConfirmar="Pausar pesquisa"
           onConfirmar={() => {
-            onAlterar((p) => pausar(p))
+            /* Acerta o passo junto: pausar fecha o ciclo, e ir direto no
+               Histórico tem de mostrar a linha dele. */
+            onAlterar((p) => acertarPasso(encerrarCiclo(p)))
             setPedindoPausa(false)
           }}
           onCancelar={() => setPedindoPausa(false)}

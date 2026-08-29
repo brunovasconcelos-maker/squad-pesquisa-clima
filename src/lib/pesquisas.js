@@ -129,7 +129,12 @@ export function forcarInicio(p, agora = new Date()) {
   return iniciarCiclo(p, agora)
 }
 
-export function pausar(p, agora = new Date()) {
+/*
+ * Tira a pesquisa do ar — o interruptor "Publicar formulário" desligado, e
+ * só ele. Pausar não passa por aqui: quem pausa fecha o ciclo e continua no
+ * ar, o que é `encerrarCiclo`.
+ */
+export function despublicar(p, agora = new Date()) {
   return { ...p, status: 'naoAtiva', atualizadoEm: agora.toISOString() }
 }
 
@@ -165,6 +170,11 @@ export function publicar(p, agora = new Date()) {
  * motor faz quando o prazo vence, só que agora. O fim vai para `cicloFim`
  * porque é ele que diz quando o ciclo acabou de verdade, e não o prazo que
  * não chegou a vencer.
+ *
+ * É o que pausar faz, em todos os lugares onde pausar existe: o botão da
+ * home, o portão da aba Perguntas e o "Aceitando respostas" desligado. Uma
+ * pesquisa pausada continua ativa — está entre ciclos, não fora do ar —, e
+ * por isso vai para "Ativa | Aguardando" e não para "Não ativa".
  */
 export function encerrarCiclo(p, agora = new Date()) {
   return {
