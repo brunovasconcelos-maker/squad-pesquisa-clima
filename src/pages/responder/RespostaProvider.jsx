@@ -1,10 +1,11 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import { Outlet, useNavigate, useParams } from 'react-router-dom'
-import { avaliarLista, gravar, ler } from '../../lib/pesquisas.js'
+import { avaliarLista, estaPublicada, gravar, ler } from '../../lib/pesquisas.js'
 import { adicionarResposta, sincronizar } from '../../lib/respostas.js'
 import { sincronizarHistorico } from '../../lib/historico.js'
 import { ehObrigatoria } from './obrigatorias.js'
 import { PESQUISA_EXEMPLO } from './exemplo.js'
+import TelaForaDoAr from './TelaForaDoAr.jsx'
 
 /*
  * O estado de uma sessão de resposta.
@@ -111,9 +112,14 @@ export default function RespostaProvider() {
     [pesquisa, perguntas, valores, responder, enviar],
   )
 
+  /* Fora do ar, nenhuma das três telas abre: o link inteiro para de
+     funcionar, que é o que despublicar quer dizer. Vale o retrato do começo
+     da sessão, como o resto — quem já estava respondendo termina. */
+  const foraDoAr = sessao.guardada && !estaPublicada(pesquisa)
+
   return (
     <Contexto.Provider value={valor}>
-      <Outlet />
+      {foraDoAr ? <TelaForaDoAr pesquisa={pesquisa} /> : <Outlet />}
     </Contexto.Provider>
   )
 }
