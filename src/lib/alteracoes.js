@@ -1,3 +1,5 @@
+import { fimDoCiclo } from './datas.js'
+
 /*
  * Registro de alterações nas perguntas.
  *
@@ -6,23 +8,35 @@
  * cada mudança na abertura — entra num registro, guardado junto da pesquisa e
  * separado por ciclo.
  *
- * A que ciclo uma alteração pertence: só "rodando" tem ciclo aberto, e a
- * alteração é dele. Em qualquer outro status — aguardando, não ativa,
- * encerrada, agendada ou rascunho — o ciclo `ciclos` já fechou e está no
- * Histórico com as datas e a taxa dele; o que se edita agora vale para o
- * próximo, `ciclos + 1`.
+ * A que ciclo uma alteração pertence:
  *
- * É a mesma conta de `ciclosFechados`, e tem de ser: anotar uma alteração num
- * ciclo que a tabela já mostra como encerrado diria que ele mudou depois de
- * ter acabado.
+ *  - Rodando, o ciclo `ciclos` está aberto e a alteração é dele.
+ *  - Pausada, também: a aba Perguntas exige pausar antes de editar, então
+ *    quem edita interrompeu o ciclo em curso, e é esse que sofreu a
+ *    alteração. É a mesma linha que o Histórico marca com o aviso de
+ *    "encerrado antes do prazo".
+ *  - Entre ciclos por conta do prazo, encerrada, fora do ar, agendada ou
+ *    rascunho, não há ciclo interrompido: o que se edita agora vale para o
+ *    próximo, `ciclos + 1`.
+ *
+ * Pausar e o prazo vencer deixam a pesquisa no mesmo status — "Ativa |
+ * Aguardando" —, então o que separa os dois é a data: pausar fecha o ciclo
+ * antes do prazo que ele teria, e é isso que `cicloInterrompido` compara.
  *
  * O registro fica no formato { "3": [...], "4": [...] } para uma alteração
  * nunca migrar de ciclo depois de anotada.
  */
 
+function cicloInterrompido(p) {
+  if (p.status !== 'aguardando' || !p.cicloInicio || !p.cicloFim) return false
+  const prazo = fimDoCiclo(new Date(p.cicloInicio), p.configuracao?.prazo)
+  return Boolean(prazo) && new Date(p.cicloFim) < prazo
+}
+
 export function cicloEmAberto(p) {
   const atual = p.ciclos ?? 0
-  if (p.status === 'rodando' && atual >= 1) return atual
+  if (atual < 1) return atual + 1
+  if (p.status === 'rodando' || cicloInterrompido(p)) return atual
   return atual + 1
 }
 
