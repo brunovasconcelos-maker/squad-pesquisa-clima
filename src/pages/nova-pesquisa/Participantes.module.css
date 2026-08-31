@@ -186,3 +186,21 @@
   align-items: center;
   justify-content: space-between;
 }
+
+/* Resultados da busca, abaixo do campo, com o mesmo respiro da lista de
+   cima. */
+.resultados {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--espaco-12);
+}
+
+.semResultado {
+  margin: 0;
+  color: var(--cor-texto-secundario);
+  font-size: 14px;
+  font-weight: var(--peso-medio);
+  letter-spacing: -0.08px;
+}

@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
-import { ler, gravar, avaliarLista, INTERVALO_MS } from '../../lib/pesquisas.js'
+import {
+  ler,
+  gravar,
+  avaliarLista,
+  ehRecorrente,
+  INTERVALO_MS,
+} from '../../lib/pesquisas.js'
 import { sincronizar } from '../../lib/respostas.js'
 import { sincronizarHistorico } from '../../lib/historico.js'
 import AbaGeral from './AbaGeral.jsx'
@@ -30,8 +36,14 @@ import close from '../../assets/icons/Close.svg'
  * Chegar numa aba específica é outra coisa — é navegação —, e vem pelo state
  * da rota: é assim que a tela do ciclo devolve a pessoa ao Histórico. Num F5
  * o state se perde e a tela abre no Geral, como qualquer visita direta.
+ *
+ * "Histórico" é a lista de ciclos anteriores, e uma pesquisa Única só tem um:
+ * a aba só existe para as recorrentes.
  */
 const ABAS = ['Geral', 'Perguntas', 'Respostas', 'Histórico', 'Configurações']
+
+const abasDe = (pesquisa) =>
+  ehRecorrente(pesquisa) ? ABAS : ABAS.filter((aba) => aba !== 'Histórico')
 
 export default function TelaDetalhe() {
   const { id } = useParams()
@@ -68,6 +80,7 @@ export default function TelaDetalhe() {
   }, [id])
 
   const pesquisa = pesquisas?.find((p) => p.id === id)
+  const abas = pesquisa ? abasDe(pesquisa) : ABAS
 
   /* Grava junto com o setState, como a home: a lista em memória e a guardada
      não podem divergir, senão um F5 desfaz a última edição. */
@@ -94,20 +107,24 @@ export default function TelaDetalhe() {
 
   if (!pesquisa) return null
 
+  /* Trocar a frequência para "Não repete" com a aba de Histórico aberta some
+     com ela; a Geral é o destino, como em qualquer visita direta. */
+  const visivel = abas.includes(ativa) ? ativa : ABAS[0]
+
   return (
     <div className={s.tela}>
       <header className={s.cabecalho}>
         <p className={s.titulo}>{pesquisa.nome}</p>
 
         <div className={s.abas} role="tablist" aria-label="Seções da pesquisa">
-          {ABAS.map((aba) => (
+          {abas.map((aba) => (
             <button
               type="button"
               key={aba}
               id={`aba-${aba}`}
-              className={`${s.aba} ${aba === ativa ? s.ativa : ''}`}
+              className={`${s.aba} ${aba === visivel ? s.ativa : ''}`}
               role="tab"
-              aria-selected={aba === ativa}
+              aria-selected={aba === visivel}
               aria-controls={`painel-${aba}`}
               onClick={() => setAtiva(aba)}
             >
@@ -123,19 +140,19 @@ export default function TelaDetalhe() {
 
       <div
         className={s.miolo}
-        id={`painel-${ativa}`}
+        id={`painel-${visivel}`}
         role="tabpanel"
-        aria-labelledby={`aba-${ativa}`}
+        aria-labelledby={`aba-${visivel}`}
       >
-        {ativa === 'Geral' ? <AbaGeral pesquisa={pesquisa} /> : null}
-        {ativa === 'Perguntas' ? (
+        {visivel === 'Geral' ? <AbaGeral pesquisa={pesquisa} /> : null}
+        {visivel === 'Perguntas' ? (
           <AbaPerguntas pesquisa={pesquisa} onAlterar={alterar} />
         ) : null}
-        {ativa === 'Respostas' ? (
+        {visivel === 'Respostas' ? (
           <AbaRespostas pesquisa={pesquisa} onAlterar={alterar} />
         ) : null}
-        {ativa === 'Histórico' ? <AbaHistorico pesquisa={pesquisa} /> : null}
-        {ativa === 'Configurações' ? (
+        {visivel === 'Histórico' ? <AbaHistorico pesquisa={pesquisa} /> : null}
+        {visivel === 'Configurações' ? (
           <AbaConfiguracoes pesquisa={pesquisa} onAlterar={alterar} />
         ) : null}
       </div>

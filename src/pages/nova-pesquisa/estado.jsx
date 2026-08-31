@@ -67,7 +67,7 @@ const estadoInicial = () => ({
   nome: '',
   // Começa em "Toda a empresa" porque é o que a tela 1 do Figma mostra. Se o
   // usuário desmarcar tudo no modal, o Continuar volta a travar.
-  participantes: { todaEmpresa: true, grupos: [] },
+  participantes: { todaEmpresa: true, grupos: [], pessoas: [] },
   template: null,
   // Quantidade escolhida na tela 5; a lista gerada mora em `perguntas`.
   quantidade: 10,
@@ -125,6 +125,23 @@ export function passoDaRota(caminho) {
 
 export const GRUPOS = ['Atendimento', 'Vendas', 'Design']
 
+/* Diretório de pessoas — fixo, do tamanho de um exemplo. A busca do modal de
+   participantes procura pelo nome, que é o pedaço antes do @. */
+export const PESSOAS = [
+  'bruno.vasconcelos@inner.ai',
+  'gustavo.lima@inner.ai',
+  'kaue.chamizo@inner.ai',
+]
+
+/* "bruno.vasconcelos@inner.ai" -> "Bruno Vasconcelos". */
+export function nomeDaPessoa(email) {
+  return (email.split('@')[0] || '')
+    .split('.')
+    .filter(Boolean)
+    .map((parte) => parte[0].toUpperCase() + parte.slice(1))
+    .join(' ')
+}
+
 export const PERGUNTAS_MIN = 1
 export const PERGUNTAS_MAX = 20
 
@@ -149,24 +166,32 @@ const PROMPTS = {
     `Entender os motivos de saída e a experiência de ${p} durante sua passagem pela empresa.`,
 }
 
-export function temParticipantes({ todaEmpresa, grupos }) {
-  return todaEmpresa || grupos.length > 0
+export function temParticipantes({ todaEmpresa, grupos, pessoas = [] }) {
+  return todaEmpresa || grupos.length > 0 || pessoas.length > 0
+}
+
+/*
+ * Como a seleção é escrita numa linha só. Grupos e pessoas podem estar
+ * marcados juntos, então quando há dos dois o rótulo conta os dois.
+ */
+function descrever({ todaEmpresa, grupos = [], pessoas = [] }, empresa) {
+  if (todaEmpresa) return empresa
+  const partes = []
+  if (grupos.length === 1) partes.push(grupos[0])
+  else if (grupos.length > 1) partes.push(`${grupos.length} grupos`)
+  if (pessoas.length === 1) partes.push(nomeDaPessoa(pessoas[0]))
+  else if (pessoas.length > 1) partes.push(`${pessoas.length} pessoas`)
+  return partes.join(' e ')
 }
 
 /* Rótulo da linha da tela 1: começa com maiúscula. */
-export function rotuloParticipantes({ todaEmpresa, grupos }) {
-  if (todaEmpresa) return 'Toda a empresa'
-  if (grupos.length === 1) return grupos[0]
-  if (grupos.length > 1) return `${grupos.length} grupos`
-  return ''
+export function rotuloParticipantes(selecao) {
+  return descrever(selecao || {}, 'Toda a empresa')
 }
 
 /* Mesma seleção, mas no meio de uma frase — daí o minúsculo. */
-export function fraseParticipantes({ todaEmpresa, grupos }) {
-  if (todaEmpresa) return 'toda a empresa'
-  if (grupos.length === 1) return grupos[0]
-  if (grupos.length > 1) return `${grupos.length} grupos`
-  return ''
+export function fraseParticipantes(selecao) {
+  return descrever(selecao || {}, 'toda a empresa')
 }
 
 export function montarPrompt(template, participantes) {

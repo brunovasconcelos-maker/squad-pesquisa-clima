@@ -30,7 +30,9 @@ import search from '../assets/icons/Search.svg'
  * carga e depois a cada 30s. Uma pesquisa que deveria ter virado ontem vira
  * na próxima carga, de uma vez só.
  *
- * A busca é decorativa por enquanto — não filtra nada.
+ * A busca filtra pelo nome, sem acento e sem caixa: quem procura "clima" tem
+ * de achar "Clima Geral" e "CLIMA", e quem digita "organizacao" tem de achar
+ * "Organização".
  *
  * O Figma tem um botão de settings à esquerda do "+", mas com opacity 0.
  * Ficou de fora: um botão invisível e clicável é pior que ausente.
@@ -49,11 +51,21 @@ const COLUNAS = [
 const maisRecentePrimeiro = (a, b) =>
   new Date(b.atualizadoEm) - new Date(a.atualizadoEm)
 
+/* Comparação frouxa de propósito: acento e caixa não deveriam esconder uma
+   pesquisa de quem está procurando por ela. */
+const normalizar = (t) =>
+  (t || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+
 export default function Home() {
   const navigate = useNavigate()
   const [pesquisas, setPesquisas] = useState([])
   const [confirmacao, setConfirmacao] = useState(null)
   const [aviso, setAviso] = useState('')
+  const [busca, setBusca] = useState('')
   const limparAviso = useCallback(() => setAviso(''), [])
 
   /* Grava junto com o setState: a lista em memória e a guardada não podem
@@ -133,6 +145,11 @@ export default function Home() {
     }
   }
 
+  const procurado = normalizar(busca)
+  const encontradas = [...pesquisas]
+    .filter((p) => !procurado || normalizar(p.nome).includes(procurado))
+    .sort(maisRecentePrimeiro)
+
   return (
     <div className={s.layout}>
       <Sidebar />
@@ -155,8 +172,10 @@ export default function Home() {
             <input
               className={s.buscaCampo}
               type="text"
+              value={busca}
               placeholder="Pesquisar por uma pesquisa..."
               aria-label="Pesquisar por uma pesquisa"
+              onChange={(e) => setBusca(e.target.value)}
             />
           </div>
         </div>
@@ -170,7 +189,7 @@ export default function Home() {
         </div>
 
         <div className={s.linhas}>
-          {[...pesquisas].sort(maisRecentePrimeiro).map((p) => (
+          {encontradas.map((p) => (
             <CartaoPesquisa
               key={p.id}
               pesquisa={paraLinha(p, rotuloParticipantes)}
@@ -181,6 +200,14 @@ export default function Home() {
               onDeletar={() => aoDeletar(p)}
             />
           ))}
+
+          {/* A lista some quando nada bate; dizer isso é melhor do que deixar
+              a tabela vazia parecendo que a busca travou. */}
+          {procurado && encontradas.length === 0 ? (
+            <p className={s.vazio}>
+              Nenhuma pesquisa com &quot;{busca.trim()}&quot; no nome.
+            </p>
+          ) : null}
         </div>
       </div>
 

@@ -137,6 +137,12 @@ export function guardar(lista, pesquisa, idAnterior) {
     : [...lista, mesma]
 }
 
+/*
+ * Uma cópia é uma pesquisa nova com o mesmo questionário: leva o que descreve
+ * a pesquisa e nada do que ela viveu. Respostas, histórico de ciclos e o
+ * registro de alterações ficam com o original — sem isso a cópia nascia
+ * mostrando participação que nunca coletou.
+ */
 export function duplicar(p, agora = new Date()) {
   return {
     ...p,
@@ -147,7 +153,12 @@ export function duplicar(p, agora = new Date()) {
     status: 'rascunho',
     ciclos: 0,
     taxa: 0,
+    taxaEm: undefined,
     anterior: undefined,
+    respostas: undefined,
+    historico: undefined,
+    alteracoes: undefined,
+    passo: undefined,
     cicloInicio: null,
     cicloFim: null,
   }
@@ -198,6 +209,13 @@ const PUBLICADAS = ['agendada', 'rodando', 'aguardando']
 export const estaPublicada = (p) => PUBLICADAS.includes(p.status)
 
 export const aceitandoRespostas = (p) => p.status === 'rodando'
+
+/*
+ * Uma pesquisa Única que encerrou acabou de vez: ela existe para sair uma vez
+ * só, e reabri-la daria um segundo ciclo a algo que não tem ciclos. Quem quer
+ * mandar de novo duplica, que é o caminho que a lista já oferece.
+ */
+export const ehFinal = (p) => p.status === 'encerrada' && !ehRecorrente(p)
 
 /*
  * Quem abre o link de resposta consegue responder? Precisa estar no ar e
@@ -286,10 +304,19 @@ export function avaliar(p, agora = new Date()) {
     }
 
     if (atual.status === 'rodando') {
-      if (!fim || agora < fim) return atual
-      atual = ehRecorrente(atual)
-        ? { ...atual, status: 'aguardando', atualizadoEm: fim.toISOString() }
-        : { ...atual, status: 'encerrada', atualizadoEm: fim.toISOString() }
+      /* Duas formas de o ciclo acabar: o prazo vencer ou todo o público já ter
+         respondido. A segunda costuma chegar antes, e sem ela o selo dizia
+         "Ativa | Rodando" enquanto o link de resposta já dizia que a pesquisa
+         tinha encerrado. */
+      const cheio = (atual.taxa ?? 0) >= 100
+      if (!cheio && (!fim || agora < fim)) return atual
+      const quando = cheio ? agora : fim
+      atual = {
+        ...atual,
+        status: ehRecorrente(atual) ? 'aguardando' : 'encerrada',
+        cicloFim: quando.toISOString(),
+        atualizadoEm: quando.toISOString(),
+      }
       continue
     }
 
@@ -331,6 +358,9 @@ export function avaliarLista(lista, agora = new Date()) {
           taxa: sobeTaxa(atualizada.taxa),
           taxaEm: agora.toISOString(),
         }
+        /* A subida pode ter chegado a 100. Passa pelo motor outra vez para o
+           ciclo fechar agora, e não daqui a meio minuto. */
+        atualizada = avaliar(atualizada, agora)
       }
     }
     if (atualizada !== p) mudou = true

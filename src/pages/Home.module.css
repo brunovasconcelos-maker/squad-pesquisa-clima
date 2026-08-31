@@ -137,3 +137,13 @@
   gap: var(--espaco-12);
   margin-top: var(--espaco-20);
 }
+
+/* Recado de busca sem resultado, no lugar onde as linhas estariam. */
+.vazio {
+  margin: var(--espaco-40) 0 0;
+  color: var(--cor-texto-secundario);
+  font-size: 16px;
+  font-weight: var(--peso-medio);
+  letter-spacing: -0.31px;
+  text-align: center;
+}

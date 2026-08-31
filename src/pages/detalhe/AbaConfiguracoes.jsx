@@ -12,6 +12,7 @@ import {
   ModalDataEnvio,
   ModalFrequencia,
   ModalLembrete,
+  ModalMensagemFinal,
   ModalPrazo,
 } from '../nova-pesquisa/ModaisConfiguracao.jsx'
 import { rotuloParticipantes } from '../nova-pesquisa/estado.jsx'
@@ -20,6 +21,7 @@ import { formatarComDia } from '../../lib/datas.js'
 import { proximoEnvioDe } from '../../lib/geral.js'
 import {
   aceitandoRespostas,
+  ehFinal,
   encerrarCiclo,
   estaPublicada,
   forcarInicio,
@@ -107,6 +109,11 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
   const avancadas = c.avancadas || {}
   const publicada = estaPublicada(pesquisa)
   const aceitando = aceitandoRespostas(pesquisa)
+  /* Uma Única que já encerrou acabou de vez: ela não tem próximo ciclo para
+     onde voltar, então republicar ou reabrir respostas só produziria um
+     estado sem sentido. Os dois interruptores travam e a nota manda duplicar,
+     que é o caminho de mandar a mesma pesquisa outra vez. */
+  const encerradaDeVez = ehFinal(pesquisa)
 
   const fechar = () => setModal(null)
 
@@ -196,15 +203,30 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
       <Cartao
         titulo="Opções publicadas"
         rodape={
-          <Botao variante="contorno" onClick={aoCopiarEAbrir}>
-            Copiar link da pesquisa
-            <img className={s.iconeDoLink} src={link} alt="" width={24} height={24} />
-          </Botao>
+          <>
+            {encerradaDeVez ? (
+              <p className={s.nota}>
+                Esta pesquisa não se repete e já foi encerrada — ela não volta a
+                receber respostas. Para enviá-la de novo, duplique a pesquisa.
+              </p>
+            ) : null}
+            <Botao variante="contorno" onClick={aoCopiarEAbrir}>
+              Copiar link da pesquisa
+              <img
+                className={s.iconeDoLink}
+                src={link}
+                alt=""
+                width={24}
+                height={24}
+              />
+            </Botao>
+          </>
         }
       >
         <LinhaInterruptor
           rotulo="Publicar formulário"
           ligado={publicada}
+          desabilitado={encerradaDeVez}
           onAlternar={aoPublicar}
         />
         {/* Fora do ar, aceitar respostas não quer dizer nada: o interruptor
@@ -212,7 +234,7 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
         <LinhaInterruptor
           rotulo="Aceitando respostas"
           ligado={aceitando}
-          desabilitado={!publicada}
+          desabilitado={!publicada || encerradaDeVez}
           onAlternar={aoAceitar}
         />
         <LinhaInterruptor
@@ -285,6 +307,14 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
               />
             </div>
           }
+        />
+        {/* Mesma linha da tela de Configuração do fluxo: o texto é longo, então
+            vai cortado com reticências e abre o mesmo editor. */}
+        <LinhaResumo
+          rotulo="Mensagem final"
+          valor={c.mensagemFinal}
+          cortar
+          onAbrir={() => setModal('mensagem')}
         />
         <LinhaInterruptor
           rotulo="Mostrar barra de progresso"
@@ -359,6 +389,14 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
             salvarAvancada({ lembrete })
             fechar()
           }}
+          onFechar={fechar}
+        />
+      ) : null}
+
+      {modal === 'mensagem' ? (
+        <ModalMensagemFinal
+          valor={c.mensagemFinal}
+          onSalvar={(mensagemFinal) => salvarConfig({ mensagemFinal })}
           onFechar={fechar}
         />
       ) : null}

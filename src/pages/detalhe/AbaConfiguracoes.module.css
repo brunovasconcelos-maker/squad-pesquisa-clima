@@ -69,3 +69,13 @@
   cursor: pointer;
 }
 
+/* Recado do cartão "Opções publicadas" quando uma pesquisa Única já encerrou:
+   os dois interruptores de cima ficam travados, e sem uma linha explicando
+   isso eles pareceriam quebrados. Fica logo abaixo das linhas, esticado. */
+.nota {
+  align-self: stretch;
+  margin: 0;
+  color: var(--cor-texto-apoio);
+  font-size: 14px;
+  line-height: 20px;
+}

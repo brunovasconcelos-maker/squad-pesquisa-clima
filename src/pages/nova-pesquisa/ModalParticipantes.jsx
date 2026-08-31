@@ -2,7 +2,7 @@ import { useState } from 'react'
 import s from './Participantes.module.css'
 import Botao from '../../components/fluxo/Botao.jsx'
 import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
-import { GRUPOS } from './estado.jsx'
+import { GRUPOS, PESSOAS, nomeDaPessoa } from './estado.jsx'
 
 import checkSquare from '../../assets/icons/CheckSquare.svg'
 import square from '../../assets/icons/Square.svg'
@@ -24,10 +24,27 @@ import close from '../../assets/icons/Close.svg'
  * A lista de grupos começa fechada: quem escolhe a empresa inteira não
  * precisa ver os grupos, e quem quer um grupo abre.
  *
- * A busca continua decorativa, como combinado.
+ * A busca procura no diretório de pessoas pelo nome e pelo e-mail inteiro —
+ * quem tem o endereço na mão cola o endereço —, e o resultado entra na lista
+ * como mais um item marcável, com o mesmo desenho dos grupos. Marcar uma
+ * pessoa também desmarca "Toda empresa".
  */
+/* Sem acento e sem caixa: quem digita "kaue" tem de achar "kauê". */
+const normalizar = (t) =>
+  (t || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+
+/* O que a busca compara: o nome que aparece na lista mais o e-mail cru, para
+   que tanto "Gustavo Lima" quanto "gustavo.lima@inner.ai" achem a mesma
+   pessoa. */
+const procuravel = (email) => normalizar(`${nomeDaPessoa(email)} ${email}`)
+
 export default function ModalParticipantes({ selecao, onSalvar, onFechar }) {
-  const [rascunho, setRascunho] = useState(selecao)
+  const [rascunho, setRascunho] = useState({ pessoas: [], ...selecao })
+  const [busca, setBusca] = useState('')
   /* Aberta quando já há grupo escolhido: fechar a lista escondendo uma
      escolha que existe seria pior do que abri-la sem precisar. */
   const [gruposAbertos, setGruposAbertos] = useState(
@@ -38,7 +55,7 @@ export default function ModalParticipantes({ selecao, onSalvar, onFechar }) {
     setRascunho((r) =>
       r.todaEmpresa
         ? { ...r, todaEmpresa: false }
-        : { ...r, todaEmpresa: true, grupos: [] },
+        : { ...r, todaEmpresa: true, grupos: [], pessoas: [] },
     )
 
   const alternarGrupo = (grupo) =>
@@ -51,7 +68,29 @@ export default function ModalParticipantes({ selecao, onSalvar, onFechar }) {
         : [...r.grupos, grupo],
     }))
 
-  const Item = ({ nome, marcado, onAlternar }) => (
+  /* Mesma regra dos grupos: escolher uma pessoa é dizer que não é a empresa
+     inteira. */
+  const alternarPessoa = (email) =>
+    setRascunho((r) => {
+      const atuais = r.pessoas || []
+      return {
+        ...r,
+        todaEmpresa: false,
+        pessoas: atuais.includes(email)
+          ? atuais.filter((e) => e !== email)
+          : [...atuais, email],
+      }
+    })
+
+  const procurado = normalizar(busca)
+  const achadas = procurado
+    ? PESSOAS.filter((e) => procuravel(e).includes(procurado))
+    : []
+  /* Quem já foi marcado fica na lista mesmo depois de a busca esvaziar: a
+     escolha não pode sumir de vista só porque o campo foi limpo. */
+  const escolhidas = (rascunho.pessoas || []).filter((e) => !achadas.includes(e))
+
+  const Item = ({ nome, apoio = '56 membros', marcado, onAlternar }) => (
     <button type="button" className={s.item} onClick={onAlternar}>
       <img
         className={s.caixa}
@@ -61,7 +100,7 @@ export default function ModalParticipantes({ selecao, onSalvar, onFechar }) {
         height={24}
       />
       <span className={s.itemNome}>{nome}</span>
-      <span className={s.itemContagem}>56 membros</span>
+      <span className={s.itemContagem}>{apoio}</span>
     </button>
   )
 
@@ -127,10 +166,40 @@ export default function ModalParticipantes({ selecao, onSalvar, onFechar }) {
           <input
             className={s.buscaCampo}
             type="text"
+            value={busca}
             placeholder="Pesquisar um membro ou grupo"
             aria-label="Pesquisar um membro ou grupo"
+            onChange={(e) => setBusca(e.target.value)}
           />
         </div>
+
+        {procurado || escolhidas.length ? (
+          <div className={s.resultados}>
+            {achadas.map((email) => (
+              <Item
+                key={email}
+                nome={nomeDaPessoa(email)}
+                apoio={email}
+                marcado={(rascunho.pessoas || []).includes(email)}
+                onAlternar={() => alternarPessoa(email)}
+              />
+            ))}
+            {escolhidas.map((email) => (
+              <Item
+                key={email}
+                nome={nomeDaPessoa(email)}
+                apoio={email}
+                marcado
+                onAlternar={() => alternarPessoa(email)}
+              />
+            ))}
+            {procurado && achadas.length === 0 ? (
+              <p className={s.semResultado}>
+                Ninguém com &quot;{busca.trim()}&quot; no nome ou no e-mail.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
 
         <div className={s.rodape}>
           <Botao onClick={onFechar}>Voltar</Botao>

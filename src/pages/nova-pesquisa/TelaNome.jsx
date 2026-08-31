@@ -30,7 +30,9 @@ export default function TelaNome() {
         progresso={1 / 6}
         continuarDesabilitado={!podeContinuar}
         onFechar={sair}
-        onVoltar={() => navigate('/')}
+        /* Sair pelo Voltar é sair do mesmo jeito: os dois passam pela mesma
+           pergunta, senão um deles descarta tudo em silêncio. */
+        onVoltar={sair}
         onContinuar={() => navigate('template')}
       >
         <div className={s.conteudo}>
