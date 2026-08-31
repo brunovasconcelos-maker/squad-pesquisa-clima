@@ -106,6 +106,28 @@ export function formatarLongo(data) {
   return `${d.getDate()} ${MES_LONGO[d.getMonth()]} ${d.getFullYear()}`
 }
 
+/* ---- campos nativos de data ----
+ *
+ * O <input type="date"> fala ISO curto (2026-08-14) e o <input type="time">
+ * fala HH:MM, que já é o formato da hora aqui. A data guardada continua no
+ * formato longo que `paraData` sabe ler, então a conversão fica nesta dupla e
+ * não vaza para o resto.
+ */
+export function paraCampoDeData(textoLongo) {
+  const d = paraData(textoLongo, '00:00')
+  if (!d) return ''
+  const mes = String(d.getMonth() + 1).padStart(2, '0')
+  const dia = String(d.getDate()).padStart(2, '0')
+  return `${d.getFullYear()}-${mes}-${dia}`
+}
+
+export function deCampoDeData(iso) {
+  if (!iso) return ''
+  const [ano, mes, dia] = iso.split('-').map(Number)
+  if (!ano || !mes || !dia) return ''
+  return formatarLongo(new Date(ano, mes - 1, dia))
+}
+
 export function somarDias(data, dias) {
   const d = new Date(data)
   d.setDate(d.getDate() + dias)
@@ -127,10 +149,15 @@ const PRAZOS = {
   '1 mês': (d) => somarMeses(d, 1),
 }
 
-/* Fim do ciclo: um período depois do início, ou a data específica escolhida. */
+/* Fim do ciclo: um período depois do início, um número de dias, ou a data
+   específica escolhida. */
 export function fimDoCiclo(inicio, prazo) {
   if (prazo?.tipo === 'data') {
     return paraData(prazo.data, prazo.hora)
+  }
+  if (prazo?.tipo === 'dias') {
+    const dias = Number(prazo.dias)
+    return dias > 0 ? somarDias(inicio, dias) : somarDias(inicio, 7)
   }
   const somar = PRAZOS[prazo?.periodo]
   return somar ? somar(inicio) : somarDias(inicio, 7)

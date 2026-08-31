@@ -6,6 +6,7 @@ import EditorAbertura from '../nova-pesquisa/EditorAbertura.jsx'
 import { encerrarCiclo } from '../../lib/pesquisas.js'
 import { acertarPasso } from '../../lib/acertar.js'
 import { registrar } from '../../lib/alteracoes.js'
+import { alternarObrigatoria, ehObrigatoria } from '../../lib/obrigatorias.js'
 import s from './AbaPerguntas.module.css'
 
 /*
@@ -66,6 +67,18 @@ export default function AbaPerguntas({ pesquisa, onAlterar }) {
         nome={pesquisa.nome}
         abertura={pesquisa.abertura}
         perguntas={pesquisa.perguntas || []}
+        ehObrigatoria={(pergunta) => ehObrigatoria(pergunta, pesquisa)}
+        onAlternarObrigatoria={(pergunta) =>
+          seDerParaMexer(() =>
+            onAlterar((p) =>
+              registrar(
+                alternarObrigatoria(p, pergunta.id),
+                'editou',
+                pergunta.enunciado,
+              ),
+            ),
+          )()
+        }
         onEditarAbertura={seDerParaMexer(() =>
           setAberturaAberta({ nome: pesquisa.nome, abertura: pesquisa.abertura }),
         )}

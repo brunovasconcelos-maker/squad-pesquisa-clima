@@ -30,7 +30,7 @@ const TEMPLATES = [
 
 export default function TelaTemplate() {
   const navigate = useNavigate()
-  const { escolherTemplate } = usePesquisa()
+  const { escolherTemplate, sair } = usePesquisa()
 
   const escolher = (id) => {
     escolherTemplate(id)
@@ -50,7 +50,7 @@ export default function TelaTemplate() {
       progresso={2 / 6}
       larga
       mostrarContinuar={false}
-      onFechar={() => navigate('/')}
+      onFechar={sair}
       onVoltar={() => navigate('..')}
     >
       <div className={s.conteudo}>

@@ -35,13 +35,15 @@ function textoDeEnvio({ imediato, data, hora }) {
   return imediato ? 'Imediatamente' : `${data}, as ${hora}`
 }
 
-function textoDePrazo({ tipo, periodo, data, hora }) {
-  return tipo === 'data' ? `${data}, as ${hora}` : periodo
+function textoDePrazo({ tipo, periodo, dias, data, hora }) {
+  if (tipo === 'data') return `${data}, as ${hora}`
+  if (tipo === 'dias') return dias ? `${dias} dias` : 'Dias'
+  return periodo
 }
 
 export default function TelaConfiguracao() {
   const navigate = useNavigate()
-  const { pesquisa, definir, definirConfiguracao } = usePesquisa()
+  const { pesquisa, definir, definirConfiguracao, sair } = usePesquisa()
   const [modal, setModal] = useState(null)
 
   const c = pesquisa.configuracao
@@ -54,7 +56,7 @@ export default function TelaConfiguracao() {
 
   return (
     <div className={s.tela}>
-      <CabecalhoFluxo titulo="Nova Pesquisa" onFechar={() => navigate('/')} />
+      <CabecalhoFluxo titulo="Nova Pesquisa" onFechar={sair} />
 
       <div className={s.miolo}>
         <div className={s.coluna}>

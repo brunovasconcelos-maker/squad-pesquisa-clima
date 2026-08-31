@@ -1,8 +1,10 @@
 import { createContext, useContext, useMemo, useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 import { gerarPerguntas } from './bancoDePerguntas.js'
 import { ABERTURA_TEMPLATE, ABERTURA_BRANCO } from './perguntasExemplo.js'
 import { formatarLongo, somarDias } from '../../lib/datas.js'
+import { criarRascunho, gravar, ler } from '../../lib/pesquisas.js'
+import ModalSairDoFluxo from './ModalSairDoFluxo.jsx'
 import { CAPA_PADRAO } from '../../lib/capa.js'
 
 /*
@@ -142,7 +144,12 @@ export function usePesquisa() {
 }
 
 export default function PesquisaProvider() {
+  const navigate = useNavigate()
   const [pesquisa, setPesquisa] = useState(estadoInicial)
+  /* O X de qualquer tela do fluxo pergunta antes de sair. A pergunta mora
+     aqui, e não em cada tela, porque a resposta é a mesma nas seis e o que
+     ela guarda é este estado. */
+  const [saindo, setSaindo] = useState(false)
 
   const valor = useMemo(() => {
     const definir = (campos) => setPesquisa((atual) => ({ ...atual, ...campos }))
@@ -150,6 +157,8 @@ export default function PesquisaProvider() {
     return {
       pesquisa,
       definir,
+      /* O que o X das telas chama. Salvar acontece na confirmação. */
+      sair: () => setSaindo(true),
       /* O prompt é montado aqui, na escolha do template, e não na tela 6:
          assim o texto é gerado uma vez e as edições do usuário sobrevivem a
          ir e voltar entre os passos. */
@@ -195,6 +204,17 @@ export default function PesquisaProvider() {
   return (
     <Contexto.Provider value={valor}>
       <Outlet />
+
+      {saindo ? (
+        <ModalSairDoFluxo
+          onCancelar={() => setSaindo(false)}
+          onDescartar={() => navigate('/')}
+          onSalvar={() => {
+            gravar([...ler(), criarRascunho(pesquisa)])
+            navigate('/')
+          }}
+        />
+      ) : null}
     </Contexto.Provider>
   )
 }

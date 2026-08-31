@@ -5,6 +5,11 @@
   gap: var(--espaco-24);
 }
 
+/* A área do arquivo e o zoom seguem o mesmo espaçamento dos campos de cor. */
+.linhaZoom + .trocar {
+  margin-top: var(--espaco-8);
+}
+
 /* Prévia com a proporção da faixa da Revisão (1440x200): é lá que a capa
    aparece, então é essa a forma que vale a pena mostrar. */
 .previa {
@@ -83,31 +88,50 @@
 
 /* ---- painéis ---- */
 
+/* Os painéis respiram como os outros modais: 24 entre campos, 8 entre o
+   rótulo e o controle, e 8 de folga em cima para o conteúdo não colar na
+   linha das sub-abas. */
 .painel {
   display: flex;
   width: 100%;
   flex-direction: column;
-  gap: var(--espaco-16);
+  padding-top: var(--espaco-8);
+  gap: var(--espaco-24);
+}
+
+.campo {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: var(--espaco-8);
+}
+
+.rotulo {
+  color: var(--cor-texto-secundario);
+  font-size: 14px;
+  font-weight: var(--peso-medio);
+  letter-spacing: -0.08px;
 }
 
 .linhaDeCor {
   display: flex;
   width: 100%;
   align-items: center;
-  gap: var(--espaco-12);
+  gap: var(--espaco-16);
 }
 
-/* Quadrado de 40px com o seletor nativo invisível por cima: o clique em
-   qualquer ponto abre o seletor do sistema. */
+/* Quadrado de 48px com o seletor nativo invisível por cima: o clique em
+   qualquer ponto abre o seletor do sistema. Mesma altura do campo ao lado,
+   para os dois formarem uma linha só. */
 .amostra {
   position: relative;
   display: block;
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   flex: none;
   overflow: hidden;
   border: 1px solid var(--cor-borda-acao);
-  border-radius: var(--raio-campo);
+  border-radius: var(--raio-caixa);
   cursor: pointer;
 }
 
@@ -125,10 +149,10 @@
 .campoHex {
   flex: 1 0 0;
   min-width: 0;
-  height: 40px;
-  padding: 0 var(--espaco-12);
+  height: 48px;
+  padding: 0 var(--espaco-16);
   border: 1px solid var(--cor-borda-acao);
-  border-radius: var(--raio-campo);
+  border-radius: var(--raio-caixa);
   background: var(--cor-fundo);
   color: var(--cor-texto);
   font-family: inherit;
@@ -136,6 +160,11 @@
   font-weight: var(--peso-medio);
   letter-spacing: -0.31px;
   text-transform: lowercase;
+}
+
+.campoHex:focus {
+  outline: none;
+  border-color: var(--cor-texto-secundario);
 }
 
 /* ---- imagem ---- */

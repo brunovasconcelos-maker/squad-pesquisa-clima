@@ -3,7 +3,7 @@ import { Outlet, useNavigate, useParams } from 'react-router-dom'
 import { aceitaResposta, avaliarLista, gravar, ler } from '../../lib/pesquisas.js'
 import { adicionarResposta, sincronizar } from '../../lib/respostas.js'
 import { sincronizarHistorico } from '../../lib/historico.js'
-import { ehObrigatoria } from './obrigatorias.js'
+import { ehObrigatoria } from '../../lib/obrigatorias.js'
 import { PESQUISA_EXEMPLO } from './exemplo.js'
 import TelaForaDoAr from './TelaForaDoAr.jsx'
 

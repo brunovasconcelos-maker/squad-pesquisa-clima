@@ -17,7 +17,7 @@ import caretRight from '../../assets/icons/CaretRight.svg'
  */
 export default function TelaNome() {
   const navigate = useNavigate()
-  const { pesquisa, definir } = usePesquisa()
+  const { pesquisa, definir, sair } = usePesquisa()
   const [modalAberto, setModalAberto] = useState(false)
 
   const podeContinuar =
@@ -29,7 +29,7 @@ export default function TelaNome() {
         titulo="Nova Pesquisa"
         progresso={1 / 6}
         continuarDesabilitado={!podeContinuar}
-        onFechar={() => navigate('/')}
+        onFechar={sair}
         onVoltar={() => navigate('/')}
         onContinuar={() => navigate('template')}
       >

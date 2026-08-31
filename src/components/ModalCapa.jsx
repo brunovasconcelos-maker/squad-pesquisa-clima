@@ -55,7 +55,8 @@ function useCor(inicial) {
 function Amostra({ cor, rotulo, onEscolher }) {
   return (
     <label className={s.amostra} style={{ background: cor }}>
-      <span className={s.oculto}>{rotulo}</span>
+      {/* O nome do controle está no próprio input; o rótulo visível fica
+          acima, no campo. */}
       <input
         className={s.seletorNativo}
         type="color"
@@ -67,19 +68,24 @@ function Amostra({ cor, rotulo, onEscolher }) {
   )
 }
 
+/* Campo rotulado, como os dos outros modais do projeto: o rótulo em cima e o
+   controle embaixo — aqui a amostra e o hex lado a lado. */
 function CampoDeCor({ rotulo, campo }) {
   return (
-    <div className={s.linhaDeCor}>
-      <Amostra cor={campo.cor} rotulo={rotulo} onEscolher={campo.definir} />
-      <input
-        className={s.campoHex}
-        type="text"
-        value={campo.texto}
-        maxLength={7}
-        spellCheck={false}
-        aria-label={`${rotulo} em hexadecimal`}
-        onChange={(e) => campo.definir(e.target.value.trim())}
-      />
+    <div className={s.campo}>
+      <span className={s.rotulo}>{rotulo}</span>
+      <div className={s.linhaDeCor}>
+        <Amostra cor={campo.cor} rotulo={rotulo} onEscolher={campo.definir} />
+        <input
+          className={s.campoHex}
+          type="text"
+          value={campo.texto}
+          maxLength={7}
+          spellCheck={false}
+          aria-label={`${rotulo} em hexadecimal`}
+          onChange={(e) => campo.definir(e.target.value.trim())}
+        />
+      </div>
     </div>
   )
 }

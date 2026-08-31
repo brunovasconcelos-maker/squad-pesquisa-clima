@@ -16,17 +16,36 @@ import close from '../../assets/icons/Close.svg'
  * A seleção é editada numa cópia local e só sobe no "Salvar" — é o que faz o
  * "Voltar" descartar as marcações sem precisar desfazer nada.
  *
+ * "Toda empresa" e os grupos se excluem: marcar um grupo desmarca a empresa
+ * inteira, e marcar a empresa limpa os grupos. São duas formas de dizer a
+ * mesma coisa — quem é o público —, e as duas ligadas ao mesmo tempo não
+ * querem dizer nada além do que "Toda empresa" já diz.
+ *
+ * A lista de grupos começa fechada: quem escolhe a empresa inteira não
+ * precisa ver os grupos, e quem quer um grupo abre.
+ *
  * A busca continua decorativa, como combinado.
  */
 export default function ModalParticipantes({ selecao, onSalvar, onFechar }) {
   const [rascunho, setRascunho] = useState(selecao)
+  /* Aberta quando já há grupo escolhido: fechar a lista escondendo uma
+     escolha que existe seria pior do que abri-la sem precisar. */
+  const [gruposAbertos, setGruposAbertos] = useState(
+    () => (selecao?.grupos?.length ?? 0) > 0,
+  )
 
   const alternarEmpresa = () =>
-    setRascunho((r) => ({ ...r, todaEmpresa: !r.todaEmpresa }))
+    setRascunho((r) =>
+      r.todaEmpresa
+        ? { ...r, todaEmpresa: false }
+        : { ...r, todaEmpresa: true, grupos: [] },
+    )
 
   const alternarGrupo = (grupo) =>
     setRascunho((r) => ({
       ...r,
+      // Escolher um grupo é dizer que não é a empresa inteira.
+      todaEmpresa: false,
       grupos: r.grupos.includes(grupo)
         ? r.grupos.filter((g) => g !== grupo)
         : [...r.grupos, grupo],
@@ -61,27 +80,34 @@ export default function ModalParticipantes({ selecao, onSalvar, onFechar }) {
             onAlternar={alternarEmpresa}
           />
 
-          <div className={s.linhaGrupos}>
-            <p className={s.rotuloGrupos}>Grupos:</p>
+          <button
+            type="button"
+            className={s.linhaGrupos}
+            aria-expanded={gruposAbertos}
+            onClick={() => setGruposAbertos((aberta) => !aberta)}
+          >
+            <span className={s.rotuloGrupos}>Grupos:</span>
             <img
-              className={s.caixa}
+              className={`${s.caixa} ${gruposAbertos ? s.setaAberta : ''}`}
               src={caretDown}
               alt=""
               width={24}
               height={24}
             />
-          </div>
+          </button>
 
-          <div className={s.sublista}>
-            {GRUPOS.map((grupo) => (
-              <Item
-                key={grupo}
-                nome={grupo}
-                marcado={rascunho.grupos.includes(grupo)}
-                onAlternar={() => alternarGrupo(grupo)}
-              />
-            ))}
-          </div>
+          {gruposAbertos ? (
+            <div className={s.sublista}>
+              {GRUPOS.map((grupo) => (
+                <Item
+                  key={grupo}
+                  nome={grupo}
+                  marcado={rascunho.grupos.includes(grupo)}
+                  onAlternar={() => alternarGrupo(grupo)}
+                />
+              ))}
+            </div>
+          ) : null}
         </div>
 
         <div className={s.divisor}>

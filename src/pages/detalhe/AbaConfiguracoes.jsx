@@ -63,7 +63,9 @@ const REPETICAO = {
 
 function textoDePrazo(prazo) {
   if (!prazo) return '—'
-  return prazo.tipo === 'data' ? `${prazo.data}, as ${prazo.hora}` : prazo.periodo
+  if (prazo.tipo === 'data') return `${prazo.data}, as ${prazo.hora}`
+  if (prazo.tipo === 'dias') return prazo.dias ? `${prazo.dias} dias` : '—'
+  return prazo.periodo
 }
 
 /* Um cartão da coluna: título, as linhas e o que vier de rodapé (a pílula

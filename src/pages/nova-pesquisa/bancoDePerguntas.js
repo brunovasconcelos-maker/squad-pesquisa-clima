@@ -137,14 +137,50 @@ export function perguntaVazia(tipo) {
   return base
 }
 
+/* Os seis tipos, com os nomes que aparecem para quem monta a pesquisa. Uma
+   lista só: o seletor do editor, o título do modal e a grade da pergunta nova
+   leem daqui, então o vocabulário é o mesmo nos três. */
 export const TIPOS = [
-  { id: 'nota', nome: 'Nota' },
-  { id: 'escolhaUnica', nome: 'Escolha única' },
-  { id: 'escolhaMultipla', nome: 'Múltipla escolha' },
-  { id: 'respostaCurta', nome: 'Resposta curta' },
-  { id: 'respostaLonga', nome: 'Resposta longa' },
-  { id: 'estrelas', nome: 'Estrelas' },
+  { id: 'respostaLonga', nome: 'Texto longo' },
+  { id: 'respostaCurta', nome: 'Texto curto' },
+  { id: 'escolhaMultipla', nome: 'Múltipla seleção' },
+  { id: 'escolhaUnica', nome: 'Seleção única' },
+  { id: 'nota', nome: 'Avaliação de 0 a X' },
+  { id: 'estrelas', nome: 'Nota final' },
 ]
+
+/*
+ * Troca o tipo de uma pergunta guardando o que ainda faz sentido.
+ *
+ * O enunciado atravessa sempre. As opções atravessam entre seleção única e
+ * múltipla, que guardam a mesma coisa; para qualquer outro tipo elas somem,
+ * junto com o resto do que era só daquele tipo — deixar campos órfãos no
+ * objeto faria o cartão desenhar coisa que a pergunta não tem mais.
+ */
+export function converterPergunta(pergunta, tipo) {
+  if (pergunta.tipo === tipo) return pergunta
+
+  const base = { id: pergunta.id, tipo, enunciado: pergunta.enunciado }
+  /* A obrigatoriedade é da pergunta, não do tipo: sobrevive à troca. */
+  if (pergunta.obrigatoria !== undefined) base.obrigatoria = pergunta.obrigatoria
+
+  if (tipo === 'nota') {
+    return {
+      ...base,
+      maximo: pergunta.maximo ?? 5,
+      pontaEsquerda: pergunta.pontaEsquerda ?? '',
+      pontaDireita: pergunta.pontaDireita ?? '',
+    }
+  }
+  if (tipo === 'escolhaUnica' || tipo === 'escolhaMultipla') {
+    return {
+      ...base,
+      opcoes: pergunta.opcoes ?? ['', ''],
+      temOutro: pergunta.temOutro ?? false,
+    }
+  }
+  return base
+}
 
 export const LIMITE_CURTA = 200
 export const LIMITE_LONGA = 1200

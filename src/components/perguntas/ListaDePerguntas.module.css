@@ -37,13 +37,16 @@
   white-space: nowrap;
 }
 
-/* O Figma prende as ações num bloco de 356px alinhado à direita. */
+/* O Figma prendia as ações num bloco de 356px alinhado à direita. Com o
+   interruptor de obrigatória à esquerda dos ícones o bloco passou a ser mais
+   largo que isso, então a largura sai e o `justify-between` do topo do cartão
+   é que encosta tudo na direita. */
 .acoes {
   display: flex;
-  width: 356px;
+  flex: none;
   align-items: center;
   justify-content: flex-end;
-  gap: var(--espaco-20);
+  gap: var(--espaco-16);
 }
 
 .acao {
@@ -245,4 +248,15 @@
   text-align: left;
   padding: 0;
   cursor: pointer;
+}
+
+/* Rótulo do interruptor de obrigatória: cinza e discreto, como os outros
+   rótulos de apoio do projeto. */
+.rotuloObrigatoria {
+  margin-right: var(--espaco-8);
+  color: var(--cor-texto-secundario);
+  font-size: 14px;
+  font-weight: var(--peso-medio);
+  letter-spacing: -0.08px;
+  white-space: nowrap;
 }

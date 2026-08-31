@@ -18,14 +18,14 @@ const EXEMPLO =
 
 export default function TelaPrompt() {
   const navigate = useNavigate()
-  const { pesquisa, definir } = usePesquisa()
+  const { pesquisa, definir, sair } = usePesquisa()
 
   return (
     <FluxoLayout
       titulo="Feedback time de Design"
       progresso={4 / 6}
       centrada
-      onFechar={() => navigate('/')}
+      onFechar={sair}
       onVoltar={() => navigate('../perguntas')}
       onContinuar={() => navigate('../carregando')}
     >

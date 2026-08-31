@@ -85,6 +85,35 @@ export function criarDoFluxo(pesquisa, agora = new Date()) {
   return avaliar(base, agora)
 }
 
+/*
+ * Guarda o fluxo pela metade como rascunho.
+ *
+ * Não passa pelo motor: um rascunho não tem ciclo, data nem status a avançar
+ * — é o que foi preenchido até aqui, esperando alguém voltar. O nome cai num
+ * padrão quando ainda não foi escrito, senão a linha da lista ficaria vazia.
+ */
+export function criarRascunho(pesquisa, agora = new Date()) {
+  return {
+    id: novoId(),
+    criadoEm: agora.toISOString(),
+    atualizadoEm: agora.toISOString(),
+    nome: pesquisa.nome?.trim() || 'Pesquisa sem nome',
+    participantes: pesquisa.participantes,
+    template: pesquisa.template,
+    abertura: pesquisa.abertura,
+    capa: pesquisa.capa,
+    prompt: pesquisa.prompt,
+    quantidade: pesquisa.quantidade,
+    perguntas: pesquisa.perguntas,
+    configuracao: pesquisa.configuracao,
+    ciclos: 0,
+    taxa: 0,
+    cicloInicio: null,
+    cicloFim: null,
+    status: 'rascunho',
+  }
+}
+
 export function duplicar(p, agora = new Date()) {
   return {
     ...p,

@@ -10,6 +10,7 @@ import ModalConfirmarVoltar from './ModalConfirmarVoltar.jsx'
 import ModalCapa from '../../components/ModalCapa.jsx'
 import { estiloDaCapa } from '../../lib/capa.js'
 import { usePesquisa } from './estado.jsx'
+import { alternarObrigatoria, ehObrigatoria } from '../../lib/obrigatorias.js'
 
 /*
  * Revisão das perguntas (Figma 8065:4915).
@@ -31,7 +32,7 @@ import { usePesquisa } from './estado.jsx'
  */
 export default function TelaRevisao() {
   const navigate = useNavigate()
-  const { pesquisa, definir, removerPergunta, salvarPergunta } = usePesquisa()
+  const { pesquisa, definir, removerPergunta, salvarPergunta, sair } = usePesquisa()
   const [emEdicao, setEmEdicao] = useState(false)
   const [aberturaAberta, setAberturaAberta] = useState(false)
   const [confirmandoVoltar, setConfirmandoVoltar] = useState(false)
@@ -46,7 +47,7 @@ export default function TelaRevisao() {
     <div className={s.tela}>
       <CabecalhoFluxo
         titulo={pesquisa.nome || 'Nova Pesquisa'}
-        onFechar={() => navigate('/')}
+        onFechar={sair}
       />
 
       {/* A faixa é a capa: o que for escolhido aqui é o que a pesquisa leva
@@ -66,9 +67,13 @@ export default function TelaRevisao() {
           nome={pesquisa.nome}
           abertura={pesquisa.abertura}
           perguntas={pesquisa.perguntas}
+          ehObrigatoria={(pergunta) => ehObrigatoria(pergunta, pesquisa)}
           onEditarAbertura={() => setAberturaAberta(true)}
           onEditarPergunta={(pergunta) => setEmEdicao(pergunta)}
           onRemoverPergunta={(pergunta) => removerPergunta(pergunta.id)}
+          onAlternarObrigatoria={(pergunta) =>
+            definir({ perguntas: alternarObrigatoria(pesquisa, pergunta.id).perguntas })
+          }
           onAdicionar={() => setEmEdicao(null)}
         />
       </div>

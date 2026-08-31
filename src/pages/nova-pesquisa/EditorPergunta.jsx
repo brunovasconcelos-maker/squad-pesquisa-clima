@@ -4,6 +4,7 @@ import Botao from '../../components/fluxo/Botao.jsx'
 import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
 import {
   TIPOS,
+  converterPergunta,
   perguntaVazia,
   LIMITE_CURTA,
   LIMITE_LONGA,
@@ -94,6 +95,25 @@ export default function EditorPergunta({ pergunta, onSalvar, onFechar }) {
         </div>
 
         <div className={s.corpo}>
+          {/* Trocar o tipo aqui troca os campos abaixo: o que não vale mais
+              para o tipo novo sai do rascunho junto. */}
+          <label className={s.campo}>
+            <span className={s.rotulo}>Tipo</span>
+            <select
+              className={s.entrada}
+              value={rascunho.tipo}
+              onChange={(e) =>
+                setRascunho((r) => converterPergunta(r, e.target.value))
+              }
+            >
+              {TIPOS.map(({ id, nome }) => (
+                <option key={id} value={id}>
+                  {nome}
+                </option>
+              ))}
+            </select>
+          </label>
+
           <label className={s.campo}>
             <span className={s.rotulo}>Pergunta</span>
             <textarea

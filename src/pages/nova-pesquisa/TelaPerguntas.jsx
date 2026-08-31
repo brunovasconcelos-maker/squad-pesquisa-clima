@@ -21,7 +21,7 @@ import plus from '../../assets/icons/Plus.svg'
  */
 export default function TelaPerguntas() {
   const navigate = useNavigate()
-  const { pesquisa, definir } = usePesquisa()
+  const { pesquisa, definir, sair } = usePesquisa()
 
   const minutos = minutosEstimados(pesquisa.quantidade)
   const somar = (passo) =>
@@ -37,7 +37,7 @@ export default function TelaPerguntas() {
       titulo="Feedback time de Design"
       progresso={3 / 6}
       centrada
-      onFechar={() => navigate('/')}
+      onFechar={sair}
       onVoltar={() => navigate('../template')}
       onContinuar={() => navigate('../prompt')}
     >

@@ -1,4 +1,5 @@
 import s from './ListaDePerguntas.module.css'
+import Interruptor from '../fluxo/Interruptor.jsx'
 import { LIMITE_CURTA, LIMITE_LONGA } from '../../pages/nova-pesquisa/bancoDePerguntas.js'
 
 import pencilSimpleLine from '../../assets/icons/PencilSimpleLine.svg'
@@ -22,6 +23,10 @@ import plus from '../../assets/icons/Plus.svg'
  * Em `somenteLeitura` os botões somem — não desabilitados, ausentes. É como a
  * tela do ciclo mostra as perguntas de um ciclo fechado: aquilo já foi
  * perguntado e não há o que editar.
+ *
+ * O interruptor "Tornar obrigatória" fica à esquerda dos ícones e vale para
+ * aquela pergunta só. O padrão da pesquisa, nas configurações avançadas,
+ * decide por quem nunca foi mexida; mexer numa a solta do padrão.
  *
  * O vermelho do Trash vem do próprio SVG (#FF2633), não de CSS.
  */
@@ -238,9 +243,11 @@ export default function ListaDePerguntas({
   abertura,
   perguntas,
   somenteLeitura = false,
+  ehObrigatoria = () => false,
   onEditarAbertura,
   onEditarPergunta,
   onRemoverPergunta,
+  onAlternarObrigatoria,
   onAdicionar,
 }) {
   return (
@@ -270,6 +277,12 @@ export default function ListaDePerguntas({
             <p className={s.rotuloPergunta}>Pergunta {indice + 1}:</p>
             {somenteLeitura ? null : (
               <div className={s.acoes}>
+                <span className={s.rotuloObrigatoria}>Tornar obrigatória</span>
+                <Interruptor
+                  ligado={ehObrigatoria(pergunta)}
+                  rotulo={`Tornar obrigatória a pergunta ${indice + 1}`}
+                  onAlternar={() => onAlternarObrigatoria(pergunta)}
+                />
                 <Icone
                   src={pencilSimpleLine}
                   rotulo={`Editar pergunta ${indice + 1}`}

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import s from './Configuracao.module.css'
 import ModalFluxo from '../../components/fluxo/ModalFluxo.jsx'
+import { deCampoDeData, paraCampoDeData } from '../../lib/datas.js'
 import LinhaResumo from '../../components/fluxo/LinhaResumo.jsx'
 import Interruptor from '../../components/fluxo/Interruptor.jsx'
 
@@ -57,20 +58,29 @@ function ListaDeOpcoes({ opcoes, marcada, onEscolher }) {
   )
 }
 
+/*
+ * Data e hora pelos seletores do próprio navegador: `type="date"` abre o
+ * calendário e `type="time"` o relógio, com teclado e idioma de graça e sem
+ * biblioteca nenhuma no pacote. O projeto já usa o mesmo caminho no seletor
+ * de cor da capa.
+ *
+ * O campo fala ISO curto; o que fica guardado continua no formato longo que
+ * `paraData` lê. A conversão mora em lib/datas.js.
+ */
 function ParDeCampos({ data, hora, onMudar, desabilitado = false }) {
   return (
     <div className={s.parDeCampos}>
       <input
         className={s.campoData}
-        type="text"
-        value={data}
+        type="date"
+        value={paraCampoDeData(data)}
         disabled={desabilitado}
         aria-label="Data"
-        onChange={(e) => onMudar({ data: e.target.value })}
+        onChange={(e) => onMudar({ data: deCampoDeData(e.target.value) })}
       />
       <input
         className={s.campoData}
-        type="text"
+        type="time"
         value={hora}
         disabled={desabilitado}
         aria-label="Hora"
@@ -174,6 +184,7 @@ const PERIODOS = ['1 dia', '1 semana', '1 mês']
 export function ModalPrazo({ valor, onSalvar, onFechar }) {
   const [rascunho, , alterar, salvar] = useRascunho(valor, onSalvar)
   const porData = rascunho.tipo === 'data'
+  const porDias = rascunho.tipo === 'dias'
 
   return (
     <ModalFluxo
@@ -187,10 +198,33 @@ export function ModalPrazo({ valor, onSalvar, onFechar }) {
           <Opcao
             key={periodo}
             texto={periodo}
-            marcada={!porData && rascunho.periodo === periodo}
+            marcada={rascunho.tipo === 'periodo' && rascunho.periodo === periodo}
             onEscolher={() => alterar({ tipo: 'periodo', periodo })}
           />
         ))}
+
+        {/* Quarta opção: um número de dias qualquer. Escolher o rádio ou
+            digitar no campo é a mesma coisa — quem digita está escolhendo. */}
+        <div className={s.opcaoComCampos}>
+          <Opcao
+            rotulo="Prazo em dias"
+            marcada={porDias}
+            onEscolher={() => alterar({ tipo: 'dias' })}
+          />
+          <div className={s.parDeCampos}>
+            <input
+              className={s.campoData}
+              type="number"
+              min="1"
+              max="365"
+              value={rascunho.dias ?? ''}
+              placeholder="15"
+              aria-label="Número de dias"
+              onChange={(e) => alterar({ tipo: 'dias', dias: e.target.value })}
+            />
+            <span className={s.unidadeCampo}>Dias</span>
+          </div>
+        </div>
 
         <div className={s.divisor}>
           <span className={s.divisorLinha} />
