@@ -21,9 +21,6 @@ import { alteracoesDoCiclo } from './alteracoes.js'
  * nunca entra — a lista é do que já fechou.
  */
 
-/* Convidados de um ciclo. O Figma mostra "25|32". */
-export const CONVIDADOS = 32
-
 /* Quantos ciclos já fecharam: todos menos o que está rodando agora. */
 export function ciclosFechados(p) {
   const total = p.ciclos ?? 0
@@ -76,7 +73,11 @@ function criarCiclo(p, numero, inicio) {
      não pode mudar o que foi perguntado neste ciclo. */
   const perguntas = (p.perguntas || []).map((q) => ({ ...q }))
 
-  const responderam = Math.round((taxa / 100) * CONVIDADOS)
+  /* Convidados são o público da pesquisa, o mesmo número que o cartão do
+     Geral usa. Um fixo aqui fazia as duas telas contarem sobre bases
+     diferentes: "29 de 32" de um lado, "17 de 56" do outro. */
+  const convidados = totalDeParticipantes(p.participantes)
+  const responderam = Math.round((taxa / 100) * convidados)
   const respostas = Array.from({ length: responderam }, (_, i) => ({
     id: `${p.id}_c${numero}_r${i}`,
     valores: Object.fromEntries(
@@ -94,7 +95,7 @@ function criarCiclo(p, numero, inicio) {
     fim: fim.toISOString(),
     taxa,
     cedo,
-    convidados: CONVIDADOS,
+    convidados,
     perguntas,
     respostas,
   }
@@ -104,15 +105,37 @@ function criarCiclo(p, numero, inicio) {
  * Acerta o histórico guardado com quantos ciclos já fecharam. Devolve a
  * própria pesquisa quando não há nada a fazer, para quem chama saber que não
  * precisa gravar.
+ *
+ * Acerta também o público de cada ciclo. Ele é da pesquisa, não do ciclo:
+ * mudou o público — ou o ciclo veio de quando o histórico usava um número
+ * fixo —, a taxa dele passa a contar sobre o público de verdade.
+ *
+ * Só o denominador muda, e a lista de respostas nunca cresce aqui: apagar as
+ * de um ciclo continua durando. Ela só encolhe quando passou a ter mais
+ * respostas do que convidados, que é uma conta que não existe.
  */
 export function sincronizarHistorico(p) {
   if (!p) return p
   const quantos = ciclosFechados(p)
+  const publico = totalDeParticipantes(p.participantes)
   const atuais = p.historico || []
-  if (quantos === atuais.length) return p
-  if (quantos < atuais.length) {
+
+  /* Mais respostas que convidados não existe: quando o público encolhe, a
+     lista do ciclo encolhe junto, senão a tabela diria 180%. */
+  const comPublico = (c) => {
+    const respostas = c.respostas || []
+    const cabem = respostas.length > publico ? respostas.slice(0, publico) : respostas
+    if (c.convidados === publico && cabem === respostas) return c
+    return { ...c, convidados: publico, respostas: cabem }
+  }
+
+  if (quantos <= atuais.length) {
     // Perdeu ciclos (uma cópia, por exemplo): fica com os mais antigos.
-    return { ...p, historico: atuais.slice(atuais.length - quantos) }
+    const cortados = atuais.slice(atuais.length - quantos)
+    const acertados = cortados.map(comPublico)
+    const igual =
+      acertados.length === atuais.length && acertados.every((c, i) => c === atuais[i])
+    return igual ? p : { ...p, historico: acertados }
   }
 
   const inicios = iniciosAnteriores(p, quantos)
@@ -120,7 +143,7 @@ export function sincronizarHistorico(p) {
   for (let passo = 0; passo < quantos; passo += 1) {
     const numero = quantos - passo
     const guardado = atuais.find((c) => c.numero === numero)
-    novos.push(guardado || criarCiclo(p, numero, inicios[passo]))
+    novos.push(guardado ? comPublico(guardado) : criarCiclo(p, numero, inicios[passo]))
   }
   return { ...p, historico: novos }
 }
@@ -149,11 +172,12 @@ export function historicoDe(p) {
  * cartão de cima já mostra — em curso quando está rodando, o último quando a
  * pesquisa está entre ciclos —, e os dois cartões não podem falar do mesmo.
  *
- * Os números são os do próprio ciclo (respostas e convidados guardados nele),
- * que são os mesmos que a tabela do Histórico conta.
+ * Os números são os do próprio ciclo, que são os mesmos que a tabela do
+ * Histórico conta — e o público é o da pesquisa, o mesmo do cartão de cima.
  */
 export function taxasAnteriores(p) {
   if (!ehRecorrente(p)) return []
+  const publico = totalDeParticipantes(p.participantes)
   return historicoDe(p)
     .filter((c) => c.numero < (p.ciclos ?? 0))
     .sort((a, b) => b.numero - a.numero)
@@ -162,7 +186,7 @@ export function taxasAnteriores(p) {
       titulo: 'Taxa de resposta anterior',
       periodo: formatarPeriodo(c.inicio),
       taxa: c.taxa,
-      principal: `${c.respostas?.length ?? 0} de ${c.convidados ?? CONVIDADOS} responderam essa pesquisa.`,
+      principal: `${c.respostas?.length ?? 0} de ${c.convidados ?? publico} responderam essa pesquisa.`,
       apoio: `Encerrada em ${formatarMedio(c.fim)}`,
     }))
 }
@@ -171,7 +195,8 @@ export function taxasAnteriores(p) {
    sorteou o ciclo: apagar as respostas tem de derrubar a taxa junto, senão a
    linha do Histórico diria 71% para um ciclo com zero respostas. */
 export function taxaDoCiclo(ciclo) {
-  const convidados = ciclo.convidados || CONVIDADOS
+  const convidados = ciclo.convidados || 0
+  if (!convidados) return 0
   return Math.round(((ciclo.respostas?.length ?? 0) / convidados) * 100)
 }
 
