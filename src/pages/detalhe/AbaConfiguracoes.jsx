@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import s from './AbaConfiguracoes.module.css'
+import Aviso from '../../components/Aviso.jsx'
 import Botao from '../../components/fluxo/Botao.jsx'
 import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
 import Interruptor from '../../components/fluxo/Interruptor.jsx'
@@ -100,6 +101,8 @@ function LinhaInterruptor({ rotulo, ligado, desabilitado = false, onAlternar }) 
 export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
   const [modal, setModal] = useState(null)
   const [confirmacao, setConfirmacao] = useState(null)
+  const [aviso, setAviso] = useState('')
+  const limparAviso = useCallback(() => setAviso(''), [])
   const c = pesquisa.configuracao || {}
   const avancadas = c.avancadas || {}
   const publicada = estaPublicada(pesquisa)
@@ -160,11 +163,26 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
     })
   }
 
-  /* Abre a vista de quem responde numa aba nova, para dar para conferir a
-     pesquisa sem perder a tela de configuração. `noopener` porque a aba nova
-     não tem nada que fazer com esta. */
-  const aoAbrirPesquisa = () =>
-    window.open(linkDaPesquisa(pesquisa), '_blank', 'noopener')
+  /*
+   * Copia o link e abre a vista de quem responde numa aba nova: o botão
+   * entrega o link para mandar para alguém e, de quebra, mostra como ela
+   * ficou sem perder a tela de configuração. `noopener` porque a aba nova não
+   * tem nada que fazer com esta.
+   *
+   * Abrir vem primeiro, e de propósito: depois de um `await` o clique deixa
+   * de contar como gesto do usuário e o navegador barra a aba nova.
+   */
+  const aoCopiarEAbrir = async () => {
+    const endereco = linkDaPesquisa(pesquisa)
+    window.open(endereco, '_blank', 'noopener')
+    try {
+      await navigator.clipboard.writeText(endereco)
+      setAviso('Link copiado')
+    } catch {
+      // Sem permissão de área de transferência (contexto inseguro, por ex.).
+      setAviso('Não foi possível copiar o link')
+    }
+  }
 
   /* "Imediatamente" só faz sentido enquanto não há ciclo: com um em curso, o
      que importa é quando sai o próximo. */
@@ -178,7 +196,7 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
       <Cartao
         titulo="Opções publicadas"
         rodape={
-          <Botao variante="contorno" onClick={aoAbrirPesquisa}>
+          <Botao variante="contorno" onClick={aoCopiarEAbrir}>
             Copiar link da pesquisa
             <img className={s.iconeDoLink} src={link} alt="" width={24} height={24} />
           </Botao>
@@ -355,6 +373,8 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
           onFechar={fechar}
         />
       ) : null}
+
+      <Aviso texto={aviso} onSumir={limparAviso} />
 
       {confirmacao ? (
         <ModalConfirmar
