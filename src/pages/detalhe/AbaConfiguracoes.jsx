@@ -1,6 +1,5 @@
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import s from './AbaConfiguracoes.module.css'
-import Aviso from '../../components/Aviso.jsx'
 import Botao from '../../components/fluxo/Botao.jsx'
 import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
 import Interruptor from '../../components/fluxo/Interruptor.jsx'
@@ -29,8 +28,8 @@ import {
 } from '../../lib/pesquisas.js'
 import { acertarPasso } from '../../lib/acertar.js'
 
+import arrowUpRight from '../../assets/icons/ArrowUpRight.svg'
 import caretRight from '../../assets/icons/CaretRight.svg'
-import link from '../../assets/icons/Link.svg'
 
 /*
  * Aba "Configurações" do detalhe (Figma 8072:6532), ligada à pesquisa
@@ -99,9 +98,6 @@ function LinhaInterruptor({ rotulo, ligado, desabilitado = false, onAlternar }) 
 export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
   const [modal, setModal] = useState(null)
   const [confirmacao, setConfirmacao] = useState(null)
-  const [aviso, setAviso] = useState('')
-  const limparAviso = useCallback(() => setAviso(''), [])
-
   const c = pesquisa.configuracao || {}
   const avancadas = c.avancadas || {}
   const publicada = estaPublicada(pesquisa)
@@ -162,15 +158,11 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
     })
   }
 
-  const aoCopiarLink = async () => {
-    try {
-      await navigator.clipboard.writeText(linkDaPesquisa(pesquisa))
-      setAviso('Link copiado')
-    } catch {
-      // Sem permissão de área de transferência (contexto inseguro, por ex.).
-      setAviso('Não foi possível copiar o link')
-    }
-  }
+  /* Abre a vista de quem responde numa aba nova, para dar para conferir a
+     pesquisa sem perder a tela de configuração. `noopener` porque a aba nova
+     não tem nada que fazer com esta. */
+  const aoAbrirPesquisa = () =>
+    window.open(linkDaPesquisa(pesquisa), '_blank', 'noopener')
 
   /* "Imediatamente" só faz sentido enquanto não há ciclo: com um em curso, o
      que importa é quando sai o próximo. */
@@ -184,9 +176,15 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
       <Cartao
         titulo="Opções publicadas"
         rodape={
-          <Botao variante="contorno" onClick={aoCopiarLink}>
-            Copiar link da pesquisa
-            <img className={s.iconeDoLink} src={link} alt="" width={24} height={24} />
+          <Botao variante="contorno" onClick={aoAbrirPesquisa}>
+            Abrir pesquisa
+            <img
+              className={s.iconeDoLink}
+              src={arrowUpRight}
+              alt=""
+              width={24}
+              height={24}
+            />
           </Botao>
         }
       >
@@ -257,7 +255,15 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
           rotulo="Capa"
           controle={
             <div className={s.controleDaCapa}>
-              <span className={s.amostra} style={estiloDaCapa(pesquisa.capa)} />
+              {/* A amostra abre o mesmo modal que a seta: é o alvo mais
+                  óbvio da linha, e clicar nela sem efeito frustrava. */}
+              <button
+                type="button"
+                className={s.amostra}
+                style={estiloDaCapa(pesquisa.capa)}
+                aria-label="Editar capa"
+                onClick={() => setModal('capa')}
+              />
               <IconeBotao
                 src={caretRight}
                 rotulo="Abrir Capa"
@@ -348,8 +354,6 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
           onFechar={fechar}
         />
       ) : null}
-
-      <Aviso texto={aviso} onSumir={limparAviso} />
 
       {confirmacao ? (
         <ModalConfirmar

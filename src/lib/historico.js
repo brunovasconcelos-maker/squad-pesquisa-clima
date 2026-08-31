@@ -1,5 +1,5 @@
 import { entre, semente, totalDeParticipantes } from './geral.js'
-import { formatarMedio, proximoCiclo, somarDias } from './datas.js'
+import { formatarMedio, formatarPeriodo, proximoCiclo, somarDias } from './datas.js'
 import { ehRecorrente } from './pesquisas.js'
 import { gerarValor } from './respostas.js'
 import { alteracoesDoCiclo } from './alteracoes.js'
@@ -138,6 +138,33 @@ export function historicoDe(p) {
        subir quando ele fechar. */
     alteracoes: alteracoesDoCiclo(p, c.numero).length,
   }))
+}
+
+/*
+ * Os ciclos fechados como o cartão "Taxa de resposta anterior" do Geral
+ * precisa deles: do mais novo para o mais velho, cada um já com o rótulo do
+ * seletor e as frases do cartão.
+ *
+ * Só entram os de número menor que `ciclos`: o ciclo `ciclos` é o que o
+ * cartão de cima já mostra — em curso quando está rodando, o último quando a
+ * pesquisa está entre ciclos —, e os dois cartões não podem falar do mesmo.
+ *
+ * Os números são os do próprio ciclo (respostas e convidados guardados nele),
+ * que são os mesmos que a tabela do Histórico conta.
+ */
+export function taxasAnteriores(p) {
+  if (!ehRecorrente(p)) return []
+  return historicoDe(p)
+    .filter((c) => c.numero < (p.ciclos ?? 0))
+    .sort((a, b) => b.numero - a.numero)
+    .map((c) => ({
+      numero: c.numero,
+      titulo: 'Taxa de resposta anterior',
+      periodo: formatarPeriodo(c.inicio),
+      taxa: c.taxa,
+      principal: `${c.respostas?.length ?? 0} de ${c.convidados ?? CONVIDADOS} responderam essa pesquisa.`,
+      apoio: `Encerrada em ${formatarMedio(c.fim)}`,
+    }))
 }
 
 /* A taxa que a tabela mostra vem das respostas guardadas, não do número que

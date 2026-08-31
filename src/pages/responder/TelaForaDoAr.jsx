@@ -1,13 +1,18 @@
 import VistaResposta from './VistaResposta.jsx'
 import s from './Responder.module.css'
 
+import pipo from '../../assets/images/Pipo-Loading.png'
+
 /*
  * O que quem abre o link vê quando a pesquisa não está recebendo respostas.
  *
  * É o que o modal "Tirar do ar?" das Configurações promete: despublicar faz o
- * link parar de funcionar. Sem referência no Figma — a moldura é a mesma das
- * outras telas de quem responde, com o cartão centrado da tela final e sem
- * botão nenhum, porque não há o que fazer aqui.
+ * link parar de funcionar. Encerrada e cheia — 100% do público já respondeu —
+ * caem aqui pelo mesmo motivo: não há resposta a dar.
+ *
+ * Sem referência no Figma — a moldura é a mesma das outras telas de quem
+ * responde, com o cartão centrado da tela final e sem botão nenhum, porque
+ * não há o que fazer aqui.
  *
  * O texto muda com o motivo. Dizer "não está no ar" para uma pesquisa que
  * simplesmente acabou mandaria a pessoa cobrar quem enviou por um problema
@@ -15,9 +20,9 @@ import s from './Responder.module.css'
  */
 const MOTIVOS = {
   encerrada: {
-    titulo: 'Esta pesquisa já foi encerrada',
-    texto:
-      'O prazo para responder acabou e as respostas foram fechadas. Obrigado pelo interesse.',
+    titulo: 'Essa pesquisa foi encerrada.',
+    /* Mesmo tratamento da tela final: o Pipo entra embaixo do cartão. */
+    ilustracao: true,
   },
   rascunho: {
     titulo: 'Esta pesquisa ainda não foi publicada',
@@ -32,14 +37,30 @@ const MOTIVOS = {
 }
 
 export default function TelaForaDoAr({ pesquisa }) {
-  const motivo = MOTIVOS[pesquisa.status] ?? MOTIVOS.padrao
+  /* Cheia é o mesmo fim que encerrada, para quem chega: o ciclo já colheu
+     todas as respostas que tinha para colher. */
+  const cheia = (pesquisa.taxa ?? 0) >= 100
+  const motivo =
+    cheia || pesquisa.status === 'encerrada'
+      ? MOTIVOS.encerrada
+      : (MOTIVOS[pesquisa.status] ?? MOTIVOS.padrao)
 
   return (
     <VistaResposta pesquisa={pesquisa}>
       <section className={`${s.cartao} ${s.cartaoCentrado}`}>
         <h1 className={s.nome}>{motivo.titulo}</h1>
-        <p className={s.paragrafo}>{motivo.texto}</p>
+        {motivo.texto ? <p className={s.paragrafo}>{motivo.texto}</p> : null}
       </section>
+
+      {motivo.ilustracao ? (
+        <img
+          className={s.ilustracao}
+          src={pipo}
+          alt="Pipo trabalhando no computador"
+          width={580}
+          height={324}
+        />
+      ) : null}
     </VistaResposta>
   )
 }

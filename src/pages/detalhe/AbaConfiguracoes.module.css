@@ -56,12 +56,16 @@
   gap: var(--espaco-8);
 }
 
-/* Amostra da capa: 32px de lado, cantos de 4px. */
+/* Amostra da capa: 32px de lado, cantos de 4px. É botão, e não um quadrado
+   solto, porque abre o modal como a seta ao lado. */
 .amostra {
   display: block;
   width: 32px;
   height: 32px;
   flex: none;
+  padding: 0;
+  border: none;
   border-radius: var(--raio-campo);
+  cursor: pointer;
 }
 

@@ -1,6 +1,5 @@
 import {
   formatarMedio,
-  formatarPeriodo,
   diasAte,
   paraData,
   proximoCiclo,
@@ -175,23 +174,9 @@ export function taxaAtualDe(p, agora = new Date()) {
   }
 }
 
-/*
- * O cartão do ciclo anterior só existe quando há um ciclo anterior: recorrente
- * que já virou pelo menos uma vez. Única nunca tem, e recorrente no primeiro
- * ciclo também não — nos dois casos o cartão some e o de agora ocupa a linha.
- */
-export function taxaAnteriorDe(p) {
-  if (!ehRecorrente(p) || !p.anterior) return null
-  const total = totalDeParticipantes(p.participantes)
-  const quantos = responderam(p.anterior.taxa, total)
-  return {
-    titulo: 'Taxa de resposta anterior',
-    periodo: formatarPeriodo(p.anterior.inicio),
-    taxa: p.anterior.taxa,
-    principal: `${quantos} de ${total} responderam essa pesquisa.`,
-    apoio: p.anterior.fim ? `Encerrada em ${formatarMedio(p.anterior.fim)}` : '—',
-  }
-}
+/* O cartão do ciclo anterior agora sai do histórico guardado, e não do
+   `anterior` que o motor carrega: o seletor precisa de todos os ciclos
+   fechados, não só do último. Ele mora em lib/historico.js, com os ciclos. */
 
 /* ---- cartões de número (simulados) ---- */
 

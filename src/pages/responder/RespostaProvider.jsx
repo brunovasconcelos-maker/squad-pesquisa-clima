@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import { Outlet, useNavigate, useParams } from 'react-router-dom'
-import { avaliarLista, estaPublicada, gravar, ler } from '../../lib/pesquisas.js'
+import { aceitaResposta, avaliarLista, gravar, ler } from '../../lib/pesquisas.js'
 import { adicionarResposta, sincronizar } from '../../lib/respostas.js'
 import { sincronizarHistorico } from '../../lib/historico.js'
 import { ehObrigatoria } from './obrigatorias.js'
@@ -112,10 +112,11 @@ export default function RespostaProvider() {
     [pesquisa, perguntas, valores, responder, enviar],
   )
 
-  /* Fora do ar, nenhuma das três telas abre: o link inteiro para de
-     funcionar, que é o que despublicar quer dizer. Vale o retrato do começo
-     da sessão, como o resto — quem já estava respondendo termina. */
-  const foraDoAr = sessao.guardada && !estaPublicada(pesquisa)
+  /* Sem poder responder — fora do ar, encerrada ou já com todo mundo
+     respondido —, nenhuma das três telas abre: o link inteiro para. Vale o
+     retrato do começo da sessão, como o resto, então quem já estava
+     respondendo termina. */
+  const foraDoAr = sessao.guardada && !aceitaResposta(pesquisa)
 
   return (
     <Contexto.Provider value={valor}>

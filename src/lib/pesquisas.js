@@ -148,6 +148,13 @@ export const estaPublicada = (p) => PUBLICADAS.includes(p.status)
 export const aceitandoRespostas = (p) => p.status === 'rodando'
 
 /*
+ * Quem abre o link de resposta consegue responder? Precisa estar no ar e
+ * ainda ter quem responda: a 100% todo mundo do público já respondeu, e o
+ * formulário não tem mais o que coletar neste ciclo.
+ */
+export const aceitaResposta = (p) => estaPublicada(p) && (p.taxa ?? 0) < 100
+
+/*
  * Republica uma pesquisa que estava fora do ar. Volta a existir, mas sem
  * receber respostas: quem quiser isso liga o outro interruptor.
  *
