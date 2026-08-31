@@ -13,7 +13,6 @@ import {
 import { taxasAnteriores } from '../../lib/historico.js'
 import s from './AbaGeral.module.css'
 
-import more from '../../assets/icons/More.svg'
 import caretDown from '../../assets/icons/CaretDown.svg'
 
 /*
@@ -142,12 +141,7 @@ export default function AbaGeral({ pesquisa }) {
   return (
     <div className={s.coluna}>
       <section className={`${s.cartao} ${s.cartaoInfo}`}>
-        <div className={s.topoInfo}>
-          <h2 className={s.nome}>{pesquisa.nome}</h2>
-          <button type="button" className={s.maisOpcoes} aria-label="Mais opções">
-            <img src={more} alt="" width={24} height={24} />
-          </button>
-        </div>
+        <h2 className={s.nome}>{pesquisa.nome}</h2>
 
         <Selo status={STATUS[pesquisa.status]} />
 

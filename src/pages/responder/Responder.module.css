@@ -99,13 +99,16 @@
   letter-spacing: -0.4px;
 }
 
-/* O Figma põe o "Começar pesquisa" bem abaixo do cartão, perto do fim da
-   tela: ele desce com o espaço que sobrar. */
+/* O "Começar pesquisa" fica no meio do que sobra abaixo do cartão. No Figma
+   ele aparece lá embaixo, mas encostado no fim da tela ele fica longe demais
+   do que se acabou de ler — centrado, continua sendo o próximo passo óbvio
+   sem sumir no rodapé. */
 .acaoCentral {
   display: flex;
-  margin-top: auto;
-  padding-top: var(--espaco-40);
+  flex: 1;
+  align-items: center;
   justify-content: center;
+  padding: var(--espaco-40) 0;
 }
 
 /* Mesma caixa do enunciado da lista do administrador, sem a divisória: nesta
