@@ -296,8 +296,13 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
       {modal === 'participantes' ? (
         <ModalParticipantes
           selecao={pesquisa.participantes}
+          /* Trocar o público troca o denominador de tudo: a taxa do ciclo em
+             curso e a de cada ciclo do histórico contam sobre ele. Por isso
+             acerta o passo na mesma gravação, como as viradas de status —
+             senão o Histórico ficaria até 30s contando sobre o público
+             velho. */
           onSalvar={(participantes) => {
-            onAlterar((p) => ({ ...p, participantes }))
+            onAlterar((p) => acertarPasso({ ...p, participantes }))
             fechar()
           }}
           onFechar={fechar}

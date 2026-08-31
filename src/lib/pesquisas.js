@@ -192,10 +192,16 @@ export function encerrarCiclo(p, agora = new Date()) {
   }
 }
 
-/* O link que a pessoa recebe para responder — a vista de quem responde, não
-   o detalhe interno. */
+/*
+ * O link que a pessoa recebe para responder — a vista de quem responde, não o
+ * detalhe interno.
+ *
+ * Com o # no meio: sem ele o GitHub Pages procura um arquivo em
+ * /squad-pesquisa-clima/responder/x, que não existe, e devolve 404. A rota
+ * mora depois do #, que o servidor nem chega a ver.
+ */
 export const linkDaPesquisa = (p) =>
-  `${window.location.origin}${import.meta.env.BASE_URL}responder/${p.id}`
+  `${window.location.origin}${import.meta.env.BASE_URL}#/responder/${p.id}`
 
 const sobeTaxa = (taxa) =>
   Math.min(

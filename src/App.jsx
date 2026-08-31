@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { HashRouter, Routes, Route } from 'react-router-dom'
 import Home from './pages/Home.jsx'
 import PesquisaProvider from './pages/nova-pesquisa/estado.jsx'
 import TelaNome from './pages/nova-pesquisa/TelaNome.jsx'
@@ -16,6 +16,14 @@ import TelaPerguntaResposta from './pages/responder/TelaPergunta.jsx'
 import TelaFim from './pages/responder/TelaFim.jsx'
 
 /*
+ * Rotas por hash, e não por caminho: o GitHub Pages serve arquivos estáticos
+ * e não sabe reescrever /squad-pesquisa-clima/responder/x para o index, então
+ * abrir uma rota direto — um link de resposta, um F5 no detalhe — dava 404.
+ * Depois do # o servidor não olha, e o roteador resolve tudo no navegador.
+ *
+ * Sem `basename`: o caminho da publicação já vem antes do #, e o que o
+ * roteador lê é só o que vem depois.
+ *
  * O provider do fluxo é a rota-mãe: o estado nasce ao entrar em
  * /pesquisas/nova e morre ao sair, sem virar estado global.
  *
@@ -24,7 +32,7 @@ import TelaFim from './pages/responder/TelaFim.jsx'
  */
 export default function App() {
   return (
-    <BrowserRouter basename={import.meta.env.BASE_URL}>
+    <HashRouter>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/pesquisas/:id" element={<TelaDetalhe />} />
@@ -49,6 +57,6 @@ export default function App() {
           <Route path="fim" element={<TelaFim />} />
         </Route>
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
