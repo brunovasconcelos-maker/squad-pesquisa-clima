@@ -250,13 +250,29 @@
   cursor: pointer;
 }
 
+/* Rótulo e interruptor são um controle só, então andam juntos e coladinhos;
+   os 16px do `.acoes` separam esse par dos ícones. */
+.grupoObrigatoria {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-8);
+}
+
 /* Rótulo do interruptor de obrigatória: cinza e discreto, como os outros
    rótulos de apoio do projeto. */
 .rotuloObrigatoria {
-  margin-right: var(--espaco-8);
   color: var(--cor-texto-secundario);
   font-size: 14px;
   font-weight: var(--peso-medio);
   letter-spacing: -0.08px;
   white-space: nowrap;
+}
+
+/* Risco entre os dois grupos: o que muda a pergunta de um lado, o que mexe no
+   cartão do outro. */
+.divisorAcoes {
+  width: 1px;
+  height: 24px;
+  flex: none;
+  background: var(--cor-borda-acao);
 }

@@ -96,17 +96,23 @@ export default function Home() {
 
   /*
    * Abrir uma pesquisa é ver o detalhe dela; abrir um rascunho é voltar para
-   * o fluxo de onde ele saiu. Com perguntas já geradas o fluxo abre direto na
-   * revisão: o passo de template refaz a geração, e passar por ele de novo
-   * apagaria o que já estava lá.
+   * o fluxo, na tela em que ele foi salvo.
+   *
+   * Um rascunho de antes de o passo ser guardado não tem onde cair, e aí vale
+   * a regra antiga: com perguntas já geradas vai para a revisão, porque o
+   * passo de template refaz a geração e apagaria o que estava lá.
    */
+  const passoDoRascunho = (p) => {
+    if (p.passo) return `/${p.passo}`
+    return (p.perguntas?.length ?? 0) > 0 ? '/revisao' : ''
+  }
+
   const aoAbrir = (p) => {
     if (p.status !== 'rascunho') {
       navigate(`/pesquisas/${p.id}`)
       return
     }
-    const temPerguntas = (p.perguntas?.length ?? 0) > 0
-    navigate(`/rascunhos/${p.id}${temPerguntas ? '/revisao' : ''}`)
+    navigate(`/rascunhos/${p.id}${passoDoRascunho(p)}`)
   }
 
   const aoDeletar = (p) =>

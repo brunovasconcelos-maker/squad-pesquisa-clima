@@ -92,8 +92,11 @@ export function criarDoFluxo(pesquisa, agora = new Date()) {
  * — é o que foi preenchido até aqui, esperando alguém voltar. O nome cai num
  * padrão quando ainda não foi escrito, senão a linha da lista ficaria vazia.
  */
-export function criarRascunho(pesquisa, agora = new Date()) {
+export function criarRascunho(pesquisa, agora = new Date(), passo = '') {
   return {
+    /* Em que tela o X foi clicado. É o que faz retomar cair no mesmo lugar
+       em vez de recomeçar do primeiro passo. */
+    passo,
     id: novoId(),
     criadoEm: agora.toISOString(),
     atualizadoEm: agora.toISOString(),

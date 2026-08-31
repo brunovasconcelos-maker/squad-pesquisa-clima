@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, useState } from 'react'
-import { Outlet, useNavigate, useParams } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { gerarPerguntas } from './bancoDePerguntas.js'
 import { ABERTURA_TEMPLATE, ABERTURA_BRANCO } from './perguntasExemplo.js'
 import { formatarLongo, somarDias } from '../../lib/datas.js'
@@ -104,6 +104,25 @@ export function doRascunho(guardada) {
   }
 }
 
+/*
+ * Os passos que o fluxo tem, na ordem. Serve para ler de volta em qual deles
+ * a pessoa estava: o índice é o último pedaço do caminho, e não tem nome.
+ */
+export const PASSOS = [
+  'template',
+  'perguntas',
+  'prompt',
+  'carregando',
+  'revisao',
+  'configuracao',
+]
+
+/* O passo de um caminho do fluxo. Vazio na tela 1, que é a rota índice. */
+export function passoDaRota(caminho) {
+  const ultimo = caminho.split('/').filter(Boolean).pop()
+  return PASSOS.includes(ultimo) ? ultimo : ''
+}
+
 export const GRUPOS = ['Atendimento', 'Vendas', 'Design']
 
 export const PERGUNTAS_MIN = 1
@@ -171,6 +190,7 @@ export default function PesquisaProvider() {
      zero. É a única diferença entre os dois — daí a mesma moldura servir
      para /pesquisas/nova e /rascunhos/:id. */
   const { id: idDoRascunho } = useParams()
+  const { pathname } = useLocation()
   const [pesquisa, setPesquisa] = useState(() => {
     if (!idDoRascunho) return estadoInicial()
     const guardada = ler().find((p) => p.id === idDoRascunho)
@@ -243,7 +263,13 @@ export default function PesquisaProvider() {
           onCancelar={() => setSaindo(false)}
           onDescartar={() => navigate('/')}
           onSalvar={() => {
-            gravar(guardar(ler(), criarRascunho(pesquisa), idDoRascunho))
+            gravar(
+              guardar(
+                ler(),
+                criarRascunho(pesquisa, new Date(), passoDaRota(pathname)),
+                idDoRascunho,
+              ),
+            )
             navigate('/')
           }}
         />

@@ -277,12 +277,15 @@ export default function ListaDePerguntas({
             <p className={s.rotuloPergunta}>Pergunta {indice + 1}:</p>
             {somenteLeitura ? null : (
               <div className={s.acoes}>
-                <span className={s.rotuloObrigatoria}>Tornar obrigatória</span>
-                <Interruptor
-                  ligado={ehObrigatoria(pergunta)}
-                  rotulo={`Tornar obrigatória a pergunta ${indice + 1}`}
-                  onAlternar={() => onAlternarObrigatoria(pergunta)}
-                />
+                <div className={s.grupoObrigatoria}>
+                  <span className={s.rotuloObrigatoria}>Tornar obrigatória</span>
+                  <Interruptor
+                    ligado={ehObrigatoria(pergunta)}
+                    rotulo={`Tornar obrigatória a pergunta ${indice + 1}`}
+                    onAlternar={() => onAlternarObrigatoria(pergunta)}
+                  />
+                </div>
+                <span className={s.divisorAcoes} aria-hidden="true" />
                 <Icone
                   src={pencilSimpleLine}
                   rotulo={`Editar pergunta ${indice + 1}`}

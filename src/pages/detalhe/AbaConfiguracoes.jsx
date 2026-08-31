@@ -28,8 +28,8 @@ import {
 } from '../../lib/pesquisas.js'
 import { acertarPasso } from '../../lib/acertar.js'
 
-import arrowUpRight from '../../assets/icons/ArrowUpRight.svg'
 import caretRight from '../../assets/icons/CaretRight.svg'
+import link from '../../assets/icons/Link.svg'
 
 /*
  * Aba "Configurações" do detalhe (Figma 8072:6532), ligada à pesquisa
@@ -179,14 +179,8 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
         titulo="Opções publicadas"
         rodape={
           <Botao variante="contorno" onClick={aoAbrirPesquisa}>
-            Abrir pesquisa
-            <img
-              className={s.iconeDoLink}
-              src={arrowUpRight}
-              alt=""
-              width={24}
-              height={24}
-            />
+            Copiar link da pesquisa
+            <img className={s.iconeDoLink} src={link} alt="" width={24} height={24} />
           </Botao>
         }
       >
