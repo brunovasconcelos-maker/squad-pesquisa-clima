@@ -1,9 +1,9 @@
 import { createContext, useContext, useMemo, useState } from 'react'
-import { Outlet, useNavigate } from 'react-router-dom'
+import { Outlet, useNavigate, useParams } from 'react-router-dom'
 import { gerarPerguntas } from './bancoDePerguntas.js'
 import { ABERTURA_TEMPLATE, ABERTURA_BRANCO } from './perguntasExemplo.js'
 import { formatarLongo, somarDias } from '../../lib/datas.js'
-import { criarRascunho, gravar, ler } from '../../lib/pesquisas.js'
+import { criarRascunho, gravar, guardar, ler } from '../../lib/pesquisas.js'
 import ModalSairDoFluxo from './ModalSairDoFluxo.jsx'
 import { CAPA_PADRAO } from '../../lib/capa.js'
 
@@ -82,6 +82,28 @@ const estadoInicial = () => ({
   configuracao: configuracaoInicial(),
 })
 
+/*
+ * O caminho de volta: um rascunho guardado vira o estado do fluxo outra vez.
+ *
+ * Só os campos do fluxo entram — status, ciclos e taxa são da pesquisa
+ * guardada, não do que se está montando. O que faltar cai no inicial, que é o
+ * caso de um rascunho gravado antes de o campo existir.
+ */
+export function doRascunho(guardada) {
+  const inicial = estadoInicial()
+  return {
+    nome: guardada.nome ?? inicial.nome,
+    participantes: guardada.participantes ?? inicial.participantes,
+    template: guardada.template ?? inicial.template,
+    quantidade: guardada.quantidade ?? inicial.quantidade,
+    prompt: guardada.prompt ?? inicial.prompt,
+    perguntas: guardada.perguntas ?? inicial.perguntas,
+    abertura: guardada.abertura ?? inicial.abertura,
+    capa: guardada.capa ?? inicial.capa,
+    configuracao: guardada.configuracao ?? inicial.configuracao,
+  }
+}
+
 export const GRUPOS = ['Atendimento', 'Vendas', 'Design']
 
 export const PERGUNTAS_MIN = 1
@@ -145,7 +167,15 @@ export function usePesquisa() {
 
 export default function PesquisaProvider() {
   const navigate = useNavigate()
-  const [pesquisa, setPesquisa] = useState(estadoInicial)
+  /* Com id na rota o fluxo está retomando um rascunho; sem id, começando do
+     zero. É a única diferença entre os dois — daí a mesma moldura servir
+     para /pesquisas/nova e /rascunhos/:id. */
+  const { id: idDoRascunho } = useParams()
+  const [pesquisa, setPesquisa] = useState(() => {
+    if (!idDoRascunho) return estadoInicial()
+    const guardada = ler().find((p) => p.id === idDoRascunho)
+    return guardada ? doRascunho(guardada) : estadoInicial()
+  })
   /* O X de qualquer tela do fluxo pergunta antes de sair. A pergunta mora
      aqui, e não em cada tela, porque a resposta é a mesma nas seis e o que
      ela guarda é este estado. */
@@ -157,6 +187,9 @@ export default function PesquisaProvider() {
     return {
       pesquisa,
       definir,
+      /* Quem está sendo retomado, para o salvar gravar por cima em vez de
+         criar uma segunda linha. Vazio quando a pesquisa é nova. */
+      idDoRascunho,
       /* O que o X das telas chama. Salvar acontece na confirmação. */
       sair: () => setSaindo(true),
       /* O prompt é montado aqui, na escolha do template, e não na tela 6:
@@ -199,7 +232,7 @@ export default function PesquisaProvider() {
         })
       },
     }
-  }, [pesquisa])
+  }, [pesquisa, idDoRascunho])
 
   return (
     <Contexto.Provider value={valor}>
@@ -210,7 +243,7 @@ export default function PesquisaProvider() {
           onCancelar={() => setSaindo(false)}
           onDescartar={() => navigate('/')}
           onSalvar={() => {
-            gravar([...ler(), criarRascunho(pesquisa)])
+            gravar(guardar(ler(), criarRascunho(pesquisa), idDoRascunho))
             navigate('/')
           }}
         />

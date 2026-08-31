@@ -94,6 +94,21 @@ export default function Home() {
     })
   }
 
+  /*
+   * Abrir uma pesquisa é ver o detalhe dela; abrir um rascunho é voltar para
+   * o fluxo de onde ele saiu. Com perguntas já geradas o fluxo abre direto na
+   * revisão: o passo de template refaz a geração, e passar por ele de novo
+   * apagaria o que já estava lá.
+   */
+  const aoAbrir = (p) => {
+    if (p.status !== 'rascunho') {
+      navigate(`/pesquisas/${p.id}`)
+      return
+    }
+    const temPerguntas = (p.perguntas?.length ?? 0) > 0
+    navigate(`/rascunhos/${p.id}${temPerguntas ? '/revisao' : ''}`)
+  }
+
   const aoDeletar = (p) =>
     setConfirmacao({
       titulo: 'Deletar pesquisa?',
@@ -153,7 +168,7 @@ export default function Home() {
             <CartaoPesquisa
               key={p.id}
               pesquisa={paraLinha(p, rotuloParticipantes)}
-              onAbrir={() => navigate(`/pesquisas/${p.id}`)}
+              onAbrir={() => aoAbrir(p)}
               onTransporte={() => aoTransportar(p)}
               onDuplicar={() => aplicar([...pesquisas, duplicar(p)])}
               onCopiarLink={() => aoCopiarLink(p)}

@@ -8,7 +8,7 @@ import LinhaResumo from '../../components/fluxo/LinhaResumo.jsx'
 import Interruptor from '../../components/fluxo/Interruptor.jsx'
 import ModalParticipantes from './ModalParticipantes.jsx'
 import { usePesquisa, rotuloParticipantes } from './estado.jsx'
-import { ler, gravar, criarDoFluxo } from '../../lib/pesquisas.js'
+import { ler, gravar, guardar, criarDoFluxo } from '../../lib/pesquisas.js'
 import {
   ModalDataEnvio,
   ModalRecorrencia,
@@ -43,7 +43,7 @@ function textoDePrazo({ tipo, periodo, dias, data, hora }) {
 
 export default function TelaConfiguracao() {
   const navigate = useNavigate()
-  const { pesquisa, definir, definirConfiguracao, sair } = usePesquisa()
+  const { pesquisa, definir, definirConfiguracao, idDoRascunho, sair } = usePesquisa()
   const [modal, setModal] = useState(null)
 
   const c = pesquisa.configuracao
@@ -126,7 +126,9 @@ export default function TelaConfiguracao() {
         onContinuar={() => {
           // Grava antes de sair: a home lê o localStorage ao montar, então a
           // pesquisa nova já aparece na lista sem recarregar a página.
-          gravar([...ler(), criarDoFluxo(pesquisa)])
+          // Retomando um rascunho, entra no lugar dele: a linha é a mesma,
+          // agora com status de verdade.
+          gravar(guardar(ler(), criarDoFluxo(pesquisa), idDoRascunho))
           navigate('/')
         }}
       />

@@ -30,6 +30,19 @@ import TelaFim from './pages/responder/TelaFim.jsx'
  * /responder é a vista de quem responde e não compartilha moldura nenhuma
  * com o app interno: quem abre o link não administra a pesquisa.
  */
+/* Os seis passos do fluxo, montados uma vez e usados nas duas entradas. */
+const passosDoFluxo = (
+  <>
+    <Route index element={<TelaNome />} />
+    <Route path="template" element={<TelaTemplate />} />
+    <Route path="perguntas" element={<TelaPerguntas />} />
+    <Route path="prompt" element={<TelaPrompt />} />
+    <Route path="carregando" element={<TelaCarregando />} />
+    <Route path="revisao" element={<TelaRevisao />} />
+    <Route path="configuracao" element={<TelaConfiguracao />} />
+  </>
+)
+
 export default function App() {
   return (
     <HashRouter>
@@ -38,13 +51,15 @@ export default function App() {
         <Route path="/pesquisas/:id" element={<TelaDetalhe />} />
         <Route path="/pesquisas/:id/ciclos/:cicloId" element={<TelaCiclo />} />
         <Route path="/pesquisas/nova" element={<PesquisaProvider />}>
-          <Route index element={<TelaNome />} />
-          <Route path="template" element={<TelaTemplate />} />
-          <Route path="perguntas" element={<TelaPerguntas />} />
-          <Route path="prompt" element={<TelaPrompt />} />
-          <Route path="carregando" element={<TelaCarregando />} />
-          <Route path="revisao" element={<TelaRevisao />} />
-          <Route path="configuracao" element={<TelaConfiguracao />} />
+          {passosDoFluxo}
+        </Route>
+
+        {/* Retomar um rascunho é o mesmo fluxo, só que semeado com o que já
+            foi preenchido. Os passos são os mesmos objetos de rota, e a
+            navegação entre eles é relativa, então funciona igual sob os dois
+            caminhos. */}
+        <Route path="/rascunhos/:id" element={<PesquisaProvider />}>
+          {passosDoFluxo}
         </Route>
 
         {/* Vista de quem responde: fora do app interno, sem sidebar nem abas.

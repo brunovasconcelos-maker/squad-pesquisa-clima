@@ -114,6 +114,26 @@ export function criarRascunho(pesquisa, agora = new Date()) {
   }
 }
 
+/*
+ * Grava no lugar do rascunho que originou o fluxo, ou no fim da lista quando
+ * a pesquisa é nova.
+ *
+ * O id e o `criadoEm` do rascunho sobrevivem: é a mesma linha da home, que
+ * saiu de rascunho e virou pesquisa — duplicá-la deixaria as duas lá.
+ */
+export function guardar(lista, pesquisa, idAnterior) {
+  if (!idAnterior) return [...lista, pesquisa]
+  const anterior = lista.find((p) => p.id === idAnterior)
+  const mesma = {
+    ...pesquisa,
+    id: idAnterior,
+    criadoEm: anterior?.criadoEm ?? pesquisa.criadoEm,
+  }
+  return anterior
+    ? lista.map((p) => (p.id === idAnterior ? mesma : p))
+    : [...lista, mesma]
+}
+
 export function duplicar(p, agora = new Date()) {
   return {
     ...p,
