@@ -21,9 +21,17 @@ import { ehRecorrente } from './pesquisas.js'
    mesmo número. */
 export const MEMBROS_POR_GRUPO = 56
 
-export function totalDeParticipantes({ todaEmpresa, grupos = [] } = {}) {
+/* Pessoas escolhidas uma a uma contam uma cada: escolher duas pessoas é um
+   público de duas, e não de um grupo inteiro. Sem nada escolhido cai no
+   tamanho de um grupo, que é o que a lista mostrava antes de existir escolha
+   avulsa. */
+export function totalDeParticipantes({
+  todaEmpresa,
+  grupos = [],
+  pessoas = [],
+} = {}) {
   if (todaEmpresa) return MEMBROS_POR_GRUPO
-  return Math.max(1, grupos.length) * MEMBROS_POR_GRUPO
+  return grupos.length * MEMBROS_POR_GRUPO + pessoas.length || MEMBROS_POR_GRUPO
 }
 
 /*

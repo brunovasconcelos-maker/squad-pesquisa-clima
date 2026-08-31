@@ -126,7 +126,7 @@ export function passoDaRota(caminho) {
 export const GRUPOS = ['Atendimento', 'Vendas', 'Design']
 
 /* Diretório de pessoas — fixo, do tamanho de um exemplo. A busca do modal de
-   participantes procura pelo nome, que é o pedaço antes do @. */
+   participantes procura tanto pelo nome quanto pelo e-mail inteiro. */
 export const PESSOAS = [
   'bruno.vasconcelos@inner.ai',
   'gustavo.lima@inner.ai',
