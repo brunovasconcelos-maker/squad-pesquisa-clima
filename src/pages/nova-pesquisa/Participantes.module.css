@@ -1,22 +1,48 @@
+/*
+ * Mesma moldura dos outros modais do projeto (ModalFluxo, Editor): respiro
+ * entre o modal e a borda da janela, altura limitada à janela e o miolo
+ * rolando por dentro.
+ *
+ * Este aqui tinha ficado sem nada disso, e numa janela baixa — 560px de
+ * altura, com a lista de grupos aberta — o modal passava de 635px, era
+ * centralizado e o topo subia para fora da tela sem jeito de descer até ele:
+ * `overflow: visible` num contêiner centralizado não rola, então o cabeçalho
+ * e o X ficavam inalcançáveis.
+ */
 .scrim {
   position: fixed;
   inset: 0;
-  z-index: 20;
+  z-index: 30;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: var(--espaco-40);
+  overflow-y: auto;
   background: var(--cor-scrim);
 }
 
 .modal {
   display: flex;
   width: var(--largura-miolo);
+  max-height: 100%;
   flex-direction: column;
   gap: var(--espaco-32);
   align-items: flex-start;
   padding: var(--espaco-24);
   border-radius: var(--raio-card);
   background: var(--cor-fundo);
+}
+
+/* O que rola quando não cabe: cabeçalho e rodapé ficam parados, como nos
+   outros modais, e a lista no meio é que anda. O mesmo vão de 32px de antes,
+   porque era o `gap` do modal que separava estes blocos. */
+.corpo {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: var(--espaco-32);
+  align-items: flex-start;
+  overflow-y: auto;
 }
 
 .cabecalho {

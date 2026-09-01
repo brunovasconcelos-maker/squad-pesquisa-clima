@@ -54,7 +54,7 @@ export default function TelaTemplate() {
       onVoltar={() => navigate('..')}
     >
       <div className={s.conteudo}>
-        <p className={s.rotulo}>Para que vai servir esse Pesquisa?</p>
+        <p className={s.rotulo}>Para que vai servir essa Pesquisa?</p>
 
         <div className={s.cartoes}>
           {TEMPLATES.map(({ id, icone, nome }) => (

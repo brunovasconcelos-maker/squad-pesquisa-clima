@@ -30,13 +30,13 @@ export default function TelaPrompt() {
       onContinuar={() => navigate('../carregando')}
     >
       <div className={s.conteudo}>
-        <p className={s.rotulo}>O que você quer coletar com esse pesquisa?</p>
+        <p className={s.rotulo}>O que você quer coletar com essa pesquisa?</p>
         <textarea
           className={s.campo}
           placeholder={EXEMPLO}
           value={pesquisa.prompt}
           onChange={(e) => definir({ prompt: e.target.value })}
-          aria-label="O que você quer coletar com esse pesquisa?"
+          aria-label="O que você quer coletar com essa pesquisa?"
         />
       </div>
     </FluxoLayout>

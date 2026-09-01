@@ -48,7 +48,7 @@ export default function TelaNome() {
           />
 
           <div className={s.bloco}>
-            <p className={s.rotulo}>Para quem é esse Pesquisa?</p>
+            <p className={s.rotulo}>Para quem é essa Pesquisa?</p>
             <div className={s.linha}>
               <button
                 type="button"

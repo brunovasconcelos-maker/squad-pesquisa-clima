@@ -112,94 +112,96 @@ export default function ModalParticipantes({ selecao, onSalvar, onFechar }) {
           <IconeBotao src={close} rotulo="Fechar" onClick={onFechar} />
         </div>
 
-        <div className={s.grupos}>
-          <Item
-            nome="Toda empresa"
-            marcado={rascunho.todaEmpresa}
-            onAlternar={alternarEmpresa}
-          />
+        <div className={s.corpo}>
+          <div className={s.grupos}>
+            <Item
+              nome="Toda empresa"
+              marcado={rascunho.todaEmpresa}
+              onAlternar={alternarEmpresa}
+            />
 
-          <button
-            type="button"
-            className={s.linhaGrupos}
-            aria-expanded={gruposAbertos}
-            onClick={() => setGruposAbertos((aberta) => !aberta)}
-          >
-            <span className={s.rotuloGrupos}>Grupos:</span>
+            <button
+              type="button"
+              className={s.linhaGrupos}
+              aria-expanded={gruposAbertos}
+              onClick={() => setGruposAbertos((aberta) => !aberta)}
+            >
+              <span className={s.rotuloGrupos}>Grupos:</span>
+              <img
+                className={`${s.caixa} ${gruposAbertos ? s.setaAberta : ''}`}
+                src={caretDown}
+                alt=""
+                width={24}
+                height={24}
+              />
+            </button>
+
+            {gruposAbertos ? (
+              <div className={s.sublista}>
+                {GRUPOS.map((grupo) => (
+                  <Item
+                    key={grupo}
+                    nome={grupo}
+                    marcado={rascunho.grupos.includes(grupo)}
+                    onAlternar={() => alternarGrupo(grupo)}
+                  />
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          <div className={s.divisor}>
+            <span className={s.divisorLinha} />
+            <p className={s.divisorTexto}>ou</p>
+            <span className={s.divisorLinha} />
+          </div>
+
+          <div className={s.busca}>
             <img
-              className={`${s.caixa} ${gruposAbertos ? s.setaAberta : ''}`}
-              src={caretDown}
+              className={s.buscaIcone}
+              src={search}
               alt=""
               width={24}
               height={24}
             />
-          </button>
+            <input
+              className={s.buscaCampo}
+              type="text"
+              value={busca}
+              placeholder="Pesquisar um membro ou grupo"
+              aria-label="Pesquisar um membro ou grupo"
+              onChange={(e) => setBusca(e.target.value)}
+            />
+          </div>
 
-          {gruposAbertos ? (
-            <div className={s.sublista}>
-              {GRUPOS.map((grupo) => (
+          {procurado || escolhidas.length ? (
+            <div className={s.resultados}>
+              {achadas.map((email) => (
                 <Item
-                  key={grupo}
-                  nome={grupo}
-                  marcado={rascunho.grupos.includes(grupo)}
-                  onAlternar={() => alternarGrupo(grupo)}
+                  key={email}
+                  nome={nomeDaPessoa(email)}
+                  apoio={email}
+                  marcado={(rascunho.pessoas || []).includes(email)}
+                  onAlternar={() => alternarPessoa(email)}
                 />
               ))}
+              {escolhidas.map((email) => (
+                <Item
+                  key={email}
+                  nome={nomeDaPessoa(email)}
+                  apoio={email}
+                  marcado
+                  onAlternar={() => alternarPessoa(email)}
+                />
+              ))}
+              {procurado && achadas.length === 0 ? (
+                <p className={s.semResultado}>
+                  Ninguém com &quot;{busca.trim()}&quot; no nome ou no e-mail.
+                </p>
+              ) : null}
             </div>
           ) : null}
         </div>
-
-        <div className={s.divisor}>
-          <span className={s.divisorLinha} />
-          <p className={s.divisorTexto}>ou</p>
-          <span className={s.divisorLinha} />
-        </div>
-
-        <div className={s.busca}>
-          <img
-            className={s.buscaIcone}
-            src={search}
-            alt=""
-            width={24}
-            height={24}
-          />
-          <input
-            className={s.buscaCampo}
-            type="text"
-            value={busca}
-            placeholder="Pesquisar um membro ou grupo"
-            aria-label="Pesquisar um membro ou grupo"
-            onChange={(e) => setBusca(e.target.value)}
-          />
-        </div>
-
-        {procurado || escolhidas.length ? (
-          <div className={s.resultados}>
-            {achadas.map((email) => (
-              <Item
-                key={email}
-                nome={nomeDaPessoa(email)}
-                apoio={email}
-                marcado={(rascunho.pessoas || []).includes(email)}
-                onAlternar={() => alternarPessoa(email)}
-              />
-            ))}
-            {escolhidas.map((email) => (
-              <Item
-                key={email}
-                nome={nomeDaPessoa(email)}
-                apoio={email}
-                marcado
-                onAlternar={() => alternarPessoa(email)}
-              />
-            ))}
-            {procurado && achadas.length === 0 ? (
-              <p className={s.semResultado}>
-                Ninguém com &quot;{busca.trim()}&quot; no nome ou no e-mail.
-              </p>
-            ) : null}
-          </div>
-        ) : null}
 
         <div className={s.rodape}>
           <Botao onClick={onFechar}>Voltar</Botao>
