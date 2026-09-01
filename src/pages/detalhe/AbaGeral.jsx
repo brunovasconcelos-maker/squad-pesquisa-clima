@@ -178,7 +178,7 @@ export default function AbaGeral({ pesquisa }) {
         <p className={s.resumo}>{resumoDe(pesquisa, atual, anterior)}</p>
       </section>
 
-      <div className={`${s.faixa} ${s.faixaNumeros}`}>
+      <div className={s.faixa}>
         <CartaoNumero
           titulo="Tempo médio de resposta"
           valor={tempoMedio.valor}

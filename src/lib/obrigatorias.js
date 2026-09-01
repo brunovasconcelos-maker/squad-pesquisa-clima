@@ -16,10 +16,6 @@ export function ehObrigatoria(pergunta, pesquisa) {
   )
 }
 
-export function temObrigatorias(pesquisa) {
-  return (pesquisa?.perguntas || []).some((q) => ehObrigatoria(q, pesquisa))
-}
-
 /* Marca ou desmarca uma pergunta, sempre gravando o valor: a partir daqui ela
    deixa de seguir o padrão da pesquisa. */
 export function alternarObrigatoria(pesquisa, idPergunta) {

@@ -128,17 +128,6 @@ export function proximoEnvioDe(p) {
 
 const responderam = (taxa, total) => Math.round((taxa / 100) * total)
 
-/*
- * Quantas pessoas responderam. Depois que a aba Respostas sincroniza, quem
- * manda é a lista guardada — é ela que sobrevive a uma exclusão. Antes disso,
- * ou numa pesquisa que nunca teve a aba aberta, vale o que a taxa diz.
- */
-export function totalDeRespostas(p) {
-  if (p.status === 'agendada' || p.status === 'rascunho') return 0
-  if (p.respostas) return p.respostas.length
-  return responderam(p.taxa ?? 0, totalDeParticipantes(p.participantes))
-}
-
 export function taxaAtualDe(p, agora = new Date()) {
   const total = totalDeParticipantes(p.participantes)
   const taxa = p.status === 'agendada' ? 0 : (p.taxa ?? 0)
@@ -182,9 +171,10 @@ export function taxaAtualDe(p, agora = new Date()) {
   }
 }
 
-/* O cartão do ciclo anterior agora sai do histórico guardado, e não do
-   `anterior` que o motor carrega: o seletor precisa de todos os ciclos
-   fechados, não só do último. Ele mora em lib/historico.js, com os ciclos. */
+/* O cartão do ciclo anterior sai do histórico guardado: o seletor precisa de
+   todos os ciclos fechados, não só do último. Ele mora em lib/historico.js,
+   com os ciclos. O motor chegou a carregar um campo `anterior` com o último
+   deles; ficou sem leitor e foi aposentado. */
 
 /* ---- cartões de número (simulados) ---- */
 

@@ -154,6 +154,8 @@ export function duplicar(p, agora = new Date()) {
     ciclos: 0,
     taxa: 0,
     taxaEm: undefined,
+    // `anterior` não é mais escrito; segue limpo aqui por causa das pesquisas
+    // guardadas antes de o campo ser aposentado, que ainda o carregam.
     anterior: undefined,
     respostas: undefined,
     historico: undefined,
@@ -167,10 +169,10 @@ export function duplicar(p, agora = new Date()) {
 /*
  * Começa um ciclo agora mesmo — usado pelo Play e pela virada de recorrência.
  *
- * Guarda o ciclo que acabou em `anterior` antes de zerar a taxa. Sem isso a
- * participação do ciclo passado se perderia na virada, e o detalhe não teria
- * o que comparar. Só existe a partir do segundo ciclo, que é justamente
- * quando há um anterior.
+ * A virada guardava o ciclo que acabou num campo `anterior`, para o detalhe
+ * ter o que comparar. Não guarda mais: quem mostra o ciclo passado é o
+ * cartão "Taxa de resposta anterior", e ele lê o histórico guardado
+ * (`taxasAnteriores`), que tem todos os ciclos fechados e não só o último.
  */
 function iniciarCiclo(p, quando) {
   return {
@@ -179,9 +181,6 @@ function iniciarCiclo(p, quando) {
     ciclos: p.ciclos + 1,
     taxa: 0,
     taxaEm: quando.toISOString(),
-    ...(p.ciclos > 0
-      ? { anterior: { taxa: p.taxa, inicio: p.cicloInicio, fim: p.cicloFim } }
-      : {}),
     cicloInicio: quando.toISOString(),
     cicloFim: fimDoCiclo(quando, p.configuracao?.prazo)?.toISOString() ?? null,
     atualizadoEm: quando.toISOString(),
