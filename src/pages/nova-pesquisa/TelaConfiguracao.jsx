@@ -1,14 +1,21 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import s from './Configuracao.module.css'
 import CabecalhoFluxo from '../../components/fluxo/CabecalhoFluxo.jsx'
+import Aviso from '../../components/Aviso.jsx'
 import RodapeFluxo from '../../components/fluxo/RodapeFluxo.jsx'
 import Botao from '../../components/fluxo/Botao.jsx'
 import LinhaResumo from '../../components/fluxo/LinhaResumo.jsx'
 import Interruptor from '../../components/fluxo/Interruptor.jsx'
 import ModalParticipantes from './ModalParticipantes.jsx'
 import { usePesquisa, rotuloParticipantes } from './estado.jsx'
-import { ler, gravar, guardar, criarDoFluxo } from '../../lib/pesquisas.js'
+import {
+  ler,
+  gravar,
+  guardar,
+  criarDoFluxo,
+  ERRO_AO_GRAVAR,
+} from '../../lib/pesquisas.js'
 import {
   ModalDataEnvio,
   ModalEncerramento,
@@ -53,6 +60,8 @@ export default function TelaConfiguracao() {
   const navigate = useNavigate()
   const { pesquisa, definir, definirConfiguracao, idDoRascunho, sair } = usePesquisa()
   const [modal, setModal] = useState(null)
+  const [aviso, setAviso] = useState('')
+  const limparAviso = useCallback(() => setAviso(''), [])
 
   const c = pesquisa.configuracao
   const fechar = () => setModal(null)
@@ -146,8 +155,12 @@ export default function TelaConfiguracao() {
           // pesquisa nova já aparece na lista sem recarregar a página.
           // Retomando um rascunho, entra no lugar dele: a linha é a mesma,
           // agora com status de verdade.
-          gravar(guardar(ler(), criarDoFluxo(pesquisa), idDoRascunho))
-          navigate('/')
+          //
+          // Sem conseguir gravar, o fluxo não sai: mandar para a home diria
+          // que a pesquisa foi criada, e ela não estaria lá.
+          const deu = gravar(guardar(ler(), criarDoFluxo(pesquisa), idDoRascunho))
+          if (deu) navigate('/')
+          else setAviso(ERRO_AO_GRAVAR)
         }}
       />
 
@@ -217,6 +230,8 @@ export default function TelaConfiguracao() {
           onFechar={fechar}
         />
       ) : null}
+
+      <Aviso texto={aviso} onSumir={limparAviso} />
     </div>
   )
 }

@@ -147,3 +147,38 @@
   letter-spacing: -0.31px;
   text-align: center;
 }
+
+/* Falha ao ler o que estava guardado. Fica na tela — não é aviso passageiro:
+   a tabela vazia logo abaixo é que precisa da explicação, e ela não some. */
+.falha {
+  display: flex;
+  /* Mesma coluna do cabeçalho e da tabela: sem isto a faixa esticava para
+     além da largura da lista e ficava mais larga que tudo em volta. */
+  width: 100%;
+  max-width: var(--largura-lista);
+  margin-right: auto;
+  margin-left: auto;
+  flex-direction: column;
+  gap: var(--espaco-8);
+  margin-bottom: var(--espaco-24);
+  padding: var(--espaco-16);
+  border: 1px solid var(--cor-vermelho);
+  border-radius: var(--raio-caixa);
+  background: var(--selo-negativo-fundo);
+}
+
+.falhaTitulo {
+  margin: 0;
+  color: var(--cor-vermelho);
+  font-size: 14px;
+  font-weight: var(--peso-semibold);
+  line-height: 1.4;
+}
+
+.falhaApoio {
+  margin: 0;
+  color: var(--cor-texto-secundario);
+  font-size: 13px;
+  font-weight: var(--peso-regular);
+  line-height: 1.5;
+}

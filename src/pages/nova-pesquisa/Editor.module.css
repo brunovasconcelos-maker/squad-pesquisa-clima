@@ -198,3 +198,13 @@
   align-items: center;
   justify-content: space-between;
 }
+
+/* Erro dentro de um modal de confirmação — gravação que não passou. Fica
+   entre o texto e os botões, no vermelho dos outros erros do projeto. */
+.erroSalvar {
+  margin: 0;
+  color: var(--cor-vermelho);
+  font-size: 13px;
+  font-weight: var(--peso-medio);
+  line-height: 1.4;
+}

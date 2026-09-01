@@ -4,6 +4,7 @@ import {
   totalDeParticipantes,
   vagasRestantes,
 } from './participacao.js'
+import { avisarValorDesconhecido } from './desconhecido.js'
 
 /*
  * Respostas simuladas.
@@ -88,7 +89,23 @@ const LONGAS = {
   ],
 }
 
-const paraTema = (mapa, template) => mapa[template] || mapa.clima
+/*
+ * O banco de texto de um template.
+ *
+ * Quatro deles têm banco próprio. A pesquisa em branco não parte de tema
+ * nenhum e não tem — as respostas simuladas dela saem do banco de clima, o
+ * mais genérico dos quatro. Isso é escolha declarada, e não substituição
+ * escondida: só template fora desta lista é anomalia, e essa é anunciada.
+ */
+const SEM_BANCO_PROPRIO = new Set(['blank', null, undefined, ''])
+
+const paraTema = (mapa, template) => {
+  if (Object.prototype.hasOwnProperty.call(mapa, template)) return mapa[template]
+  if (!SEM_BANCO_PROPRIO.has(template)) {
+    avisarValorDesconhecido('template da pesquisa', template)
+  }
+  return mapa.clima
+}
 
 /*
  * Escolha com peso, guiada pelo hash. As distribuições não são uniformes de
@@ -209,6 +226,15 @@ export function materializar(p, agora = new Date()) {
   if (p.taxaEm && !p.simuladoEm) antiga.simuladoEm = p.taxaEm
   if (Array.isArray(p.respostas)) return antiga
 
+  /* Rascunho e agendada não têm respostas: o link só aceita com o ciclo
+     correndo, e o motor só faz a simulação crescer aí. Taxa velha guardada
+     numa delas era incoerência da versão anterior, e materializá-la criava
+     respostas que a poda apagava logo em seguida — dado inventado e jogado
+     fora no mesmo passo. */
+  if (p.status === 'rascunho' || p.status === 'agendada') {
+    return { ...antiga, respostas: [] }
+  }
+
   const quantas = Math.round(
     ((p.taxa ?? 0) / 100) * totalDeParticipantes(p.participantes),
   )
@@ -231,9 +257,13 @@ export function materializar(p, agora = new Date()) {
 export function aparar(p) {
   if (!p) return p
   const atuais = respostasDe(p)
-  if (p.status === 'rascunho' || p.status === 'agendada') {
-    return atuais.length ? { ...p, respostas: [] } : p
-  }
+  /* Havia aqui uma segunda poda, que esvaziava a lista de rascunho e de
+     agendada. Ela existia para o tempo em que o link aceitava resposta de uma
+     agendada: a resposta entrava e sumia na poda seguinte, com a tela de
+     agradecimento já dada. Hoje `aceitandoRespostas` exige o ciclo correndo,
+     a simulação só cresce aí, e `materializar` não converte taxa velha dessas
+     duas — não há caminho que ponha resposta numa delas, e a poda só poderia
+     apagar em silêncio algo que não deveria existir. */
   const total = totalDeParticipantes(p.participantes)
   if (atuais.length <= total) return p
   return { ...p, respostas: atuais.slice(0, total) }

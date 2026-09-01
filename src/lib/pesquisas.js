@@ -66,21 +66,72 @@ export function statusDe(p) {
   return conhecido ?? { ...STATUS_DESCONHECIDO, valor: p?.status }
 }
 
+/*
+ * O que deu errado na última leitura, ou `null` se não deu.
+ *
+ * `ler` não pode lançar — a home inteira depende dela —, mas devolver uma
+ * lista vazia e calar era pior do que travar: a tela dizia que nunca houve
+ * pesquisa nenhuma, e quem tinha vinte não tinha como saber que os dados
+ * estavam ilegíveis, e não apagados. Quem desenha lê isto e avisa.
+ *
+ * Guardado ausente não é erro: quem nunca criou uma pesquisa tem a lista
+ * vazia de verdade, e as duas situações não podem falar a mesma coisa.
+ */
+let erroAoLer = null
+export const erroDeLeitura = () => erroAoLer
+
+export const TEXTO_DE_LEITURA = {
+  bloqueado:
+    'Não foi possível acessar suas pesquisas — o navegador está bloqueando o armazenamento local desta página.',
+  formato:
+    'Não foi possível carregar suas pesquisas — o que está guardado não tem o formato de uma lista de pesquisas.',
+  ilegivel:
+    'Não foi possível carregar suas pesquisas — os dados podem estar corrompidos.',
+}
+
 export function ler() {
+  erroAoLer = null
+  let cru
   try {
-    const cru = localStorage.getItem(CHAVE)
-    return cru ? JSON.parse(cru) : []
+    cru = localStorage.getItem(CHAVE)
   } catch {
-    // Storage bloqueado ou conteúdo corrompido: melhor lista vazia que travar.
+    // Modo privado, cookies bloqueados, storage desativado.
+    erroAoLer = 'bloqueado'
+    return []
+  }
+
+  if (!cru) return []
+
+  try {
+    const lista = JSON.parse(cru)
+    if (!Array.isArray(lista)) {
+      erroAoLer = 'formato'
+      return []
+    }
+    return lista
+  } catch {
+    erroAoLer = 'ilegivel'
     return []
   }
 }
 
+export const ERRO_AO_GRAVAR =
+  'Não foi possível salvar suas alterações. O espaço de armazenamento pode estar cheio.'
+
+/*
+ * Grava, e diz se conseguiu.
+ *
+ * Uma pesquisa recorrente com cinco ciclos e uma capa em imagem passa de
+ * 150KB, e o localStorage tem poucos megabytes para tudo: estourar a cota é
+ * plausível, não hipótese remota. Engolir a falha fazia cada edição parecer
+ * salva e sumir no F5 seguinte — quem chama mostra o aviso com o `false`.
+ */
 export function gravar(lista) {
   try {
     localStorage.setItem(CHAVE, JSON.stringify(lista))
+    return true
   } catch {
-    // Sem espaço ou sem permissão. A sessão continua com o que está em memória.
+    return false
   }
 }
 

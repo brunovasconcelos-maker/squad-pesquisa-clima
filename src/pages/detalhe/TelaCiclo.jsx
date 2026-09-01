@@ -10,7 +10,7 @@ import {
 } from '../../components/respostas/LeituraDeRespostas.jsx'
 import ListaDePerguntas from '../../components/perguntas/ListaDePerguntas.jsx'
 import ModalConfirmar from '../../components/fluxo/ModalConfirmar.jsx'
-import { ler, gravar } from '../../lib/pesquisas.js'
+import { ler, gravar, ERRO_AO_GRAVAR } from '../../lib/pesquisas.js'
 import { sincronizarHistorico } from '../../lib/historico.js'
 import { paraCsv, nomeDeArquivo, gerarEBaixar } from '../../lib/respostas.js'
 import {
@@ -114,7 +114,7 @@ export default function TelaCiclo() {
     const depois = antes && sincronizarHistorico(antes)
     if (depois && depois !== antes) {
       const proxima = lista.map((x) => (x.id === id ? depois : x))
-      gravar(proxima)
+      if (!gravar(proxima)) setAviso(ERRO_AO_GRAVAR)
       setPesquisas(proxima)
       return
     }
@@ -129,7 +129,7 @@ export default function TelaCiclo() {
           ? { ...transformar(x), atualizadoEm: new Date().toISOString() }
           : x,
       )
-      gravar(proxima)
+      if (!gravar(proxima)) setAviso(ERRO_AO_GRAVAR)
       return proxima
     })
 

@@ -4,7 +4,7 @@ import { aceitaResposta, avaliarLista, gravar, ler } from '../../lib/pesquisas.j
 import { adicionarResposta, materializar } from '../../lib/respostas.js'
 import { sincronizarHistorico } from '../../lib/historico.js'
 import { ehObrigatoria } from '../../lib/obrigatorias.js'
-import { PESQUISA_EXEMPLO } from './exemplo.js'
+import TelaNaoEncontrada from './TelaNaoEncontrada.jsx'
 import TelaForaDoAr from './TelaForaDoAr.jsx'
 
 /*
@@ -55,21 +55,26 @@ export default function RespostaProvider() {
        lista de respostas existir pareceria vazia para o portão do "fora do
        ar". */
     const guardada = materializar(ler().find((p) => p.id === id))
-    /* Sem pesquisa com esse id, a vista mostra o exemplo do Figma em vez de
-       uma tela vazia — e o envio não grava nada, porque não há onde. */
-    return { pesquisa: guardada || PESQUISA_EXEMPLO, guardada: Boolean(guardada) }
+    /* Sem pesquisa com esse id, a tela diz isso. Antes ela desenhava o
+       exemplo do Figma como se fosse uma pesquisa de verdade: a pessoa
+       respondia tudo, via o agradecimento e as respostas não iam a lugar
+       nenhum, porque não havia onde gravar. */
+    return { pesquisa: guardada ?? null }
   })
-  const [ordem] = useState(() => ordemDe(sessao.pesquisa))
+  const [ordem] = useState(() => ordemDe(sessao.pesquisa ?? {}))
   const [valores, setValores] = useState({})
+  /* Envio que não conseguiu gravar. A tela de agradecimento não pode aparecer
+     em cima de uma resposta que se perdeu. */
+  const [falhouAoEnviar, setFalhouAoEnviar] = useState(false)
 
-  const { pesquisa } = sessao
+  const pesquisa = sessao.pesquisa
 
   /* As perguntas na ordem desta sessão. Uma pergunta apagada da pesquisa
      depois do sorteio simplesmente não aparece. */
   const perguntas = useMemo(
     () =>
       ordem
-        .map((idPergunta) => (pesquisa.perguntas || []).find((q) => q.id === idPergunta))
+        .map((idPergunta) => (pesquisa?.perguntas || []).find((q) => q.id === idPergunta))
         .filter(Boolean),
     [ordem, pesquisa],
   )
@@ -86,22 +91,28 @@ export default function RespostaProvider() {
    * o que faz esta resposta somar à simulação em vez de concorrer com ela.
    */
   const enviar = useCallback(() => {
-    if (sessao.guardada) {
-      const { lista } = avaliarLista(ler())
-      const alvo = lista.find((p) => p.id === id)
-      if (alvo) {
-        const comResposta = adicionarResposta(alvo, valores)
-        gravar(
-          lista.map((p) =>
-            p.id === id
-              ? { ...sincronizarHistorico(comResposta), atualizadoEm: new Date().toISOString() }
-              : p,
-          ),
-        )
-      }
+    const { lista } = avaliarLista(ler())
+    const alvo = lista.find((p) => p.id === id)
+    /* Sumiu entre abrir o link e enviar: a resposta não tem onde entrar, e
+       dizer obrigado seria dizer que ela foi guardada. */
+    if (!alvo) {
+      setFalhouAoEnviar(true)
+      return
+    }
+    const comResposta = adicionarResposta(alvo, valores)
+    const deu = gravar(
+      lista.map((p) =>
+        p.id === id
+          ? { ...sincronizarHistorico(comResposta), atualizadoEm: new Date().toISOString() }
+          : p,
+      ),
+    )
+    if (!deu) {
+      setFalhouAoEnviar(true)
+      return
     }
     navigate(`/responder/${id}/fim`)
-  }, [id, navigate, sessao.guardada, valores])
+  }, [id, navigate, valores])
 
   const valor = useMemo(
     () => ({
@@ -110,7 +121,7 @@ export default function RespostaProvider() {
       valores,
       responder,
       enviar,
-      mostrarProgresso: Boolean(pesquisa.configuracao?.avancadas?.barraProgresso),
+      mostrarProgresso: Boolean(pesquisa?.configuracao?.avancadas?.barraProgresso),
       obrigatoria: (pergunta) => ehObrigatoria(pergunta, pesquisa),
     }),
     [pesquisa, perguntas, valores, responder, enviar],
@@ -120,7 +131,10 @@ export default function RespostaProvider() {
      respondido —, nenhuma das três telas abre: o link inteiro para. Vale o
      retrato do começo da sessão, como o resto, então quem já estava
      respondendo termina. */
-  const foraDoAr = sessao.guardada && !aceitaResposta(pesquisa)
+  const foraDoAr = pesquisa && !aceitaResposta(pesquisa)
+
+  if (!pesquisa) return <TelaNaoEncontrada />
+  if (falhouAoEnviar) return <TelaNaoEncontrada motivo="envio" />
 
   return (
     <Contexto.Provider value={valor}>

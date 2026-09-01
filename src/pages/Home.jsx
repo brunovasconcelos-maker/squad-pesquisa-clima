@@ -8,6 +8,9 @@ import { rotuloParticipantes } from './nova-pesquisa/estado.jsx'
 import {
   ler,
   gravar,
+  erroDeLeitura,
+  TEXTO_DE_LEITURA,
+  ERRO_AO_GRAVAR,
   avaliarLista,
   avisoDeInicio,
   duplicar,
@@ -67,20 +70,26 @@ export default function Home() {
   const [confirmacao, setConfirmacao] = useState(null)
   const [aviso, setAviso] = useState('')
   const [busca, setBusca] = useState('')
+  /* Leitura que falhou fica na tela até ser resolvida, e não some sozinha
+     como um aviso passageiro: a lista vazia embaixo dela é justamente o que
+     precisa de explicação. */
+  const [falhaDeLeitura, setFalhaDeLeitura] = useState(null)
   const limparAviso = useCallback(() => setAviso(''), [])
 
   /* Grava junto com o setState: a lista em memória e a guardada não podem
-     divergir, senão um F5 desfaz a última ação. */
+     divergir, senão um F5 desfaz a última ação. Gravação que não passou é
+     dita na hora — a tela mostraria a mudança e o F5 seguinte a desfaria. */
   const aplicar = useCallback((proxima) => {
     setPesquisas(proxima)
-    gravar(proxima)
+    if (!gravar(proxima)) setAviso(ERRO_AO_GRAVAR)
   }, [])
 
   useEffect(() => {
     const rodar = () => {
       const { lista, mudou } = avaliarLista(ler())
+      setFalhaDeLeitura(erroDeLeitura())
       setPesquisas(lista)
-      if (mudou) gravar(lista)
+      if (mudou && !gravar(lista)) setAviso(ERRO_AO_GRAVAR)
     }
     rodar()
     const id = setInterval(rodar, INTERVALO_MS)
@@ -178,6 +187,21 @@ export default function Home() {
             />
           </div>
         </div>
+
+        {/* Leitura que falhou: sem isto a tabela vazia logo abaixo diria que
+            nunca houve pesquisa nenhuma. */}
+        {falhaDeLeitura ? (
+          <div className={s.falha} role="alert">
+            <p className={s.falhaTitulo}>
+              {TEXTO_DE_LEITURA[falhaDeLeitura] ?? TEXTO_DE_LEITURA.ilegivel}
+            </p>
+            <p className={s.falhaApoio}>
+              A lista abaixo está vazia porque nada pôde ser lido, e não porque
+              não existam pesquisas. Nada foi apagado: criar ou editar algo
+              agora é que sobrescreve o que está guardado.
+            </p>
+          </div>
+        ) : null}
 
         <div className={s.tabela}>
           {COLUNAS.map(({ nome, largura }) => (

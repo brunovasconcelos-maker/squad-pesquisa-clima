@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import Aviso from '../../components/Aviso.jsx'
 import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
 import {
   ler,
@@ -7,6 +8,7 @@ import {
   avaliarLista,
   ehRecorrente,
   INTERVALO_MS,
+  ERRO_AO_GRAVAR,
 } from '../../lib/pesquisas.js'
 import { aparar } from '../../lib/respostas.js'
 import { sincronizarHistorico } from '../../lib/historico.js'
@@ -48,6 +50,10 @@ const abasDe = (pesquisa) =>
 export default function TelaDetalhe() {
   const { id } = useParams()
   const navigate = useNavigate()
+  /* Gravação que não passou precisa ser dita: a tela já mostra a alteração,
+     e sem o aviso o F5 seguinte a desfaria sem explicação. */
+  const [aviso, setAviso] = useState('')
+  const limparAviso = useCallback(() => setAviso(''), [])
   const { state } = useLocation()
   const [ativa, setAtiva] = useState(
     ABAS.includes(state?.aba) ? state.aba : ABAS[0],
@@ -72,7 +78,7 @@ export default function TelaDetalhe() {
         precisaGravar = true
       }
       setPesquisas(proxima)
-      if (precisaGravar) gravar(proxima)
+      if (precisaGravar && !gravar(proxima)) setAviso(ERRO_AO_GRAVAR)
     }
     rodar()
     const t = setInterval(rodar, INTERVALO_MS)
@@ -92,7 +98,7 @@ export default function TelaDetalhe() {
             ? { ...transformar(p), atualizadoEm: new Date().toISOString() }
             : p,
         )
-        gravar(proxima)
+        if (!gravar(proxima)) setAviso(ERRO_AO_GRAVAR)
         return proxima
       }),
     [id],
@@ -156,6 +162,8 @@ export default function TelaDetalhe() {
           <AbaConfiguracoes pesquisa={pesquisa} onAlterar={alterar} />
         ) : null}
       </div>
+
+      <Aviso texto={aviso} onSumir={limparAviso} />
     </div>
   )
 }

@@ -12,7 +12,7 @@ import close from '../../assets/icons/Close.svg'
  * ou não, é uma escolha entre jogar fora e guardar para depois. Fechar o
  * modal pelo X dele volta para o fluxo sem decidir nada.
  */
-export default function ModalSairDoFluxo({ onDescartar, onSalvar, onCancelar }) {
+export default function ModalSairDoFluxo({ onDescartar, onSalvar, onCancelar, erro }) {
   return (
     <div className={s.scrim}>
       <div
@@ -29,6 +29,14 @@ export default function ModalSairDoFluxo({ onDescartar, onSalvar, onCancelar }) 
           A pesquisa ainda não foi salva. Você pode guardar o que já preencheu
           como rascunho e continuar depois, ou descartar tudo.
         </p>
+
+        {/* Gravação que não passou: o modal fica aberto dizendo por quê, em
+            vez de fechar como se tivesse salvado. */}
+        {erro ? (
+          <p className={s.erroSalvar} role="alert">
+            {erro}
+          </p>
+        ) : null}
 
         <div className={s.rodape}>
           <Botao onClick={onDescartar}>Descartar</Botao>

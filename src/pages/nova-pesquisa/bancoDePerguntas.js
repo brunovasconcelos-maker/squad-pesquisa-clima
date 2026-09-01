@@ -1,3 +1,5 @@
+import { daTabela } from '../../lib/desconhecido.js'
+
 /*
  * Bancos de perguntas de exemplo, um por template.
  *
@@ -114,7 +116,11 @@ const proximoId = () => {
 /* Monta a lista final: pega as `quantidade` primeiras do banco do template e
    troca o {p} pela seleção de participantes. */
 export function gerarPerguntas(template, fraseDeParticipantes, quantidade) {
-  const banco = BANCOS[template]
+  /* Sem banco para o template não há o que gerar. A lista vazia é a resposta
+     honesta — inventar perguntas de outro tema seria pior —, mas quem chama
+     precisa saber que foi isso, e não "o banco tinha zero": a tela de
+     carregamento para e diz. */
+  const banco = daTabela(BANCOS, template, 'template da pesquisa')
   if (!banco) return []
 
   return banco.slice(0, quantidade).map((base) => ({

@@ -3,9 +3,16 @@ import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { gerarPerguntas } from './bancoDePerguntas.js'
 import { ABERTURA_TEMPLATE, ABERTURA_BRANCO } from './perguntasExemplo.js'
 import { formatarLongo, somarDias } from '../../lib/datas.js'
-import { criarRascunho, gravar, guardar, ler } from '../../lib/pesquisas.js'
+import {
+  criarRascunho,
+  gravar,
+  guardar,
+  ler,
+  ERRO_AO_GRAVAR,
+} from '../../lib/pesquisas.js'
 import iguais from '../../lib/iguais.js'
 import ModalSairDoFluxo from './ModalSairDoFluxo.jsx'
+import TelaRascunhoSumido from './TelaRascunhoSumido.jsx'
 import { CAPA_PADRAO } from '../../lib/capa.js'
 
 /*
@@ -220,6 +227,13 @@ export default function PesquisaProvider() {
      para /pesquisas/nova e /rascunhos/:id. */
   const { id: idDoRascunho } = useParams()
   const { pathname } = useLocation()
+  /* Rascunho que não existe mais: apagado, link velho, id digitado errado.
+     Abrir o fluxo em branco fazia o passo seguinte criar uma pesquisa nova
+     sem ninguém pedir — quem clicou queria continuar uma que já existia. */
+  const [rascunhoSumiu] = useState(
+    () => Boolean(idDoRascunho) && !ler().some((p) => p.id === idDoRascunho),
+  )
+
   const [pesquisa, setPesquisa] = useState(() => {
     if (!idDoRascunho) return estadoInicial()
     const guardada = ler().find((p) => p.id === idDoRascunho)
@@ -234,6 +248,7 @@ export default function PesquisaProvider() {
      aqui, e não em cada tela, porque a resposta é a mesma nas seis e o que
      ela guarda é este estado. */
   const [saindo, setSaindo] = useState(false)
+  const [erroAoSalvar, setErroAoSalvar] = useState('')
 
   const valor = useMemo(() => {
     const definir = (campos) => setPesquisa((atual) => ({ ...atual, ...campos }))
@@ -269,15 +284,21 @@ export default function PesquisaProvider() {
             template === 'blank' ? ABERTURA_BRANCO : ABERTURA_TEMPLATE,
         }),
 
-      /* Chamada pela tela de carregamento, no fim dos 3 segundos. */
-      gerar: () =>
-        definir({
-          perguntas: gerarPerguntas(
-            pesquisa.template,
-            fraseParticipantes(pesquisa.participantes),
-            pesquisa.quantidade,
-          ),
-        }),
+      /*
+       * Chamada pela tela de carregamento, no fim dos 3 segundos. Devolve
+       * quantas perguntas saíram: template sem banco devolvia lista vazia e o
+       * fluxo seguia para a revisão de uma pesquisa sem pergunta nenhuma,
+       * como se fosse esse o resultado. Quem chama decide o que dizer.
+       */
+      gerar: () => {
+        const geradas = gerarPerguntas(
+          pesquisa.template,
+          fraseParticipantes(pesquisa.participantes),
+          pesquisa.quantidade,
+        )
+        definir({ perguntas: geradas })
+        return geradas.length
+      },
 
       /* Mescla um pedaço da configuração sem apagar o resto. */
       definirConfiguracao: (campos) =>
@@ -299,23 +320,36 @@ export default function PesquisaProvider() {
     }
   }, [pesquisa, original, idDoRascunho, navigate])
 
+  /* O rascunho não existe mais: a tela diz isso e oferece a volta, em vez de
+     abrir o formulário em branco com cara de pesquisa nova — de onde o passo
+     seguinte criaria uma pesquisa que ninguém pediu. */
+  if (rascunhoSumiu) return <TelaRascunhoSumido />
+
   return (
     <Contexto.Provider value={valor}>
       <Outlet />
 
       {saindo ? (
         <ModalSairDoFluxo
-          onCancelar={() => setSaindo(false)}
+          onCancelar={() => {
+            setErroAoSalvar('')
+            setSaindo(false)
+          }}
           onDescartar={() => navigate('/')}
+          erro={erroAoSalvar}
           onSalvar={() => {
-            gravar(
+            /* Gravação que não passou não pode sair do fluxo como se tivesse
+               passado: o rascunho não estaria na lista, e o que foi
+               preenchido teria ido embora sem aviso. */
+            const deu = gravar(
               guardar(
                 ler(),
                 criarRascunho(pesquisa, new Date(), passoDaRota(pathname)),
                 idDoRascunho,
               ),
             )
-            navigate('/')
+            if (deu) navigate('/')
+            else setErroAoSalvar(ERRO_AO_GRAVAR)
           }}
         />
       ) : null}

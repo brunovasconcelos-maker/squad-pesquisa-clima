@@ -1,4 +1,4 @@
-import { daTabela } from './desconhecido.js'
+import { daTabela, avisarValorDesconhecido } from './desconhecido.js'
 
 /*
  * Datas do fluxo. Os campos de data e hora da Configuração são texto livre —
@@ -173,8 +173,16 @@ export const diasValidos = (dias) => {
  */
 export function diasDoPrazo(prazo) {
   const n = Math.round(Number(prazo?.dias))
-  if (!Number.isFinite(n)) return null
-  return Math.min(DIAS_MAX, Math.max(DIAS_MIN, n))
+  if (!Number.isFinite(n)) {
+    avisarValorDesconhecido('prazo em dias', prazo?.dias)
+    return null
+  }
+  const dentro = Math.min(DIAS_MAX, Math.max(DIAS_MIN, n))
+  /* O campo não deixa mais gravar fora da faixa, então um valor de fora
+     chegar aqui é dado antigo ou mexido por fora — e aparar calado esconderia
+     justamente isso. A tela mostra o número aparado; o console diz qual era. */
+  if (dentro !== n) avisarValorDesconhecido('prazo em dias', prazo?.dias)
+  return dentro
 }
 
 /* Fim do ciclo: um período depois do início, um número de dias, ou a data
