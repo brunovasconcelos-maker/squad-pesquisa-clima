@@ -171,6 +171,18 @@ const FREQUENCIAS = {
   Anual: (d) => somarMeses(d, 12),
 }
 
+/* O que a linha "Data de Encerramento" mostra. Sem data estipulada, dizer
+   "Não definida" é mais honesto do que um traço: a escolha existe e está
+   vazia, não é um campo que não se aplica. */
+export function textoDeEncerramento(encerramento) {
+  if (!encerramento || encerramento.semData || !encerramento.data) {
+    return 'Não definida'
+  }
+  return encerramento.hora
+    ? `${encerramento.data}, as ${encerramento.hora}`
+    : encerramento.data
+}
+
 export function proximoCiclo(inicio, frequencia) {
   const somar = FREQUENCIAS[frequencia] ?? FREQUENCIAS.Mensal
   return somar(inicio)

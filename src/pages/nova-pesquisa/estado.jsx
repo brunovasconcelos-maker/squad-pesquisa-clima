@@ -53,6 +53,9 @@ export function configuracaoInicial(hoje = new Date()) {
       data: formatarLongo(somarDias(envio, 7)),
       hora: '10:30',
     },
+    /* Sem data de encerramento: a recorrente repete indefinidamente até
+       alguém estipular um fim. É a única forma de ela chegar a "Encerrada". */
+    encerramento: { data: '', hora: '18:00', semData: true },
     mensagemFinal: MENSAGEM_FINAL_PADRAO,
     avancadas: {
       lembrete: 'Diário',

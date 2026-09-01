@@ -60,6 +60,23 @@ const novoId = () =>
 
 export const ehRecorrente = (p) => p.configuracao?.recorrencia === 'Recorrente'
 
+/*
+ * Até quando a pesquisa existe, quando alguém estipulou uma data.
+ *
+ * É o limite de vida dela, e não o de um ciclo: o "Prazo pra respostas" diz
+ * quanto tempo cada volta fica aberta, este diz quando não há mais voltas.
+ * `null` é "sem data" — a recorrente repete indefinidamente, como sempre fez.
+ *
+ * Só vale para recorrente. Uma Única já acaba sozinha quando o prazo do seu
+ * único ciclo vence, e por isso a linha nem aparece para ela.
+ */
+export function fimDaPesquisa(p) {
+  if (!ehRecorrente(p)) return null
+  const marcado = p.configuracao?.encerramento
+  if (!marcado || marcado.semData) return null
+  return paraData(marcado.data, marcado.hora)
+}
+
 /* Início do ciclo: a data de envio, ou agora quando marcado "imediatamente". */
 function inicioAgendado(configuracao, agora) {
   if (configuracao?.envio?.imediato) return agora
@@ -278,11 +295,12 @@ export const estaPublicada = (p) => PUBLICADAS.includes(p.status)
 export const aceitandoRespostas = (p) => p.status === 'rodando'
 
 /*
- * Uma pesquisa Única que encerrou acabou de vez: ela existe para sair uma vez
- * só, e reabri-la daria um segundo ciclo a algo que não tem ciclos. Quem quer
- * mandar de novo duplica, que é o caminho que a lista já oferece.
+ * "Encerrada" é o fim, e agora vale para os dois tipos: a Única que já saiu
+ * a sua vez, e a recorrente que chegou à data de encerramento. Reabrir
+ * qualquer uma das duas contrariaria o que a tela diz. Quem quer mandar de
+ * novo duplica, que é o caminho que a lista já oferece.
  */
-export const ehFinal = (p) => p.status === 'encerrada' && !ehRecorrente(p)
+export const ehFinal = (p) => p.status === 'encerrada'
 
 /*
  * Quem abre o link de resposta consegue responder?
@@ -382,18 +400,29 @@ export function avaliar(p, agora = new Date()) {
     }
 
     if (atual.status === 'rodando') {
-      /* Duas formas de o ciclo acabar: o prazo vencer ou todo o público já ter
-         respondido. A segunda costuma chegar antes, e sem ela o selo dizia
-         "Ativa | Rodando" enquanto o link de resposta já dizia que a pesquisa
-         tinha encerrado. */
+      /* Três formas de o ciclo acabar: o prazo vencer, todo o público já ter
+         respondido, ou a pesquisa chegar à data de encerramento. A segunda
+         costuma chegar antes, e sem ela o selo dizia "Ativa | Rodando"
+         enquanto o link de resposta já dizia que a pesquisa tinha encerrado.
+         A terceira acaba com a pesquisa, e não só com o ciclo. */
+      const acaba = fimDaPesquisa(atual)
       const cheio = cicloCheio(atual)
-      if (!cheio && (!fim || agora < fim)) return atual
-      const quando = cheio ? agora : fim
-      atual = fecharCiclo(
-        atual,
-        quando,
-        ehRecorrente(atual) ? 'aguardando' : 'encerrada',
-      )
+      const prazoVenceu = fim && agora >= fim
+      const chegouAoFim = acaba && agora >= acaba
+      if (!cheio && !prazoVenceu && !chegouAoFim) return atual
+
+      /* Quando o ciclo acabou de verdade: o mais cedo entre os motivos que
+         valeram. Encher acontece agora; os outros dois têm hora marcada. */
+      const motivos = []
+      if (cheio) motivos.push(agora)
+      if (prazoVenceu) motivos.push(fim)
+      if (chegouAoFim) motivos.push(acaba)
+      const quando = new Date(Math.min(...motivos.map(Number)))
+
+      /* Acabou a pesquisa, e não só o ciclo, quando ela não se repete ou
+         quando a data de encerramento já tinha chegado nesse momento. */
+      const final = !ehRecorrente(atual) || (acaba && quando >= acaba)
+      atual = fecharCiclo(atual, quando, final ? 'encerrada' : 'aguardando')
       continue
     }
 
@@ -403,6 +432,13 @@ export function avaliar(p, agora = new Date()) {
          interruptor "Aceitando respostas" põe, e aí ela não pode reabrir um
          ciclo sozinha um mês depois. */
       if (!inicio || !ehRecorrente(atual)) return atual
+      /* Passou da data de encerramento: não há próximo ciclo a abrir, e a
+         pesquisa acabou. O ciclo anterior já fechou e já foi contado, então
+         aqui só o selo muda — `cicloFim` continua sendo quando ele acabou. */
+      const acaba = fimDaPesquisa(atual)
+      if (acaba && agora >= acaba) {
+        return { ...atual, status: 'encerrada', atualizadoEm: agora.toISOString() }
+      }
       const proximo = proximoCiclo(inicio, atual.configuracao?.frequencia)
       if (agora < proximo) return atual
       /* O ciclo que venceria agora já teria acabado? Então a página ficou

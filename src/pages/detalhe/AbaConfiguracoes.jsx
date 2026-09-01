@@ -11,16 +11,18 @@ import ModalParticipantes from '../nova-pesquisa/ModalParticipantes.jsx'
 import {
   ModalDataEnvio,
   ModalFrequencia,
+  ModalEncerramento,
   ModalLembrete,
   ModalMensagemFinal,
   ModalPrazo,
 } from '../nova-pesquisa/ModaisConfiguracao.jsx'
 import { rotuloParticipantes } from '../nova-pesquisa/estado.jsx'
 import { estiloDaCapa } from '../../lib/capa.js'
-import { formatarComDia } from '../../lib/datas.js'
+import { formatarComDia, textoDeEncerramento } from '../../lib/datas.js'
 import { proximoEnvioDe } from '../../lib/geral.js'
 import {
   aceitandoRespostas,
+  avaliar,
   avisoDeInicio,
   ehRecorrente,
   ehFinal,
@@ -220,8 +222,9 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
           <>
             {encerradaDeVez ? (
               <p className={s.nota}>
-                Esta pesquisa não se repete e já foi encerrada — ela não volta a
-                receber respostas. Para enviá-la de novo, duplique a pesquisa.
+                {recorrente
+                  ? 'Esta pesquisa chegou à data de encerramento — ela não volta a receber respostas. Para rodá-la de novo, duplique a pesquisa.'
+                  : 'Esta pesquisa não se repete e já foi encerrada — ela não volta a receber respostas. Para enviá-la de novo, duplique a pesquisa.'}
               </p>
             ) : null}
             <Botao variante="contorno" onClick={aoCopiarEAbrir}>
@@ -277,6 +280,15 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
           valor={textoDoEnvio}
           onAbrir={() => setModal('envio')}
         />
+        {/* Até quando a pesquisa existe. Só recorrente tem essa pergunta: a
+            Única acaba sozinha quando o prazo do seu único ciclo vence. */}
+        {recorrente ? (
+          <LinhaResumo
+            rotulo="Data de Encerramento"
+            valor={textoDeEncerramento(c.encerramento)}
+            onAbrir={() => setModal('encerramento')}
+          />
+        ) : null}
         {/* Recorrente escolhe de quanto em quanto tempo repete; Única não
             tem o que escolher aqui. A linha fica, para a pesquisa dizer o que
             ela é, mas travada — ver a explicação em `recorrente`. */}
@@ -373,6 +385,27 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
         <ModalDataEnvio
           valor={c.envio}
           onSalvar={(envio) => salvarConfig({ envio })}
+          onFechar={fechar}
+        />
+      ) : null}
+
+      {modal === 'encerramento' ? (
+        <ModalEncerramento
+          valor={c.encerramento}
+          onSalvar={(encerramento) => {
+            /* Acertar o passo junto: a data pode já ter passado, e aí a
+               pesquisa encerra agora — esperar o próximo giro do motor
+               deixaria o selo mentindo por até 30s. */
+            onAlterar((p) =>
+              acertarPasso(
+                avaliar({
+                  ...p,
+                  configuracao: { ...p.configuracao, encerramento },
+                }),
+              ),
+            )
+            fechar()
+          }}
           onFechar={fechar}
         />
       ) : null}

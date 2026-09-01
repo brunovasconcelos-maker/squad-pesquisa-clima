@@ -11,12 +11,14 @@ import { usePesquisa, rotuloParticipantes } from './estado.jsx'
 import { ler, gravar, guardar, criarDoFluxo } from '../../lib/pesquisas.js'
 import {
   ModalDataEnvio,
+  ModalEncerramento,
   ModalRecorrencia,
   ModalFrequencia,
   ModalPrazo,
   ModalMensagemFinal,
   ModalAvancadas,
 } from './ModaisConfiguracao.jsx'
+import { textoDeEncerramento } from '../../lib/datas.js'
 
 /*
  * Último passo do fluxo (Figma 8067:5498).
@@ -28,8 +30,8 @@ import {
  * Os modais abrem por estado local, não por rota: são passos dentro desta
  * tela, e voltar de um não deveria mexer no histórico do navegador.
  *
- * Data e hora são texto livre — não há date picker ainda —, então o valor
- * mostrado na lista é montado a partir do que foi digitado.
+ * Data e hora vêm dos campos nativos de data e hora; o valor mostrado na
+ * lista é montado a partir do que foi escolhido.
  */
 function textoDeEnvio({ imediato, data, hora }) {
   return imediato ? 'Imediatamente' : `${data}, as ${hora}`
@@ -87,6 +89,16 @@ export default function TelaConfiguracao() {
               valor={textoDeEnvio(c.envio)}
               onAbrir={() => setModal('envio')}
             />
+            {/* Até quando a pesquisa existe, logo abaixo de quando ela
+                começa. Só faz pergunta para quem repete: a Única acaba
+                sozinha quando o prazo do seu único ciclo vence. */}
+            {c.recorrencia === 'Recorrente' ? (
+              <LinhaResumo
+                rotulo="Data de Encerramento"
+                valor={textoDeEncerramento(c.encerramento)}
+                onAbrir={() => setModal('encerramento')}
+              />
+            ) : null}
             <LinhaResumo
               rotulo="Recorrência"
               valor={c.recorrencia}
@@ -172,6 +184,14 @@ export default function TelaConfiguracao() {
         <ModalPrazo
           valor={c.prazo}
           onSalvar={salvar('prazo')}
+          onFechar={fechar}
+        />
+      ) : null}
+
+      {modal === 'encerramento' ? (
+        <ModalEncerramento
+          valor={c.encerramento}
+          onSalvar={salvar('encerramento')}
           onFechar={fechar}
         />
       ) : null}
