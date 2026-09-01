@@ -4,9 +4,10 @@ import IconeBotao from './IconeBotao.jsx'
 import caretRight from '../../assets/icons/CaretRight.svg'
 
 /*
- * Uma linha da lista de configuração. Duas formas:
+ * Uma linha da lista de configuração. Três formas:
  * - com `valor`: mostra o valor e a seta que abre um modal;
- * - com `controle`: põe o que vier no lugar da seta (o interruptor).
+ * - com `controle`: põe o que vier no lugar da seta (o interruptor);
+ * - com `travado`: mostra o valor e mais nada, porque não há o que editar.
  *
  * `cortar` é para a mensagem final, que é longa e precisa de reticências.
  */
@@ -15,6 +16,7 @@ export default function LinhaResumo({
   valor,
   controle,
   cortar = false,
+  travado = false,
   onAbrir,
 }) {
   const conteudo = (
@@ -28,7 +30,7 @@ export default function LinhaResumo({
 
   return (
     <div className={s.linha}>
-      {controle ? (
+      {controle || travado ? (
         <div className={`${s.conteudo} ${cortar ? s.conteudoLargo : ''}`}>
           {conteudo}
         </div>
@@ -41,9 +43,10 @@ export default function LinhaResumo({
           {conteudo}
         </button>
       )}
-      {controle ?? (
+      {/* Travada não ganha seta: sem nada para abrir, ela só prometeria. */}
+      {controle ?? (travado ? null : (
         <IconeBotao src={caretRight} rotulo={`Abrir ${rotulo}`} onClick={onAbrir} />
-      )}
+      ))}
     </div>
   )
 }

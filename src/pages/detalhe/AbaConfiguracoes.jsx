@@ -22,6 +22,7 @@ import { proximoEnvioDe } from '../../lib/geral.js'
 import {
   aceitandoRespostas,
   avisoDeInicio,
+  ehRecorrente,
   ehFinal,
   encerrarCiclo,
   estaPublicada,
@@ -108,6 +109,20 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
   const limparAviso = useCallback(() => setAviso(''), [])
   const c = pesquisa.configuracao || {}
   const avancadas = c.avancadas || {}
+  /*
+   * Única ou Recorrente é escolha da criação, e não muda mais depois.
+   *
+   * A linha "Repetir" chamava o modal de frequência, e escolher qualquer
+   * intervalo ali marcava a pesquisa como recorrente — inclusive uma Única já
+   * encerrada, que assim reabria os interruptores travados e ganhava a aba
+   * Histórico de volta. Era a porta dos fundos das travas todas.
+   *
+   * Uma pesquisa que já saiu do rascunho tem ciclos, histórico e respostas
+   * contados segundo o tipo dela; virar o tipo no meio faria tudo isso passar
+   * a significar outra coisa. Quem quer a mesma pesquisa repetindo duplica —
+   * a cópia nasce rascunho, e no rascunho a escolha está aberta.
+   */
+  const recorrente = ehRecorrente(pesquisa)
   const publicada = estaPublicada(pesquisa)
   const aceitando = aceitandoRespostas(pesquisa)
   /* Uma Única que já encerrou acabou de vez: ela não tem próximo ciclo para
@@ -262,13 +277,15 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
           valor={textoDoEnvio}
           onAbrir={() => setModal('envio')}
         />
+        {/* Recorrente escolhe de quanto em quanto tempo repete; Única não
+            tem o que escolher aqui. A linha fica, para a pesquisa dizer o que
+            ela é, mas travada — ver a explicação em `recorrente`. */}
         <LinhaResumo
           rotulo="Repetir"
           valor={
-            c.recorrencia === 'Recorrente'
-              ? (REPETICAO[c.frequencia] ?? c.frequencia)
-              : 'Não repete'
+            recorrente ? (REPETICAO[c.frequencia] ?? c.frequencia) : 'Não repete'
           }
+          travado={!recorrente}
           onAbrir={() => setModal('frequencia')}
         />
         <LinhaResumo
@@ -361,14 +378,11 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
       ) : null}
 
       {modal === 'frequencia' ? (
+        /* Só chega aqui uma recorrente, e o modal muda o intervalo dela — o
+           tipo não entra na gravação. */
         <ModalFrequencia
           valor={c.frequencia}
-          /* Escolher de quanto em quanto tempo repete é dizer que repete:
-             uma Única vira recorrente aqui, senão a linha voltaria a mostrar
-             "Não repete" logo depois de escolher "Todo mês". */
-          onSalvar={(frequencia) =>
-            salvarConfig({ frequencia, recorrencia: 'Recorrente' })
-          }
+          onSalvar={(frequencia) => salvarConfig({ frequencia })}
           onFechar={fechar}
         />
       ) : null}

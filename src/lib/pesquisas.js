@@ -209,10 +209,14 @@ function iniciarCiclo(p, quando) {
  * o encerra —, nunca por ter começado.
  */
 function fecharCiclo(p, quando, status) {
+  const contados = (p.ciclos ?? 0) + 1
   return {
     ...p,
     status,
-    ciclos: (p.ciclos ?? 0) + 1,
+    /* Uma Única tem um ciclo e só. Pausar fecha, retomar reabre, o prazo
+       fecha de novo — e nada disso pode virar dois. O teto está aqui, no
+       único ponto que conta, para valer por qualquer caminho. */
+    ciclos: ehRecorrente(p) ? contados : Math.min(1, contados),
     cicloFim: quando.toISOString(),
     atualizadoEm: quando.toISOString(),
   }
@@ -233,6 +237,10 @@ function retomarCiclo(p, agora) {
   return {
     ...p,
     status: 'rodando',
+    /* Devolve o que o fechamento contou: este ciclo voltou a correr, então
+       ainda não cumpriu o percurso. Ele conta de novo quando fechar — uma
+       vez, não duas. */
+    ciclos: Math.max(0, (p.ciclos ?? 0) - 1),
     simuladoEm: agora.toISOString(),
     cicloInicio: inicio.toISOString(),
     cicloFim: fimDoCiclo(inicio, p.configuracao?.prazo)?.toISOString() ?? null,
@@ -397,7 +405,14 @@ export function avaliar(p, agora = new Date()) {
       if (!inicio || !ehRecorrente(atual)) return atual
       const proximo = proximoCiclo(inicio, atual.configuracao?.frequencia)
       if (agora < proximo) return atual
-      atual = iniciarCiclo(atual, proximo)
+      /* O ciclo que venceria agora já teria acabado? Então a página ficou
+         fechada por mais de um período inteiro, e nenhum deles esteve no ar:
+         o selo nunca virou "Rodando" e o link nunca abriu. Replicá-los daria
+         ciclos de 0% que ninguém pôde responder e linhas de histórico
+         inventadas. Em vez disso, um só recomeço, a partir de agora. */
+      const fimDoProximo = fimDoCiclo(proximo, atual.configuracao?.prazo)
+      const perdido = fimDoProximo && agora >= fimDoProximo
+      atual = iniciarCiclo(atual, perdido ? agora : proximo)
       continue
     }
 
@@ -480,6 +495,10 @@ function eventoDe(p) {
   if (p.status === 'rodando') return `Encerra: ${formatarCurto(p.cicloFim)}`
   if (p.status === 'encerrada') return `Encerrada: ${formatarCurto(p.cicloFim)}`
   if (p.status === 'aguardando') {
+    /* Uma Única não tem próxima: ela está entre o ciclo que pausou e o fim.
+       A coluna Status já diz "Ativa | Aguardando", então aqui não há evento
+       nenhum a anunciar — anunciar uma data de repetição seria inventá-la. */
+    if (!ehRecorrente(p) || !p.cicloInicio) return '—'
     const proximo = proximoCiclo(
       new Date(p.cicloInicio),
       p.configuracao?.frequencia,

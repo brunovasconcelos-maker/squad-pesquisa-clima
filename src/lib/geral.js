@@ -143,7 +143,15 @@ export function taxaAtualDe(p, agora = new Date()) {
     titulo: 'Taxa de resposta',
     taxa,
     principal: `${quantos} de ${total} responderam essa pesquisa.`,
-    apoio: p.cicloFim ? `Encerrada em ${formatarMedio(p.cicloFim)}` : '—',
+    /* Fora do ar não é encerrada: o `cicloFim` guardado é o prazo que o ciclo
+       teria cumprido, e ele não chegou a vencer — dizer "Encerrada em" com
+       uma data no futuro descrevia um fim que não aconteceu. */
+    apoio:
+      p.status === 'naoAtiva'
+        ? 'Fora do ar'
+        : p.cicloFim
+          ? `Encerrada em ${formatarMedio(p.cicloFim)}`
+          : '—',
   }
 }
 
