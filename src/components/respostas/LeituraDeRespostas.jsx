@@ -39,13 +39,21 @@ function Seta({ direcao, rotulo, onClick, desabilitado }) {
 }
 
 function CartaoResposta({ rotulo, pergunta, resposta, enunciado }) {
+  const valor = valorDe(resposta, pergunta)
   return (
     <section className={s.cartao}>
       <div className={s.topoCartao}>
         <p className={s.rotuloCartao}>{rotulo}</p>
       </div>
       {enunciado ? <p className={s.enunciado}>{enunciado}</p> : null}
-      <CorpoDaResposta pergunta={pergunta} resposta={valorDe(resposta, pergunta)} />
+      {/* Sem valor o corpo não desenha nada, e o cartão ficava com o enunciado
+          e um buraco embaixo. Dizer que não foi respondida é a diferença entre
+          uma tela vazia e uma tela que informa. */}
+      {valor ? (
+        <CorpoDaResposta pergunta={pergunta} resposta={valor} />
+      ) : (
+        <p className={s.semResposta}>Sem resposta para esta pergunta.</p>
+      )}
     </section>
   )
 }
@@ -123,14 +131,25 @@ export function PorPergunta({ perguntas, respostas }) {
         </div>
       </section>
 
-      {respostas.map((resposta, i) => (
-        <CartaoResposta
-          key={resposta.id}
-          rotulo={`Resposta ${i + 1}`}
-          pergunta={pergunta}
-          resposta={resposta}
-        />
-      ))}
+      {/* Ninguém respondeu esta: uma linha só, em vez de um cartão por pessoa
+          repetindo a mesma ausência. Acontece com pergunta acrescentada depois
+          de a coleta já ter começado. */}
+      {pergunta && !respostas.some((r) => valorDe(r, pergunta)) ? (
+        <section className={s.cartao}>
+          <p className={s.semResposta}>
+            Ninguém respondeu esta pergunta ainda.
+          </p>
+        </section>
+      ) : (
+        respostas.map((resposta, i) => (
+          <CartaoResposta
+            key={resposta.id}
+            rotulo={`Resposta ${i + 1}`}
+            pergunta={pergunta}
+            resposta={resposta}
+          />
+        ))
+      )}
     </>
   )
 }

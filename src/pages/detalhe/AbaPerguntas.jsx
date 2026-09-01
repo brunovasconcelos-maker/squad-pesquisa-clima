@@ -4,6 +4,7 @@ import ModalConfirmar from '../../components/fluxo/ModalConfirmar.jsx'
 import EditorPergunta from '../nova-pesquisa/EditorPergunta.jsx'
 import EditorAbertura from '../nova-pesquisa/EditorAbertura.jsx'
 import { encerrarCiclo } from '../../lib/pesquisas.js'
+import { acertarRespostasDaPergunta } from '../../lib/respostas.js'
 import { acertarPasso } from '../../lib/acertar.js'
 import { registrar } from '../../lib/alteracoes.js'
 import { alternarObrigatoria, ehObrigatoria } from '../../lib/obrigatorias.js'
@@ -47,16 +48,25 @@ export default function AbaPerguntas({ pesquisa, onAlterar }) {
 
   const salvarPergunta = (pergunta) =>
     onAlterar((p) => {
-      const existe = p.perguntas.some((q) => q.id === pergunta.id)
+      const anterior = p.perguntas.find((q) => q.id === pergunta.id)
       const comPergunta = {
         ...p,
-        perguntas: existe
+        perguntas: anterior
           ? p.perguntas.map((q) => (q.id === pergunta.id ? pergunta : q))
           : [...p.perguntas, pergunta],
       }
-      return registrar(
+      /* Trocar o tipo de uma pergunta muda o formato do que ela guarda. O que
+         já foi respondido acerta o passo na mesma gravação: o que tem
+         tradução migra, o resto passa a não respondido. Deixar valor do tipo
+         velho ali era o que derrubava a aba Respostas. */
+      const acertada = acertarRespostasDaPergunta(
         comPergunta,
-        existe ? 'editou' : 'adicionou',
+        pergunta,
+        anterior?.tipo,
+      )
+      return registrar(
+        acertada,
+        anterior ? 'editou' : 'adicionou',
         pergunta.enunciado,
       )
     })

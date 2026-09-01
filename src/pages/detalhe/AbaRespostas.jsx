@@ -1,12 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { PorPergunta, Individual } from '../../components/respostas/LeituraDeRespostas.jsx'
 import ModalConfirmar from '../../components/fluxo/ModalConfirmar.jsx'
+import Aviso from '../../components/Aviso.jsx'
 import {
   removerResposta,
   limparRespostas,
   paraCsv,
   nomeDeArquivo,
-  baixar,
+  gerarEBaixar,
 } from '../../lib/respostas.js'
 import s from './AbaRespostas.module.css'
 
@@ -28,6 +29,8 @@ const SUBABAS = ['Por pergunta', 'Individual']
 export default function AbaRespostas({ pesquisa, onAlterar }) {
   const [subaba, setSubaba] = useState(SUBABAS[0])
   const [menuAberto, setMenuAberto] = useState(false)
+  const [aviso, setAviso] = useState('')
+  const limparAviso = useCallback(() => setAviso(''), [])
   const [confirmacao, setConfirmacao] = useState(null)
   const envoltorioMenu = useRef(null)
 
@@ -44,15 +47,22 @@ export default function AbaRespostas({ pesquisa, onAlterar }) {
     return () => document.removeEventListener('mousedown', aoClicar)
   }, [menuAberto])
 
-  const baixarUma = (pessoa, indice) =>
-    baixar(
+  /* Sem o aviso, uma falha na geração fechava o menu e não baixava nada,
+     sem dizer por quê. */
+  const baixarUma = (pessoa, indice) => {
+    const deu = gerarEBaixar(
       nomeDeArquivo(pesquisa, `resposta-${indice + 1}`),
-      paraCsv(pesquisa, [pessoa]),
+      () => paraCsv(pesquisa, [pessoa]),
     )
+    if (!deu) setAviso('Não foi possível gerar o arquivo')
+  }
 
   const baixarTudo = () => {
     setMenuAberto(false)
-    baixar(nomeDeArquivo(pesquisa, 'respostas'), paraCsv(pesquisa, respostas))
+    const deu = gerarEBaixar(nomeDeArquivo(pesquisa, 'respostas'), () =>
+      paraCsv(pesquisa, respostas),
+    )
+    if (!deu) setAviso('Não foi possível gerar o arquivo')
   }
 
   const pedirExclusaoDeUma = (pessoa, indice) =>
@@ -161,6 +171,8 @@ export default function AbaRespostas({ pesquisa, onAlterar }) {
           onCancelar={() => setConfirmacao(null)}
         />
       ) : null}
+
+      <Aviso texto={aviso} onSumir={limparAviso} />
     </div>
   )
 }

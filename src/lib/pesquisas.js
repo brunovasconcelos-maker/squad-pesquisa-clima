@@ -225,15 +225,54 @@ function iniciarCiclo(p, quando) {
  * ciclo conta quando cumpre o percurso dele — vence o prazo, enche, ou alguém
  * o encerra —, nunca por ter começado.
  */
+/*
+ * O retrato do ciclo que acabou de fechar, do jeito que ele foi.
+ *
+ * O Histórico inventava cada linha quando ela aparecia: sorteava uma taxa por
+ * hash e gerava respostas próprias, sem relação com o que o motor tinha
+ * medido. O mesmo ciclo aparecia com um número no Geral e outro na tabela, e
+ * as datas eram recalculadas para trás a cada passada — dois ciclos chegavam
+ * a mostrar o mesmo dia.
+ *
+ * Agora o registro nasce aqui, no instante em que o ciclo fecha, com o que
+ * ele de fato colheu: as respostas guardadas, o público que ele tinha, as
+ * perguntas como estavam, e as datas de verdade. Depois de escrito ninguém
+ * mexe — é um retrato, não uma conta a refazer.
+ */
+function retratoDoCiclo(p, numero, quando) {
+  const inicio = p.cicloInicio ? new Date(p.cicloInicio) : quando
+  const prazo = fimDoCiclo(inicio, p.configuracao?.prazo)
+  return {
+    id: `${p.id}_c${numero}`,
+    numero,
+    inicio: inicio.toISOString(),
+    fim: quando.toISOString(),
+    /* Fechou antes do prazo que ele teria: foi pausado no meio. É o que a
+       coluna Atividade marca. */
+    cedo: Boolean(prazo && quando < prazo),
+    convidados: totalDeParticipantes(p.participantes),
+    /* Cópias, não referências: editar a pesquisa depois não pode mudar o que
+       foi perguntado nem o que foi respondido neste ciclo. */
+    perguntas: (p.perguntas || []).map((q) => ({ ...q })),
+    respostas: (p.respostas || []).map((r) => ({ ...r })),
+  }
+}
+
 function fecharCiclo(p, quando, status) {
   const contados = (p.ciclos ?? 0) + 1
+  /* Uma Única tem um ciclo e só. Pausar fecha, retomar reabre, o prazo fecha
+     de novo — e nada disso pode virar dois. O teto está aqui, no único ponto
+     que conta, para valer por qualquer caminho. */
+  const ciclos = ehRecorrente(p) ? contados : Math.min(1, contados)
+  /* Retomar desconta o ciclo para ele contar de novo ao fechar; então o
+     retrato que já existe com este número é o mesmo ciclo, e o novo o
+     substitui — o que vale é como ele terminou. */
+  const anteriores = (p.historico || []).filter((c) => c.numero !== ciclos)
   return {
     ...p,
     status,
-    /* Uma Única tem um ciclo e só. Pausar fecha, retomar reabre, o prazo
-       fecha de novo — e nada disso pode virar dois. O teto está aqui, no
-       único ponto que conta, para valer por qualquer caminho. */
-    ciclos: ehRecorrente(p) ? contados : Math.min(1, contados),
+    ciclos,
+    historico: [...anteriores, retratoDoCiclo(p, ciclos, quando)],
     cicloFim: quando.toISOString(),
     atualizadoEm: quando.toISOString(),
   }

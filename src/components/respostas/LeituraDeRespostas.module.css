@@ -171,3 +171,13 @@
 .itemAtual {
   background: var(--cor-superficie);
 }
+
+/* Pergunta sem resposta: o cartão fica com o enunciado e uma linha dizendo
+   isso, em vez de um corpo vazio que parece defeito. Acontece com quem entrou
+   depois de a coleta começar, e com quem pulou uma pergunta opcional. */
+.semResposta {
+  margin: 0;
+  color: var(--cor-texto-tenue);
+  font-size: 14px;
+  line-height: 20px;
+}

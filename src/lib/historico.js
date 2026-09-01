@@ -8,18 +8,21 @@ import { alteracoesDoCiclo } from './alteracoes.js'
 /*
  * Ciclos já encerrados de uma pesquisa.
  *
- * Simulado — o motor não guarda histórico, ele carrega um ciclo por vez —, mas
- * guardado: cada ciclo entra em `historico` com as perguntas como estavam
- * naquele momento e as respostas daquele ciclo. Sem isso, editar uma pergunta
- * hoje reescreveria o que foi perguntado há três meses, e apagar as respostas
- * de um ciclo não duraria até o próximo render.
+ * Cada ciclo entra em `historico` no instante em que fecha, com o que ele de
+ * fato colheu — quem escreve é `fecharCiclo`, em lib/pesquisas.js. O registro
+ * é um retrato: as perguntas como estavam, as respostas daquele ciclo, o
+ * público que ele tinha e as datas de verdade. Depois de escrito, ninguém o
+ * recalcula. Sem isso, editar uma pergunta hoje reescreveria o que foi
+ * perguntado há três meses, e as datas andavam a cada passada do motor.
  *
- * `sincronizar` só acrescenta o que falta e nunca mexe no que já está lá. É a
- * mesma regra das respostas do ciclo em curso, pelo mesmo motivo.
+ * Este arquivo só preenche buraco: ciclo que fechou antes de o motor passar a
+ * guardar o retrato não deixou medida nenhuma, e a linha dele é reconstruída
+ * por hash, como o Histórico inteiro era antes. O que nasce daqui para a
+ * frente nunca passa por essa reconstrução.
  *
- * O que não é simulado é quantos ciclos existem e a numeração deles: sai de
- * `ciclos`, o mesmo número que o cartão do Geral mostra. O ciclo em curso
- * nunca entra — a lista é do que já fechou.
+ * Quantos ciclos existem e a numeração deles saem de `ciclos`, o mesmo número
+ * que o cartão do Geral mostra. O ciclo em curso nunca entra — a lista é do
+ * que já fechou.
  */
 
 /* Quantos ciclos já fecharam. É o próprio `ciclos`: ele anda quando um ciclo
@@ -52,7 +55,11 @@ function iniciosAnteriores(p, quantos) {
   return datas
 }
 
-/* Um ciclo novo: datas, taxa, o retrato das perguntas e as respostas dele. */
+/*
+ * Reconstrói um ciclo do qual não sobrou medida: os que fecharam antes de o
+ * motor passar a guardar o retrato. Tudo aqui é inventado a partir do hash da
+ * pesquisa — e por isso este caminho não serve para ciclo novo nenhum.
+ */
 function criarCiclo(p, numero, inicio) {
   const chave = `${p.id}:ciclo${numero}`
 
@@ -122,33 +129,28 @@ function criarCiclo(p, numero, inicio) {
 export function sincronizarHistorico(p) {
   if (!p) return p
   const quantos = ciclosFechados(p)
-  const publico = totalDeParticipantes(p.participantes)
   const atuais = p.historico || []
+  const guardado = (numero) => atuais.find((c) => c.numero === numero)
 
-  /* Mais respostas que convidados não existe: quando o público encolhe, a
-     lista do ciclo encolhe junto, senão a tabela diria 180%. */
-  const comPublico = (c) => {
-    const respostas = c.respostas || []
-    const cabem = respostas.length > publico ? respostas.slice(0, publico) : respostas
-    if (c.convidados === publico && cabem === respostas) return c
-    return { ...c, convidados: publico, respostas: cabem }
+  /* Já tem um retrato para cada ciclo fechado: nada a fazer. Devolver a
+     própria pesquisa é o que diz a quem chamou que não precisa gravar. */
+  const faltando = []
+  for (let numero = 1; numero <= quantos; numero += 1) {
+    if (!guardado(numero)) faltando.push(numero)
   }
+  const sobrando = atuais.some((c) => c.numero > quantos)
+  if (!faltando.length && !sobrando) return p
 
-  if (quantos <= atuais.length) {
-    // Perdeu ciclos (uma cópia, por exemplo): fica com os mais antigos.
-    const cortados = atuais.slice(atuais.length - quantos)
-    const acertados = cortados.map(comPublico)
-    const igual =
-      acertados.length === atuais.length && acertados.every((c, i) => c === atuais[i])
-    return igual ? p : { ...p, historico: acertados }
-  }
-
+  /* Preenche o que falta. Só cai aqui ciclo fechado antes de o motor passar a
+     guardar o retrato — desses não sobrou medida nenhuma, então a linha é
+     reconstruída como sempre foi, por hash. Os ciclos daqui para a frente
+     nascem prontos em `fecharCiclo` e nunca passam por aqui. */
   const inicios = iniciosAnteriores(p, quantos)
   const novos = []
-  for (let passo = 0; passo < quantos; passo += 1) {
-    const numero = quantos - passo
-    const guardado = atuais.find((c) => c.numero === numero)
-    novos.push(guardado ? comPublico(guardado) : criarCiclo(p, numero, inicios[passo]))
+  for (let numero = 1; numero <= quantos; numero += 1) {
+    /* `inicios` anda para trás a partir do ciclo atual: o passo 0 é o mais
+       recente, que é o ciclo `quantos`. */
+    novos.push(guardado(numero) ?? criarCiclo(p, numero, inicios[quantos - numero]))
   }
   return { ...p, historico: novos }
 }

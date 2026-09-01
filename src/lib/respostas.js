@@ -266,21 +266,131 @@ export function limparRespostas(p) {
   return { ...p, respostas: [] }
 }
 
+/* ---- o valor guardado e o tipo da pergunta ---- */
+
+/*
+ * Um valor combina com a pergunta?
+ *
+ * Cada tipo guarda um formato: nota e estrelas guardam um número dentro da
+ * escala, seleção única um índice da lista de opções, múltipla uma lista de
+ * índices, e os dois textos uma string. Trocar o tipo de uma pergunta não
+ * mexia no que já tinha sido respondido, e as telas desenhavam o valor velho
+ * como se fosse do tipo novo: `marcadas.includes(...)` sobre um número
+ * derrubava a aba Respostas inteira, e as trocas que não quebravam mostravam
+ * coisa errada em silêncio — a nota 3 virava a terceira opção marcada.
+ *
+ * Este é o portão: o que não combina não é desenhado nem exportado, e conta
+ * como não respondido. Vale para as pesquisas que já estão guardadas com
+ * valores trocados, sem precisar mexer nelas.
+ */
+export function valorCombina(valor, pergunta) {
+  if (valor === undefined || valor === null || !pergunta) return false
+  switch (pergunta.tipo) {
+    case 'nota':
+      return Number.isInteger(valor) && valor >= 0 && valor <= (pergunta.maximo ?? 5)
+    case 'estrelas':
+      return Number.isInteger(valor) && valor >= 1 && valor <= 5
+    case 'escolhaUnica':
+      return (
+        Number.isInteger(valor) && valor >= 0 && valor < (pergunta.opcoes?.length ?? 0)
+      )
+    case 'escolhaMultipla':
+      return (
+        Array.isArray(valor) &&
+        valor.every(
+          (i) => Number.isInteger(i) && i >= 0 && i < (pergunta.opcoes?.length ?? 0),
+        )
+      )
+    case 'respostaCurta':
+    case 'respostaLonga':
+      return typeof valor === 'string'
+    default:
+      return false
+  }
+}
+
+const TEXTOS = ['respostaCurta', 'respostaLonga']
+
+/*
+ * O que sobrevive a uma troca de tipo.
+ *
+ * Só migra o que quer dizer a mesma coisa dos dois lados:
+ *
+ *  - escolha única vira múltipla com aquela escolha marcada, e a múltipla com
+ *    uma marca só vira essa escolha única;
+ *  - texto curto e texto longo guardam a mesma coisa, então o que foi escrito
+ *    atravessa inteiro — cortar no limite do campo novo apagaria parte do que
+ *    a pessoa disse, e o limite vale para quem escreve, não para o que já
+ *    está escrito.
+ *
+ * O resto não tem tradução, e o perigo não é só quebrar: a nota 4 caberia
+ * como índice numa lista de cinco opções e passaria a marcar a quarta, que é
+ * uma resposta que ninguém deu. Sem tradução, vira não respondido — que é o
+ * que de fato aconteceu com a pergunta que está lá agora.
+ */
+function migrarValor(valor, de, para) {
+  if (de === 'escolhaUnica' && para === 'escolhaMultipla') {
+    return Number.isInteger(valor) ? [valor] : undefined
+  }
+  if (de === 'escolhaMultipla' && para === 'escolhaUnica') {
+    return Array.isArray(valor) && valor.length === 1 ? valor[0] : undefined
+  }
+  if (TEXTOS.includes(de) && TEXTOS.includes(para)) return valor
+  return undefined
+}
+
+/*
+ * Acerta as respostas guardadas de uma pergunta que mudou.
+ *
+ * Roda na gravação da pergunta, e não na leitura: assim o que fica guardado
+ * combina com o que a pesquisa pergunta hoje, em vez de depender de todo
+ * leitor lembrar de desconfiar. O portão da leitura continua de pé para o que
+ * já estava guardado errado.
+ */
+export function acertarRespostasDaPergunta(p, pergunta, tipoAnterior) {
+  const respostas = respostasDe(p)
+  if (!respostas.length) return p
+  const mesmoTipo = tipoAnterior === undefined || tipoAnterior === pergunta.tipo
+
+  const acertadas = respostas.map((r) => {
+    const antes = r.valores?.[pergunta.id]
+    if (antes === undefined) return r
+    const migrado = mesmoTipo
+      ? antes
+      : migrarValor(antes, tipoAnterior, pergunta.tipo)
+    if (valorCombina(migrado, pergunta)) {
+      return migrado === antes ? r : { ...r, valores: { ...r.valores, [pergunta.id]: migrado } }
+    }
+    /* Não tem tradução: sai do registro, e a pergunta fica sem resposta desta
+       pessoa. Tirar a chave é diferente de guardar vazio — vazio seria dizer
+       que ela respondeu nada. */
+    const { [pergunta.id]: _fora, ...resto } = r.valores || {}
+    return { ...r, valores: resto }
+  })
+
+  return acertadas.every((r, i) => r === respostas[i])
+    ? p
+    : { ...p, respostas: acertadas }
+}
+
 /* ---- leitura ---- */
 
-/* O que a pessoa respondeu numa pergunta, no formato que CorpoDaResposta lê. */
+/* O que a pessoa respondeu numa pergunta, no formato que CorpoDaResposta lê.
+   Valor que não combina com o tipo de hoje conta como não respondido. */
 export function valorDe(resposta, pergunta) {
   if (!resposta || !pergunta) return null
   const valor = resposta.valores?.[pergunta.id]
-  if (valor === undefined || valor === null) return null
+  if (!valorCombina(valor, pergunta)) return null
   return { tipo: pergunta.tipo, valor }
 }
 
 /* ---- arquivos ---- */
 
-/* Como a resposta aparece no arquivo: o texto, não o índice. */
+/* Como a resposta aparece no arquivo: o texto, não o índice. O que não
+   combina com o tipo de hoje sai como célula vazia, pelo mesmo motivo que não
+   é desenhado na tela. */
 function paraTexto(pergunta, valor) {
-  if (valor === undefined || valor === null) return ''
+  if (!valorCombina(valor, pergunta)) return ''
   switch (pergunta.tipo) {
     case 'escolhaUnica':
       return pergunta.opcoes?.[valor] ?? ''
@@ -319,6 +429,23 @@ export function nomeDeArquivo(p, sufixo) {
     .replace(/^-|-$/g, '')
     .toLowerCase()
   return `${base}-${sufixo}.csv`
+}
+
+/*
+ * Monta o arquivo e entrega, dizendo se deu certo.
+ *
+ * Montar um CSV lê todas as respostas de todas as perguntas, e um dado
+ * inesperado ali derrubava a geração em silêncio: o menu fechava, nada
+ * baixava e ninguém ficava sabendo. Falhar calado não serve — quem chama
+ * mostra o aviso com o `false`.
+ */
+export function gerarEBaixar(nome, montarConteudo) {
+  try {
+    baixar(nome, montarConteudo())
+    return true
+  } catch {
+    return false
+  }
 }
 
 export function baixar(nome, conteudo) {
