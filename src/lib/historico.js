@@ -1,6 +1,12 @@
 import { entre, semente } from './semente.js'
 import { totalDeParticipantes } from './participacao.js'
-import { formatarMedio, formatarPeriodo, proximoCiclo, somarDias } from './datas.js'
+import {
+  fimDoCiclo,
+  formatarMedio,
+  formatarPeriodo,
+  proximoCiclo,
+  somarDias,
+} from './datas.js'
 import { ehRecorrente } from './pesquisas.js'
 import { gerarValor } from './respostas.js'
 import { alteracoesDoCiclo } from './alteracoes.js'
@@ -141,18 +147,56 @@ export function sincronizarHistorico(p) {
   const sobrando = atuais.some((c) => c.numero > quantos)
   if (!faltando.length && !sobrando) return p
 
-  /* Preenche o que falta. Só cai aqui ciclo fechado antes de o motor passar a
-     guardar o retrato — desses não sobrou medida nenhuma, então a linha é
-     reconstruída como sempre foi, por hash. Os ciclos daqui para a frente
-     nascem prontos em `fecharCiclo` e nunca passam por aqui. */
+  /*
+   * Preenche o que falta — só ciclo fechado antes de o motor passar a guardar
+   * o retrato; os de agora nascem prontos em `fecharCiclo` e nunca passam por
+   * aqui.
+   *
+   * Do último deles ainda dá para saber a verdade: enquanto a pesquisa não
+   * abre o ciclo seguinte, ela continua carregando as respostas e as datas
+   * daquele que fechou. É o que `recuperarUltimo` aproveita, e é o que fazia o
+   * Geral e o Histórico discordarem sobre o mesmo ciclo. Dos anteriores não
+   * sobrou medida nenhuma, e a linha é reconstruída por hash, como sempre foi.
+   */
+  const real = recuperarUltimo(p, quantos)
   const inicios = iniciosAnteriores(p, quantos)
+  /* `inicios` anda para trás a partir de `cicloInicio`. Com o último ciclo
+     recuperado, `cicloInicio` é o começo dele, e o passo 0 é o ciclo de
+     antes; sem recuperação, `cicloInicio` é o do ciclo em curso, e o passo 0
+     é o próprio `quantos`. */
+  const desloca = real ? 1 : 0
   const novos = []
   for (let numero = 1; numero <= quantos; numero += 1) {
-    /* `inicios` anda para trás a partir do ciclo atual: o passo 0 é o mais
-       recente, que é o ciclo `quantos`. */
-    novos.push(guardado(numero) ?? criarCiclo(p, numero, inicios[quantos - numero]))
+    const pronto =
+      guardado(numero) ?? (numero === quantos ? real : null)
+    novos.push(pronto ?? criarCiclo(p, numero, inicios[quantos - numero - desloca]))
   }
   return { ...p, historico: novos }
+}
+
+/*
+ * O retrato do último ciclo fechado, tirado do que a pesquisa ainda carrega.
+ *
+ * Vale enquanto ela não abriu o ciclo seguinte: aí `respostas`, `cicloInicio`
+ * e `cicloFim` ainda são os dele. Rodando, não — a lista é do ciclo aberto, e
+ * o que fechou antes já se perdeu.
+ */
+function recuperarUltimo(p, quantos) {
+  if (quantos < 1 || p.status === 'rodando') return null
+  if (!p.cicloInicio || !p.cicloFim) return null
+  const inicio = new Date(p.cicloInicio)
+  const fim = new Date(p.cicloFim)
+  const prazo = fimDoCiclo(inicio, p.configuracao?.prazo)
+  return {
+    id: `${p.id}_c${quantos}`,
+    numero: quantos,
+    inicio: inicio.toISOString(),
+    fim: fim.toISOString(),
+    cedo: Boolean(prazo && fim < prazo),
+    convidados: totalDeParticipantes(p.participantes),
+    perguntas: (p.perguntas || []).map((q) => ({ ...q })),
+    respostas: (p.respostas || []).map((r) => ({ ...r })),
+  }
 }
 
 /* A lista para a tabela, do mais novo para o mais velho, já com as datas
