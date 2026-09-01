@@ -4,6 +4,7 @@ import { gerarPerguntas } from './bancoDePerguntas.js'
 import { ABERTURA_TEMPLATE, ABERTURA_BRANCO } from './perguntasExemplo.js'
 import { formatarLongo, somarDias } from '../../lib/datas.js'
 import { criarRascunho, gravar, guardar, ler } from '../../lib/pesquisas.js'
+import iguais from '../../lib/iguais.js'
 import ModalSairDoFluxo from './ModalSairDoFluxo.jsx'
 import { CAPA_PADRAO } from '../../lib/capa.js'
 
@@ -224,6 +225,11 @@ export default function PesquisaProvider() {
     const guardada = ler().find((p) => p.id === idDoRascunho)
     return guardada ? doRascunho(guardada) : estadoInicial()
   })
+  /* Como o fluxo estava ao abrir. É contra isto que se decide se há algo a
+     perder: o estado inicial em branco de uma pesquisa nova, ou o rascunho
+     como foi retomado. Guardado uma vez, no primeiro render — refazer o
+     estado inicial na hora de comparar daria outras datas de envio. */
+  const [original] = useState(pesquisa)
   /* O X de qualquer tela do fluxo pergunta antes de sair. A pergunta mora
      aqui, e não em cada tela, porque a resposta é a mesma nas seis e o que
      ela guarda é este estado. */
@@ -238,8 +244,19 @@ export default function PesquisaProvider() {
       /* Quem está sendo retomado, para o salvar gravar por cima em vez de
          criar uma segunda linha. Vazio quando a pesquisa é nova. */
       idDoRascunho,
-      /* O que o X das telas chama. Salvar acontece na confirmação. */
-      sair: () => setSaindo(true),
+      /*
+       * O que o X e o Voltar das telas chamam. Salvar acontece na
+       * confirmação.
+       *
+       * Só pergunta se houver algo a perder. Num formulário recém-aberto,
+       * onde nada foi digitado, a pergunta não tinha resposta boa: descartar
+       * o nada, ou salvar um rascunho "Pesquisa sem nome" com zero
+       * perguntas, que só sujava a lista. Sem alteração nenhuma, sair é sair.
+       */
+      sair: () => {
+        if (iguais(pesquisa, original)) navigate('/')
+        else setSaindo(true)
+      },
       /* O prompt é montado aqui, na escolha do template, e não na tela 6:
          assim o texto é gerado uma vez e as edições do usuário sobrevivem a
          ir e voltar entre os passos. */
@@ -280,7 +297,7 @@ export default function PesquisaProvider() {
         })
       },
     }
-  }, [pesquisa, idDoRascunho])
+  }, [pesquisa, original, idDoRascunho, navigate])
 
   return (
     <Contexto.Provider value={valor}>

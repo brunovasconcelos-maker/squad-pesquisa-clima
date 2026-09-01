@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react'
 import ModalFluxo from './fluxo/ModalFluxo.jsx'
+import ModalConfirmar from './fluxo/ModalConfirmar.jsx'
+import iguais from '../lib/iguais.js'
 import {
   COR_PADRAO,
   CAPA_PADRAO,
@@ -27,6 +29,12 @@ import s from './ModalCapa.module.css'
  * As três abas guardam estado próprio enquanto o modal está aberto: trocar de
  * aba e voltar não perde o que foi digitado. Só o que estiver na aba aberta
  * na hora do Salvar é que vira a capa — uma capa é de um tipo só.
+ *
+ * Fechar pergunta antes, e é a exceção do projeto junto com o editor de
+ * pergunta — nos outros modais o fechar descarta calado, de propósito. Aqui
+ * o que se perde pode ser uma imagem escolhida do computador e enquadrada à
+ * mão, que não se refaz digitando de novo. A pergunta só aparece se fechar
+ * agora fosse mesmo jogar algo fora.
  */
 const ABAS = ['Cor sólida', 'Gradiente', 'Imagem']
 
@@ -105,6 +113,7 @@ export default function ModalCapa({ valor, onSalvar, onFechar }) {
   const [imagem, setImagem] = useState(null)
   const [erro, setErro] = useState('')
   const [arrastandoArquivo, setArrastandoArquivo] = useState(false)
+  const [confirmandoDescarte, setConfirmandoDescarte] = useState(false)
   const entrada = useRef(null)
   const arrasto = useRef(null)
 
@@ -192,126 +201,167 @@ export default function ModalCapa({ valor, onSalvar, onFechar }) {
     }
   }
 
+  const imagemNova = aba === 'Imagem' && imagem !== null
+
+  /* O que o Salvar gravaria agora. Na aba Imagem sem imagem escolhida ele não
+     grava nada, então o que vale ali é a capa como já está. */
+  const proposta =
+    aba === 'Cor sólida'
+      ? { tipo: 'solida', cor: solida.cor }
+      : aba === 'Gradiente'
+        ? { tipo: 'gradiente', de: de.cor, ate: ate.cor }
+        : capa
+
+  /*
+   * Se fechar agora joga alguma coisa fora.
+   *
+   * A conta não é "mexeu em algum campo", é "o Salvar mudaria a capa" — o que
+   * já inclui trocar de aba, porque é a aba aberta que decide o tipo da capa
+   * que sai daqui. Sair de um gradiente com a aba Cor sólida aberta troca a
+   * capa; não perguntar seria descartar essa troca calado.
+   *
+   * Imagem escolhida conta sempre: o recorte vira um data URL novo, que nunca
+   * é igual ao que já estava guardado.
+   */
+  const alterada = imagemNova || !iguais(proposta, capa)
+
+  const fechar = () => {
+    if (alterada) setConfirmandoDescarte(true)
+    else onFechar()
+  }
+
   return (
-    <ModalFluxo
-      titulo="Editar Capa"
-      espacamento={24}
-      onVoltar={onFechar}
-      onFechar={onFechar}
-      onSalvar={salvar}
-    >
-      <div className={s.corpo}>
-        {/* A prévia tem a proporção da faixa da Revisão. Na aba Imagem ela é
-            a própria área de recorte, e por isso vira uma superfície de
-            arrasto. */}
-        <div
-          className={`${s.previa} ${recortando ? s.previaArrastavel : ''} ${
-            estiloDaPrevia ? '' : s.previaVazia
-          }`}
-          style={estiloDaPrevia ?? undefined}
-          role={recortando ? 'application' : undefined}
-          aria-label={recortando ? 'Arraste para posicionar a imagem' : undefined}
-          onPointerDown={aoPressionar}
-          onPointerMove={aoMover}
-          onPointerUp={aoSoltar}
-          onPointerCancel={aoSoltar}
-        >
-          {estiloDaPrevia ? null : <span className={s.previaTexto}>Sem imagem</span>}
-        </div>
-
-        <div className={s.subabas} role="tablist" aria-label="Tipo de capa">
-          {ABAS.map((nome) => (
-            <button
-              type="button"
-              key={nome}
-              className={`${s.subaba} ${nome === aba ? s.ativa : ''}`}
-              role="tab"
-              aria-selected={nome === aba}
-              onClick={() => setAba(nome)}
-            >
-              {nome}
-            </button>
-          ))}
-        </div>
-
-        {aba === 'Cor sólida' ? (
-          <div className={s.painel}>
-            <CampoDeCor rotulo="Cor da capa" campo={solida} />
+    <>
+      <ModalFluxo
+        titulo="Editar Capa"
+        espacamento={24}
+        onVoltar={fechar}
+        onFechar={fechar}
+        onSalvar={salvar}
+      >
+        <div className={s.corpo}>
+          {/* A prévia tem a proporção da faixa da Revisão. Na aba Imagem ela é
+              a própria área de recorte, e por isso vira uma superfície de
+              arrasto. */}
+          <div
+            className={`${s.previa} ${recortando ? s.previaArrastavel : ''} ${
+              estiloDaPrevia ? '' : s.previaVazia
+            }`}
+            style={estiloDaPrevia ?? undefined}
+            role={recortando ? 'application' : undefined}
+            aria-label={recortando ? 'Arraste para posicionar a imagem' : undefined}
+            onPointerDown={aoPressionar}
+            onPointerMove={aoMover}
+            onPointerUp={aoSoltar}
+            onPointerCancel={aoSoltar}
+          >
+            {estiloDaPrevia ? null : <span className={s.previaTexto}>Sem imagem</span>}
           </div>
-        ) : null}
 
-        {aba === 'Gradiente' ? (
-          <div className={s.painel}>
-            <CampoDeCor rotulo="Cor inicial" campo={de} />
-            <CampoDeCor rotulo="Cor final" campo={ate} />
-          </div>
-        ) : null}
-
-        {aba === 'Imagem' ? (
-          <div className={s.painel}>
-            <input
-              ref={entrada}
-              className={s.oculto}
-              type="file"
-              accept="image/*"
-              aria-label="Escolher imagem"
-              onChange={(e) => carregar(e.target.files?.[0])}
-            />
-
-            {imagem ? (
-              <>
-                <label className={s.linhaZoom}>
-                  <span className={s.rotuloZoom}>Zoom</span>
-                  <input
-                    className={s.zoom}
-                    type="range"
-                    min="1"
-                    max="4"
-                    step="0.01"
-                    value={imagem.zoom}
-                    aria-label="Zoom da imagem"
-                    onChange={(e) =>
-                      setImagem((i) => ({ ...i, zoom: Number(e.target.value) }))
-                    }
-                  />
-                </label>
-                <button
-                  type="button"
-                  className={s.trocar}
-                  onClick={() => entrada.current?.click()}
-                >
-                  Trocar imagem
-                </button>
-              </>
-            ) : (
+          <div className={s.subabas} role="tablist" aria-label="Tipo de capa">
+            {ABAS.map((nome) => (
               <button
                 type="button"
-                className={`${s.area} ${arrastandoArquivo ? s.areaAtiva : ''}`}
-                onClick={() => entrada.current?.click()}
-                onDragOver={(e) => {
-                  e.preventDefault()
-                  setArrastandoArquivo(true)
-                }}
-                onDragLeave={() => setArrastandoArquivo(false)}
-                onDrop={(e) => {
-                  e.preventDefault()
-                  setArrastandoArquivo(false)
-                  carregar(e.dataTransfer.files?.[0])
-                }}
+                key={nome}
+                className={`${s.subaba} ${nome === aba ? s.ativa : ''}`}
+                role="tab"
+                aria-selected={nome === aba}
+                onClick={() => setAba(nome)}
               >
-                <span className={s.areaTitulo}>Arraste uma imagem aqui</span>
-                <span className={s.areaApoio}>ou clique para escolher do computador</span>
+                {nome}
               </button>
-            )}
+            ))}
           </div>
-        ) : null}
 
-        {erro ? (
-          <p className={s.erro} role="alert">
-            {erro}
-          </p>
-        ) : null}
-      </div>
-    </ModalFluxo>
+          {aba === 'Cor sólida' ? (
+            <div className={s.painel}>
+              <CampoDeCor rotulo="Cor da capa" campo={solida} />
+            </div>
+          ) : null}
+
+          {aba === 'Gradiente' ? (
+            <div className={s.painel}>
+              <CampoDeCor rotulo="Cor inicial" campo={de} />
+              <CampoDeCor rotulo="Cor final" campo={ate} />
+            </div>
+          ) : null}
+
+          {aba === 'Imagem' ? (
+            <div className={s.painel}>
+              <input
+                ref={entrada}
+                className={s.oculto}
+                type="file"
+                accept="image/*"
+                aria-label="Escolher imagem"
+                onChange={(e) => carregar(e.target.files?.[0])}
+              />
+
+              {imagem ? (
+                <>
+                  <label className={s.linhaZoom}>
+                    <span className={s.rotuloZoom}>Zoom</span>
+                    <input
+                      className={s.zoom}
+                      type="range"
+                      min="1"
+                      max="4"
+                      step="0.01"
+                      value={imagem.zoom}
+                      aria-label="Zoom da imagem"
+                      onChange={(e) =>
+                        setImagem((i) => ({ ...i, zoom: Number(e.target.value) }))
+                      }
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    className={s.trocar}
+                    onClick={() => entrada.current?.click()}
+                  >
+                    Trocar imagem
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  className={`${s.area} ${arrastandoArquivo ? s.areaAtiva : ''}`}
+                  onClick={() => entrada.current?.click()}
+                  onDragOver={(e) => {
+                    e.preventDefault()
+                    setArrastandoArquivo(true)
+                  }}
+                  onDragLeave={() => setArrastandoArquivo(false)}
+                  onDrop={(e) => {
+                    e.preventDefault()
+                    setArrastandoArquivo(false)
+                    carregar(e.dataTransfer.files?.[0])
+                  }}
+                >
+                  <span className={s.areaTitulo}>Arraste uma imagem aqui</span>
+                  <span className={s.areaApoio}>ou clique para escolher do computador</span>
+                </button>
+              )}
+            </div>
+          ) : null}
+
+          {erro ? (
+            <p className={s.erro} role="alert">
+              {erro}
+            </p>
+          ) : null}
+        </div>
+      </ModalFluxo>
+
+      {confirmandoDescarte ? (
+        <ModalConfirmar
+          titulo="Descartar alterações?"
+          texto="Você perderá as alterações feitas nesta capa."
+          rotuloConfirmar="Descartar"
+          onConfirmar={onFechar}
+          onCancelar={() => setConfirmandoDescarte(false)}
+        />
+      ) : null}
+    </>
   )
 }

@@ -2,6 +2,8 @@ import { useState } from 'react'
 import s from './Editor.module.css'
 import Botao from '../../components/fluxo/Botao.jsx'
 import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
+import ModalConfirmar from '../../components/fluxo/ModalConfirmar.jsx'
+import iguais from '../../lib/iguais.js'
 import {
   TIPOS,
   converterPergunta,
@@ -36,9 +38,26 @@ const NOME_DO_TIPO = Object.fromEntries(TIPOS.map((t) => [t.id, t.nome]))
  * lista com remover ao lado, e o tipo escolhido antes de tudo quando é nova.
  *
  * A edição acontece numa cópia: só o "Salvar" devolve, então fechar descarta.
+ *
+ * Fechar pergunta antes, e é a exceção do projeto — nos outros modais o
+ * fechar descarta calado, de propósito, porque o que se perde ali é um campo
+ * ou dois. Aqui é uma pergunta inteira: enunciado, opções, rótulos. Só
+ * pergunta se houver o que perder; sem nada alterado desde que abriu, fecha
+ * direto.
  */
 export default function EditorPergunta({ pergunta, onSalvar, onFechar }) {
   const [rascunho, setRascunho] = useState(pergunta)
+  /* A pergunta como estava ao abrir o editor — é com ela que o rascunho se
+     compara para saber se há alterações. Numa pergunta nova ela nasce junto
+     com o tipo escolhido, e é por isso que é estado e não a prop. */
+  const [original, setOriginal] = useState(pergunta)
+  const [confirmandoDescarte, setConfirmandoDescarte] = useState(false)
+
+  const alterada = !iguais(rascunho, original)
+  const fechar = () => {
+    if (alterada) setConfirmandoDescarte(true)
+    else onFechar()
+  }
 
   /* Sem pergunta ainda: primeiro passo é escolher o tipo. */
   if (!rascunho) {
@@ -47,6 +66,7 @@ export default function EditorPergunta({ pergunta, onSalvar, onFechar }) {
         <div className={s.modal} role="dialog" aria-label="Nova pergunta">
           <div className={s.cabecalho}>
             <p className={s.titulo}>Nova pergunta</p>
+            {/* Ainda não há nada para descartar: só se escolheu o tipo. */}
             <IconeBotao src={close} rotulo="Fechar" onClick={onFechar} />
           </div>
           <p className={s.dica}>Escolha o tipo da pergunta.</p>
@@ -56,7 +76,11 @@ export default function EditorPergunta({ pergunta, onSalvar, onFechar }) {
                 key={id}
                 type="button"
                 className={s.tipo}
-                onClick={() => setRascunho(perguntaVazia(id))}
+                onClick={() => {
+                  const nova = perguntaVazia(id)
+                  setRascunho(nova)
+                  setOriginal(nova)
+                }}
               >
                 {nome}
               </button>
@@ -68,6 +92,21 @@ export default function EditorPergunta({ pergunta, onSalvar, onFechar }) {
   }
 
   const alterar = (campos) => setRascunho((r) => ({ ...r, ...campos }))
+
+  /*
+   * Trocar o tipo troca os campos abaixo, levando junto o que ainda faz
+   * sentido para o tipo novo.
+   *
+   * Numa pergunta nova em que ainda não se digitou nada, a base acompanha a
+   * troca: escolher "Texto longo", mudar de ideia e fechar não é alteração
+   * nenhuma. Numa pergunta que já existia a base fica como estava — aí a
+   * troca de tipo é justamente o que se perderia ao fechar.
+   */
+  const trocarTipo = (tipo) => {
+    const intocada = !alterada
+    setRascunho((r) => converterPergunta(r, tipo))
+    if (!pergunta && intocada) setOriginal((o) => converterPergunta(o, tipo))
+  }
 
   const alterarOpcao = (indice, texto) =>
     alterar({
@@ -91,7 +130,7 @@ export default function EditorPergunta({ pergunta, onSalvar, onFechar }) {
       <div className={s.modal} role="dialog" aria-label="Editar pergunta">
         <div className={s.cabecalho}>
           <p className={s.titulo}>{NOME_DO_TIPO[rascunho.tipo]}</p>
-          <IconeBotao src={close} rotulo="Fechar" onClick={onFechar} />
+          <IconeBotao src={close} rotulo="Fechar" onClick={fechar} />
         </div>
 
         <div className={s.corpo}>
@@ -102,9 +141,7 @@ export default function EditorPergunta({ pergunta, onSalvar, onFechar }) {
             <select
               className={s.entrada}
               value={rascunho.tipo}
-              onChange={(e) =>
-                setRascunho((r) => converterPergunta(r, e.target.value))
-              }
+              onChange={(e) => trocarTipo(e.target.value)}
             >
               {TIPOS.map(({ id, nome }) => (
                 <option key={id} value={id}>
@@ -234,7 +271,7 @@ export default function EditorPergunta({ pergunta, onSalvar, onFechar }) {
         </div>
 
         <div className={s.rodape}>
-          <Botao onClick={onFechar}>Cancelar</Botao>
+          <Botao onClick={fechar}>Cancelar</Botao>
           <Botao
             variante="marca"
             desabilitado={!podeSalvar}
@@ -244,6 +281,16 @@ export default function EditorPergunta({ pergunta, onSalvar, onFechar }) {
           </Botao>
         </div>
       </div>
+
+      {confirmandoDescarte ? (
+        <ModalConfirmar
+          titulo="Descartar alterações?"
+          texto="Você perderá o que foi editado nesta pergunta."
+          rotuloConfirmar="Descartar"
+          onConfirmar={onFechar}
+          onCancelar={() => setConfirmandoDescarte(false)}
+        />
+      ) : null}
     </div>
   )
 }

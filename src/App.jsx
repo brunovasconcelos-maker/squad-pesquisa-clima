@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Home from './pages/Home.jsx'
 import PesquisaProvider from './pages/nova-pesquisa/estado.jsx'
 import TelaNome from './pages/nova-pesquisa/TelaNome.jsx'
@@ -71,6 +71,15 @@ export default function App() {
           <Route path="pergunta/:numero" element={<TelaPerguntaResposta />} />
           <Route path="fim" element={<TelaFim />} />
         </Route>
+
+        {/* Qualquer caminho que não seja nenhum dos de cima vai para a home.
+            Sem isto o roteador não casava nada e a tela ficava em branco —
+            sem cabeçalho, sem conteúdo e sem caminho de volta. É o mesmo que
+            já acontece com id de pesquisa ou de ciclo que não existe, e pelo
+            mesmo motivo: um endereço que não leva a lugar nenhum leva à
+            lista. `replace` para o endereço quebrado não ficar no histórico,
+            senão o Voltar do navegador cairia nele de novo. */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </HashRouter>
   )
