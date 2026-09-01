@@ -5,6 +5,12 @@ import {
   proximoCiclo,
 } from './datas.js'
 import { ehRecorrente } from './pesquisas.js'
+import { entre, semente } from './semente.js'
+import {
+  quantasResponderam,
+  taxaDe,
+  totalDeParticipantes,
+} from './participacao.js'
 
 /*
  * O que a aba Geral mostra, derivado da pesquisa guardada.
@@ -15,40 +21,6 @@ import { ehRecorrente } from './pesquisas.js'
  * Pipo. O que é simulado está marcado, e é sempre derivado do id da pesquisa,
  * nunca sorteado na hora — senão os números dançariam a cada render.
  */
-
-/* Quantas pessoas o modal de participantes diz que cada grupo tem. É o mesmo
-   56 que a tela de criação mostra; sai daqui para os dois lados falarem o
-   mesmo número. */
-export const MEMBROS_POR_GRUPO = 56
-
-/* Pessoas escolhidas uma a uma contam uma cada: escolher duas pessoas é um
-   público de duas, e não de um grupo inteiro. Sem nada escolhido cai no
-   tamanho de um grupo, que é o que a lista mostrava antes de existir escolha
-   avulsa. */
-export function totalDeParticipantes({
-  todaEmpresa,
-  grupos = [],
-  pessoas = [],
-} = {}) {
-  if (todaEmpresa) return MEMBROS_POR_GRUPO
-  return grupos.length * MEMBROS_POR_GRUPO + pessoas.length || MEMBROS_POR_GRUPO
-}
-
-/*
- * Semente estável a partir de um texto (FNV-1a). Dá o mesmo número sempre
- * para a mesma pesquisa, que é o que segura os valores simulados no lugar
- * entre um render e outro, e entre uma sessão e outra.
- */
-export function semente(texto) {
-  let h = 0x811c9dc5
-  for (let i = 0; i < texto.length; i += 1) {
-    h ^= texto.charCodeAt(i)
-    h = Math.imul(h, 0x01000193) >>> 0
-  }
-  return h
-}
-
-export const entre = (texto, min, max) => min + (semente(texto) % (max - min + 1))
 
 /* ---- campos do cartão de informações ---- */
 
@@ -126,12 +98,16 @@ export function proximoEnvioDe(p) {
 
 /* ---- cartões de taxa de resposta ---- */
 
-const responderam = (taxa, total) => Math.round((taxa / 100) * total)
-
+/*
+ * A taxa e a contagem saem da mesma lista de respostas, então nunca
+ * discordam: `quantos` é o tamanho dela, e `taxa` é esse tamanho sobre o
+ * público. Agendada mostra zero porque ainda não é para ter ninguém.
+ */
 export function taxaAtualDe(p, agora = new Date()) {
   const total = totalDeParticipantes(p.participantes)
-  const taxa = p.status === 'agendada' ? 0 : (p.taxa ?? 0)
-  const quantos = responderam(taxa, total)
+  const agendada = p.status === 'agendada'
+  const taxa = agendada ? 0 : taxaDe(p)
+  const quantos = agendada ? 0 : quantasResponderam(p)
 
   if (p.status === 'rodando') {
     const dias = diasAte(p.cicloFim, agora)
@@ -246,7 +222,9 @@ const escolher = (lista, chave) => lista[semente(chave) % lista.length]
 
 export function resumoDe(p, atual, anterior) {
   const total = totalDeParticipantes(p.participantes)
-  const quantos = responderam(atual.taxa, total)
+  /* A mesma contagem do cartão de cima, e da lista da aba Respostas: o texto
+     não pode dizer um número que a rosca ao lado não confirma. */
+  const quantos = quantasResponderam(p)
   const leitura = escolher(LEITURAS, `${p.id}:leitura`)
   const acompanhar = escolher(ACOMPANHAMENTOS, `${p.id}:acompanhar`)
 

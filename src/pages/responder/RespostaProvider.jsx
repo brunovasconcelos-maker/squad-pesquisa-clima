@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import { Outlet, useNavigate, useParams } from 'react-router-dom'
 import { aceitaResposta, avaliarLista, gravar, ler } from '../../lib/pesquisas.js'
-import { adicionarResposta, sincronizar } from '../../lib/respostas.js'
+import { adicionarResposta, materializar } from '../../lib/respostas.js'
 import { sincronizarHistorico } from '../../lib/historico.js'
 import { ehObrigatoria } from '../../lib/obrigatorias.js'
 import { PESQUISA_EXEMPLO } from './exemplo.js'
@@ -50,7 +50,11 @@ export default function RespostaProvider() {
   const navigate = useNavigate()
 
   const [sessao] = useState(() => {
-    const guardada = ler().find((p) => p.id === id)
+    /* Materializa na leitura: quem abre o link direto pode nunca ter passado
+       por uma tela que grave, e sem isso uma pesquisa guardada antes de a
+       lista de respostas existir pareceria vazia para o portão do "fora do
+       ar". */
+    const guardada = materializar(ler().find((p) => p.id === id))
     /* Sem pesquisa com esse id, a vista mostra o exemplo do Figma em vez de
        uma tela vazia — e o envio não grava nada, porque não há onde. */
     return { pesquisa: guardada || PESQUISA_EXEMPLO, guardada: Boolean(guardada) }
@@ -86,7 +90,7 @@ export default function RespostaProvider() {
       const { lista } = avaliarLista(ler())
       const alvo = lista.find((p) => p.id === id)
       if (alvo) {
-        const comResposta = adicionarResposta(sincronizar(alvo), valores)
+        const comResposta = adicionarResposta(alvo, valores)
         gravar(
           lista.map((p) =>
             p.id === id

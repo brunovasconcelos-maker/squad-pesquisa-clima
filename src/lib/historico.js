@@ -1,4 +1,5 @@
-import { entre, semente, totalDeParticipantes } from './geral.js'
+import { entre, semente } from './semente.js'
+import { totalDeParticipantes } from './participacao.js'
 import { formatarMedio, formatarPeriodo, proximoCiclo, somarDias } from './datas.js'
 import { ehRecorrente } from './pesquisas.js'
 import { gerarValor } from './respostas.js'

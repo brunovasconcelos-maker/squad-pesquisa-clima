@@ -1,4 +1,4 @@
-import { semente } from './geral.js'
+import { semente } from './semente.js'
 import { historicoDe, taxaDoCiclo } from './historico.js'
 
 /*

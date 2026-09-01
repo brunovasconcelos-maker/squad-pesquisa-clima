@@ -1,16 +1,27 @@
-import { semente, totalDeParticipantes } from './geral.js'
+import { semente } from './semente.js'
+import {
+  respostasDe,
+  totalDeParticipantes,
+  vagasRestantes,
+} from './participacao.js'
 
 /*
  * Respostas simuladas.
  *
  * Não há backend coletando nada, então as respostas são inventadas — mas
- * ficam guardadas junto da pesquisa, em `respostas`, e não recalculadas a
- * cada render. É o que permite deletar uma e ela continuar deletada.
+ * ficam guardadas junto da pesquisa, em `respostas`, e são elas a verdade:
+ * a taxa de resposta é o tamanho desta lista sobre o público, calculado na
+ * hora de mostrar.
  *
- * Quantas existem acompanha a taxa que o motor sobe: `sincronizar` acrescenta
- * as que faltam e nunca mexe nas que já estão lá. Deletar mexe nos dois lados
- * — tira da lista e baixa a taxa —, senão a próxima sincronização traria de
- * volta quem acabou de sair, e a rosca do Geral discordaria da contagem daqui.
+ * Era ao contrário. A taxa era um número guardado que o motor subia sozinho,
+ * e um passo de acerto refazia a lista para bater com ela. Isso desfazia
+ * exclusões — o que fosse apagado voltava no acerto seguinte, porque a
+ * porcentagem não tinha ficado sabendo — e, em público acima de 100 pessoas,
+ * apagar uma resposta apagava duas, porque converter para porcentagem e
+ * voltar não devolve o mesmo número.
+ *
+ * Agora quem cresce é a lista: o motor acrescenta gente, apagar tira gente, e
+ * ninguém reconcilia nada com uma porcentagem depois.
  */
 
 /* ---- textos por template ---- */
@@ -142,11 +153,11 @@ export function gerarValor(chave, pergunta, template) {
 
 /* Uma pessoa e tudo o que ela respondeu. O id é estável para a exclusão poder
    apontar para alguém em vez de para uma posição na lista. */
-function criarResposta(p, ordem) {
+function criarResposta(p, ordem, agora = new Date()) {
   const chaveBase = `${p.id}:r${ordem}`
   return {
     id: `${p.id}_r${ordem}`,
-    em: new Date().toISOString(),
+    em: agora.toISOString(),
     valores: Object.fromEntries(
       (p.perguntas || []).map((q) => [
         q.id,
@@ -157,69 +168,102 @@ function criarResposta(p, ordem) {
 }
 
 /*
- * Acerta a lista guardada com a taxa que o motor sobe: acrescenta o que
- * faltar, mantém o que já existe. Devolve a própria pesquisa quando não há
- * nada a fazer, para quem chama saber que não precisa gravar.
+ * Acrescenta `quantas` respostas simuladas ao fim da lista. É por aqui que a
+ * simulação do motor cresce: gente entrando, e não uma porcentagem subindo.
+ *
+ * A ordem de cada uma é a posição na lista, e é dela que sai a chave do
+ * hash — então quem já está lá nunca muda de conteúdo quando chega mais
+ * alguém.
  */
-export function sincronizar(p) {
-  if (!p) return p
-  const atuais = p.respostas || []
-  if (p.status === 'rascunho' || p.status === 'agendada') {
-    return atuais.length ? { ...p, respostas: [] } : p
-  }
-
-  const alvo = Math.round(
-    ((p.taxa ?? 0) / 100) * totalDeParticipantes(p.participantes),
-  )
-  if (alvo === atuais.length) return p
-  if (alvo < atuais.length) return { ...p, respostas: atuais.slice(0, alvo) }
-
-  const novas = Array.from({ length: alvo - atuais.length }, (_, i) =>
-    criarResposta(p, atuais.length + i),
+export function crescer(p, quantas, agora = new Date()) {
+  const cabem = Math.min(quantas, vagasRestantes(p))
+  if (cabem < 1) return p
+  const atuais = respostasDe(p)
+  const novas = Array.from({ length: cabem }, (_, i) =>
+    criarResposta(p, atuais.length + i, agora),
   )
   return { ...p, respostas: [...atuais, ...novas] }
 }
 
-/* Sobra da taxa depois de mexer na lista: a rosca do Geral e a contagem daqui
-   contam a mesma coisa, então uma não pode andar sem a outra. */
-const comTaxaDaLista = (p, respostas) => ({
-  ...p,
-  respostas,
-  taxa: Math.round(
-    (respostas.length / totalDeParticipantes(p.participantes)) * 100,
-  ),
-})
-
 /*
- * Uma resposta de verdade, enviada pela vista de quem responde. Entra na
- * mesma lista das simuladas e sobe a taxa junto, pela mesma regra da
- * exclusão: a rosca do Geral e a contagem da aba Respostas contam a mesma
- * coisa, então uma não pode andar sem a outra.
+ * Converte uma pesquisa guardada no formato antigo, uma vez só.
  *
- * Quem chama sincroniza antes: sem isso, escrever a taxa a partir do
- * tamanho da lista jogaria fora o que o motor já tinha subido e ninguém
- * ainda materializou.
+ * Antes, a participação era uma `taxa` guardada e um `taxaEm` marcando quando
+ * ela subiu pela última vez; a lista de respostas só era materializada quando
+ * alguém abria o detalhe, e muitas pesquisas não tinham nenhuma. A conversão
+ * transforma a taxa velha na lista do tamanho que ela dizia — a pesquisa
+ * continua mostrando a mesma porcentagem de antes — e tira os dois campos do
+ * registro, deixando o relógio da simulação com o nome que ele tem agora.
+ *
+ * Lista ausente e lista vazia não são a mesma coisa: `[]` é ninguém ter
+ * respondido, ou alguém ter apagado tudo, e nesse caso não há o que
+ * materializar.
  */
-export function adicionarResposta(p, valores, agora = new Date()) {
-  return comTaxaDaLista(p, [
-    ...(p.respostas || []),
-    {
-      id: `${p.id}_r${agora.getTime().toString(36)}`,
-      em: agora.toISOString(),
-      valores,
-    },
-  ])
+export function materializar(p, agora = new Date()) {
+  if (!p) return p
+  const convertida =
+    Array.isArray(p.respostas) && p.taxa === undefined && p.taxaEm === undefined
+  if (convertida) return p
+
+  const antiga = { ...p, taxa: undefined, taxaEm: undefined }
+  if (p.taxaEm && !p.simuladoEm) antiga.simuladoEm = p.taxaEm
+  if (Array.isArray(p.respostas)) return antiga
+
+  const quantas = Math.round(
+    ((p.taxa ?? 0) / 100) * totalDeParticipantes(p.participantes),
+  )
+  return crescer({ ...antiga, respostas: [] }, quantas, agora)
 }
 
+/*
+ * As duas coisas que a lista não pode contrariar.
+ *
+ * A primeira é o status: uma pesquisa que ainda não saiu — rascunho ou
+ * agendada — não tem respostas, e é o que os cartões do Geral dizem.
+ *
+ * A segunda é o público: mais respostas do que convidados não existe, então
+ * um público que encolhe encolhe a lista junto. É a mesma regra que o
+ * histórico já aplica a cada ciclo fechado.
+ *
+ * É a única poda que sobrou, e ela olha o status e o público — nunca uma
+ * porcentagem. Nada aqui repõe o que foi apagado.
+ */
+export function aparar(p) {
+  if (!p) return p
+  const atuais = respostasDe(p)
+  if (p.status === 'rascunho' || p.status === 'agendada') {
+    return atuais.length ? { ...p, respostas: [] } : p
+  }
+  const total = totalDeParticipantes(p.participantes)
+  if (atuais.length <= total) return p
+  return { ...p, respostas: atuais.slice(0, total) }
+}
+
+/* Uma resposta de verdade, enviada pela vista de quem responde. Entra na
+   mesma lista das simuladas, no fim, e a taxa sobe sozinha porque é contada
+   dela. */
+export function adicionarResposta(p, valores, agora = new Date()) {
+  return {
+    ...p,
+    respostas: [
+      ...respostasDe(p),
+      {
+        id: `${p.id}_r${agora.getTime().toString(36)}`,
+        em: agora.toISOString(),
+        valores,
+      },
+    ],
+  }
+}
+
+/* Apagar é só tirar da lista. Nada recalcula, nada repõe: a taxa cai porque
+   ela é a contagem desta lista. */
 export function removerResposta(p, idResposta) {
-  return comTaxaDaLista(
-    p,
-    (p.respostas || []).filter((r) => r.id !== idResposta),
-  )
+  return { ...p, respostas: respostasDe(p).filter((r) => r.id !== idResposta) }
 }
 
 export function limparRespostas(p) {
-  return comTaxaDaLista(p, [])
+  return { ...p, respostas: [] }
 }
 
 /* ---- leitura ---- */

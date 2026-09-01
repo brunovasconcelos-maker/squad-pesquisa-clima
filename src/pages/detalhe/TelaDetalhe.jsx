@@ -8,7 +8,7 @@ import {
   ehRecorrente,
   INTERVALO_MS,
 } from '../../lib/pesquisas.js'
-import { sincronizar } from '../../lib/respostas.js'
+import { aparar } from '../../lib/respostas.js'
 import { sincronizarHistorico } from '../../lib/historico.js'
 import AbaGeral from './AbaGeral.jsx'
 import AbaPerguntas from './AbaPerguntas.jsx'
@@ -54,10 +54,10 @@ export default function TelaDetalhe() {
   )
   const [pesquisas, setPesquisas] = useState(null)
 
-  /* O motor roda aqui como na home, e logo depois as respostas simuladas
-     desta pesquisa acertam o passo com a taxa que ele acabou de subir — as
-     duas abas contam a mesma coisa, então não podem sincronizar em momentos
-     diferentes. Só esta pesquisa: as outras sincronizam quando forem abertas. */
+  /* O motor roda aqui como na home; ele já faz a simulação desta pesquisa
+     crescer. O que sobra é o histórico dos ciclos fechados e a poda de quem
+     não cabe mais no público — as duas abas contam a mesma coisa, então não
+     podem acertar o passo em momentos diferentes. */
   useEffect(() => {
     const rodar = () => {
       const { lista, mudou } = avaliarLista(ler())
@@ -66,7 +66,7 @@ export default function TelaDetalhe() {
       const antes = lista.find((p) => p.id === id)
       /* Respostas do ciclo em curso e histórico dos que fecharam: os dois
          acertam o passo com o motor que acabou de rodar. */
-      const depois = antes && sincronizarHistorico(sincronizar(antes))
+      const depois = antes && sincronizarHistorico(aparar(antes))
       if (depois && depois !== antes) {
         proxima = lista.map((p) => (p.id === id ? depois : p))
         precisaGravar = true

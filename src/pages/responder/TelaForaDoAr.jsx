@@ -1,4 +1,5 @@
 import VistaResposta from './VistaResposta.jsx'
+import { cicloCheio } from '../../lib/participacao.js'
 import s from './Responder.module.css'
 
 import pipo from '../../assets/images/Pipo-Loading.png'
@@ -39,7 +40,7 @@ const MOTIVOS = {
 export default function TelaForaDoAr({ pesquisa }) {
   /* Cheia é o mesmo fim que encerrada, para quem chega: o ciclo já colheu
      todas as respostas que tinha para colher. */
-  const cheia = (pesquisa.taxa ?? 0) >= 100
+  const cheia = cicloCheio(pesquisa)
   const motivo =
     cheia || pesquisa.status === 'encerrada'
       ? MOTIVOS.encerrada

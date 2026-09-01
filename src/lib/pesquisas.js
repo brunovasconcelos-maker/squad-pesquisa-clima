@@ -1,4 +1,6 @@
 import { paraData, fimDoCiclo, proximoCiclo, formatarCurto } from './datas.js'
+import { cicloCheio, taxaDe, totalDeParticipantes } from './participacao.js'
+import { crescer, materializar } from './respostas.js'
 
 /*
  * Guarda e faz evoluir as pesquisas.
@@ -8,15 +10,23 @@ import { paraData, fimDoCiclo, proximoCiclo, formatarCurto } from './datas.js'
  * relógio, e sim uma função que compara o que está guardado com o horário de
  * agora — chamada na carga e de tempos em tempos. Uma pesquisa que deveria ter
  * trocado de status ontem troca no próximo carregamento, de uma vez.
+ *
+ * A participação de um ciclo é a lista de respostas guardada, e a taxa é a
+ * conta que sai dela (lib/participacao.js). O motor faz a simulação crescer
+ * acrescentando gente à lista; não existe mais uma porcentagem à parte para a
+ * lista ter de alcançar.
  */
 
 const CHAVE = 'squad-pesquisa-clima:pesquisas'
 
 export const INTERVALO_MS = 30000
 
-/* Quanto a taxa de resposta sobe a cada checagem, enquanto o ciclo roda. */
-const PASSO_TAXA_MIN = 1
-const PASSO_TAXA_MAX = 5
+/* Quanto da participação entra a cada checagem, enquanto o ciclo roda, em
+   pontos percentuais do público. Vira gente logo abaixo: é assim que o passo
+   acompanha o tamanho do público em vez de valer o mesmo para 5 pessoas e
+   para 500. */
+const PASSO_MIN = 1
+const PASSO_MAX = 5
 
 export const STATUS = {
   rascunho: { texto: 'Rascunho', tom: 'padrao' },
@@ -76,7 +86,7 @@ export function criarDoFluxo(pesquisa, agora = new Date()) {
     perguntas: pesquisa.perguntas,
     configuracao: pesquisa.configuracao,
     ciclos: 0,
-    taxa: 0,
+    respostas: [],
     cicloInicio: inicio ? inicio.toISOString() : null,
     cicloFim: null,
     status: inicio ? 'agendada' : 'rascunho',
@@ -110,7 +120,7 @@ export function criarRascunho(pesquisa, agora = new Date(), passo = '') {
     perguntas: pesquisa.perguntas,
     configuracao: pesquisa.configuracao,
     ciclos: 0,
-    taxa: 0,
+    respostas: [],
     cicloInicio: null,
     cicloFim: null,
     status: 'rascunho',
@@ -152,12 +162,13 @@ export function duplicar(p, agora = new Date()) {
     atualizadoEm: agora.toISOString(),
     status: 'rascunho',
     ciclos: 0,
-    taxa: 0,
+    simuladoEm: undefined,
+    // `taxa` e `anterior` não são mais escritos; seguem limpos aqui por causa
+    // das pesquisas guardadas antes de eles serem aposentados.
+    taxa: undefined,
     taxaEm: undefined,
-    // `anterior` não é mais escrito; segue limpo aqui por causa das pesquisas
-    // guardadas antes de o campo ser aposentado, que ainda o carregam.
     anterior: undefined,
-    respostas: undefined,
+    respostas: [],
     historico: undefined,
     alteracoes: undefined,
     passo: undefined,
@@ -179,8 +190,11 @@ function iniciarCiclo(p, quando) {
     ...p,
     status: 'rodando',
     ciclos: p.ciclos + 1,
-    taxa: 0,
-    taxaEm: quando.toISOString(),
+    /* Ciclo novo, participação do zero: a lista do ciclo que acabou fica com
+       ele, no histórico. Vazia de propósito, e não ausente — ausente é o que
+       marca uma pesquisa guardada antes de a lista existir. */
+    respostas: [],
+    simuladoEm: quando.toISOString(),
     cicloInicio: quando.toISOString(),
     cicloFim: fimDoCiclo(quando, p.configuracao?.prazo)?.toISOString() ?? null,
     atualizadoEm: quando.toISOString(),
@@ -218,10 +232,10 @@ export const ehFinal = (p) => p.status === 'encerrada' && !ehRecorrente(p)
 
 /*
  * Quem abre o link de resposta consegue responder? Precisa estar no ar e
- * ainda ter quem responda: a 100% todo mundo do público já respondeu, e o
- * formulário não tem mais o que coletar neste ciclo.
+ * ainda ter quem responda: com a lista do tamanho do público, todo mundo já
+ * respondeu e o formulário não tem mais o que coletar neste ciclo.
  */
-export const aceitaResposta = (p) => estaPublicada(p) && (p.taxa ?? 0) < 100
+export const aceitaResposta = (p) => estaPublicada(p) && !cicloCheio(p)
 
 /*
  * Republica uma pesquisa que estava fora do ar. Volta a existir, mas sem
@@ -272,13 +286,16 @@ export function encerrarCiclo(p, agora = new Date()) {
 export const linkDaPesquisa = (p) =>
   `${window.location.origin}${import.meta.env.BASE_URL}#/responder/${p.id}`
 
-const sobeTaxa = (taxa) =>
-  Math.min(
-    100,
-    taxa +
-      PASSO_TAXA_MIN +
-      Math.floor(Math.random() * (PASSO_TAXA_MAX - PASSO_TAXA_MIN + 1)),
-  )
+/*
+ * Quantas pessoas entram numa passada da simulação: um passo de 1 a 5 pontos
+ * do público, convertido em gente, nunca menos de uma. `crescer` corta no
+ * que ainda cabe, então isto não precisa olhar quantas já responderam.
+ */
+function quantasEntram(p) {
+  const passo = PASSO_MIN + Math.floor(Math.random() * (PASSO_MAX - PASSO_MIN + 1))
+  const total = totalDeParticipantes(p.participantes)
+  return Math.max(1, Math.round((passo / 100) * total))
+}
 
 /*
  * Uma pesquisa por vez, comparando o guardado com `agora`. Roda em laço porque
@@ -307,7 +324,7 @@ export function avaliar(p, agora = new Date()) {
          respondido. A segunda costuma chegar antes, e sem ela o selo dizia
          "Ativa | Rodando" enquanto o link de resposta já dizia que a pesquisa
          tinha encerrado. */
-      const cheio = (atual.taxa ?? 0) >= 100
+      const cheio = cicloCheio(atual)
       if (!cheio && (!fim || agora < fim)) return atual
       const quando = cheio ? agora : fim
       atual = {
@@ -337,28 +354,36 @@ export function avaliar(p, agora = new Date()) {
 }
 
 /*
- * Passa a lista pelo motor e sobe a taxa de quem está rodando.
+ * Passa a lista pelo motor e faz a simulação de quem está rodando crescer.
  *
- * A subida é presa ao relógio, não à quantidade de vezes que alguém chamou:
- * `taxaEm` guarda quando subiu pela última vez e só passa de novo depois de um
- * intervalo cheio. Sem isso a taxa andaria a cada montagem, e ir e voltar
- * entre a lista e o detalhe — que rodam o mesmo motor — inflaria a simulação
- * a cada clique.
+ * Crescer é acrescentar respostas ao fim da lista da pesquisa — nunca mexer
+ * em quem já está lá. É isso que faz uma exclusão durar: o que foi apagado
+ * não volta, e a simulação continua a partir do tamanho que a lista tem
+ * agora, não do que uma porcentagem guardada dizia.
+ *
+ * O crescimento é preso ao relógio, não à quantidade de vezes que alguém
+ * chamou: `simuladoEm` guarda quando entrou gente pela última vez e só passa
+ * de novo depois de um intervalo cheio. Sem isso a simulação andaria a cada
+ * montagem, e ir e voltar entre a lista e o detalhe — que rodam o mesmo
+ * motor — a inflaria a cada clique.
+ *
+ * Aqui também é onde as pesquisas guardadas antes de a lista virar a verdade
+ * ganham a lista delas, uma vez só: `materializar` converte a taxa velha e o
+ * `mudou` faz quem chamou gravar o resultado.
  */
 export function avaliarLista(lista, agora = new Date()) {
   let mudou = false
   const nova = lista.map((p) => {
-    let atualizada = avaliar(p, agora)
-    if (atualizada.status === 'rodando' && atualizada.taxa < 100) {
-      const ultima = atualizada.taxaEm ? new Date(atualizada.taxaEm) : null
+    let atualizada = avaliar(materializar(p, agora), agora)
+    if (atualizada.status === 'rodando' && !cicloCheio(atualizada)) {
+      const ultima = atualizada.simuladoEm ? new Date(atualizada.simuladoEm) : null
       if (!ultima || agora - ultima >= INTERVALO_MS) {
         atualizada = {
-          ...atualizada,
-          taxa: sobeTaxa(atualizada.taxa),
-          taxaEm: agora.toISOString(),
+          ...crescer(atualizada, quantasEntram(atualizada), agora),
+          simuladoEm: agora.toISOString(),
         }
-        /* A subida pode ter chegado a 100. Passa pelo motor outra vez para o
-           ciclo fechar agora, e não daqui a meio minuto. */
+        /* A entrada pode ter completado o público. Passa pelo motor outra vez
+           para o ciclo fechar agora, e não daqui a meio minuto. */
         atualizada = avaliar(atualizada, agora)
       }
     }
@@ -399,7 +424,7 @@ export function paraLinha(p, rotuloDoPublico) {
     tipo: rascunho ? '—' : ehRecorrente(p) ? 'Recorrente' : 'Única',
     status: STATUS[p.status],
     evento: eventoDe(p),
-    taxa: rascunho || p.status === 'agendada' ? '—' : `${p.taxa}%`,
+    taxa: rascunho || p.status === 'agendada' ? '—' : `${taxaDe(p)}%`,
     ciclos: rascunho ? '—' : String(p.ciclos),
     transporte: botaoDe(p),
   }
