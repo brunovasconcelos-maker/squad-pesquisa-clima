@@ -9,6 +9,7 @@ import {
   ler,
   gravar,
   avaliarLista,
+  avisoDeInicio,
   duplicar,
   forcarInicio,
   encerrarCiclo,
@@ -99,9 +100,7 @@ export default function Home() {
     }
     // Iniciar sobrescreve a data agendada, então pede confirmação.
     setConfirmacao({
-      titulo: 'Iniciar agora?',
-      texto: `"${p.nome}" começa imediatamente e passa a receber respostas, ignorando a data de envio agendada. Um novo ciclo é iniciado a partir de agora.`,
-      rotulo: 'Iniciar',
+      ...avisoDeInicio(p),
       aoConfirmar: () => trocar(p.id, (atual) => forcarInicio(atual)),
     })
   }

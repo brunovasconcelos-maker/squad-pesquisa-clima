@@ -22,11 +22,15 @@ import { alteracoesDoCiclo } from './alteracoes.js'
  * nunca entra — a lista é do que já fechou.
  */
 
-/* Quantos ciclos já fecharam: todos menos o que está rodando agora. */
-export function ciclosFechados(p) {
-  const total = p.ciclos ?? 0
-  return p.status === 'rodando' ? Math.max(0, total - 1) : total
-}
+/* Quantos ciclos já fecharam. É o próprio `ciclos`: ele anda quando um ciclo
+   fecha, não quando começa, então o que está rodando agora ainda não entrou
+   na conta. */
+export const ciclosFechados = (p) => p.ciclos ?? 0
+
+/* O número do ciclo que o cartão de cima do Geral está mostrando: o em curso
+   quando ela roda, o último fechado quando ela está entre ciclos. */
+const cicloEmCartaz = (p) =>
+  (p.ciclos ?? 0) + (p.status === 'rodando' ? 1 : 0)
 
 /*
  * Anda para trás a partir do início do ciclo atual, um passo de frequência
@@ -169,9 +173,9 @@ export function historicoDe(p) {
  * precisa deles: do mais novo para o mais velho, cada um já com o rótulo do
  * seletor e as frases do cartão.
  *
- * Só entram os de número menor que `ciclos`: o ciclo `ciclos` é o que o
- * cartão de cima já mostra — em curso quando está rodando, o último quando a
- * pesquisa está entre ciclos —, e os dois cartões não podem falar do mesmo.
+ * Não entra o que o cartão de cima já mostra — o ciclo em curso quando ela
+ * roda, o último fechado quando está entre ciclos —, porque os dois cartões
+ * não podem falar do mesmo.
  *
  * Os números são os do próprio ciclo, que são os mesmos que a tabela do
  * Histórico conta — e o público é o da pesquisa, o mesmo do cartão de cima.
@@ -180,7 +184,7 @@ export function taxasAnteriores(p) {
   if (!ehRecorrente(p)) return []
   const publico = totalDeParticipantes(p.participantes)
   return historicoDe(p)
-    .filter((c) => c.numero < (p.ciclos ?? 0))
+    .filter((c) => c.numero < cicloEmCartaz(p))
     .sort((a, b) => b.numero - a.numero)
     .map((c) => ({
       numero: c.numero,

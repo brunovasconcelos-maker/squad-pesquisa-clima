@@ -10,14 +10,15 @@ import { fimDoCiclo } from './datas.js'
  *
  * A que ciclo uma alteração pertence:
  *
- *  - Rodando, o ciclo `ciclos` está aberto e a alteração é dele.
- *  - Pausada, também: a aba Perguntas exige pausar antes de editar, então
- *    quem edita interrompeu o ciclo em curso, e é esse que sofreu a
- *    alteração. É a mesma linha que o Histórico marca com o aviso de
+ *  - Rodando, o ciclo aberto é o que vem depois do último fechado, e a
+ *    alteração é dele.
+ *  - Pausada, a aba Perguntas exige pausar antes de editar, então quem edita
+ *    interrompeu o ciclo em curso — e esse já fechou ao pausar, então é o
+ *    último contado. É a mesma linha que o Histórico marca com o aviso de
  *    "encerrado antes do prazo".
  *  - Entre ciclos por conta do prazo, encerrada, fora do ar, agendada ou
  *    rascunho, não há ciclo interrompido: o que se edita agora vale para o
- *    próximo, `ciclos + 1`.
+ *    próximo a abrir.
  *
  * Pausar e o prazo vencer deixam a pesquisa no mesmo status — "Ativa |
  * Aguardando" —, então o que separa os dois é a data: pausar fecha o ciclo
@@ -34,10 +35,13 @@ function cicloInterrompido(p) {
 }
 
 export function cicloEmAberto(p) {
-  const atual = p.ciclos ?? 0
-  if (atual < 1) return atual + 1
-  if (p.status === 'rodando' || cicloInterrompido(p)) return atual
-  return atual + 1
+  const fechados = p.ciclos ?? 0
+  /* Pausada no meio do ciclo, a alteração é do ciclo que acabou de fechar —
+     ele é o último contado. Fora disso, do próximo a abrir: o que está
+     rodando agora ainda não entrou na conta, então é `fechados + 1` tanto
+     para ele quanto para o que ainda vai começar. */
+  if (fechados >= 1 && cicloInterrompido(p)) return fechados
+  return fechados + 1
 }
 
 /* Anota uma alteração e devolve a pesquisa. `alvo` é o enunciado da pergunta,

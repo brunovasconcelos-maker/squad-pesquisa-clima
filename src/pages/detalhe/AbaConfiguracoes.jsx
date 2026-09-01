@@ -21,6 +21,7 @@ import { formatarComDia } from '../../lib/datas.js'
 import { proximoEnvioDe } from '../../lib/geral.js'
 import {
   aceitandoRespostas,
+  avisoDeInicio,
   ehFinal,
   encerrarCiclo,
   estaPublicada,
@@ -163,9 +164,7 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
     }
     // Mesmo texto do Play da home: a ação é a mesma.
     setConfirmacao({
-      titulo: 'Iniciar agora?',
-      texto: `"${pesquisa.nome}" começa imediatamente e passa a receber respostas, ignorando a data de envio agendada. Um novo ciclo é iniciado a partir de agora.`,
-      rotulo: 'Iniciar',
+      ...avisoDeInicio(pesquisa),
       aoConfirmar: () => onAlterar((p) => acertarPasso(forcarInicio(p))),
     })
   }

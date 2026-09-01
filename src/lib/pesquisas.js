@@ -189,7 +189,6 @@ function iniciarCiclo(p, quando) {
   return {
     ...p,
     status: 'rodando',
-    ciclos: p.ciclos + 1,
     /* Ciclo novo, participação do zero: a lista do ciclo que acabou fica com
        ele, no histórico. Vazia de propósito, e não ausente — ausente é o que
        marca uma pesquisa guardada antes de a lista existir. */
@@ -201,7 +200,54 @@ function iniciarCiclo(p, quando) {
   }
 }
 
+/*
+ * Fecha o ciclo em curso, e é aqui — e só aqui — que `ciclos` anda.
+ *
+ * Contar na abertura fazia uma pesquisa agendada e esquecida acordar com
+ * ciclos que ninguém pôde responder: bastava a data de envio ter passado. Um
+ * ciclo conta quando cumpre o percurso dele — vence o prazo, enche, ou alguém
+ * o encerra —, nunca por ter começado.
+ */
+function fecharCiclo(p, quando, status) {
+  return {
+    ...p,
+    status,
+    ciclos: (p.ciclos ?? 0) + 1,
+    cicloFim: quando.toISOString(),
+    atualizadoEm: quando.toISOString(),
+  }
+}
+
+/*
+ * Volta a receber respostas sem abrir nada: o mesmo ciclo, com o prazo que
+ * ele sempre teve e as respostas que já tinha.
+ *
+ * É o que o Play faz numa Única pausada. Ela tem um ciclo só, então "iniciar"
+ * ali não pode significar um segundo período — significa destravar o que
+ * ficou pela metade. Se o prazo original já passou enquanto estava pausada, o
+ * motor fecha o ciclo na volta seguinte, que é a resposta honesta: a janela
+ * dela acabou.
+ */
+function retomarCiclo(p, agora) {
+  const inicio = p.cicloInicio ? new Date(p.cicloInicio) : agora
+  return {
+    ...p,
+    status: 'rodando',
+    simuladoEm: agora.toISOString(),
+    cicloInicio: inicio.toISOString(),
+    cicloFim: fimDoCiclo(inicio, p.configuracao?.prazo)?.toISOString() ?? null,
+    atualizadoEm: agora.toISOString(),
+  }
+}
+
+/*
+ * O Play da home e o "Aceitando respostas" ligado.
+ *
+ * Numa recorrente é sempre um ciclo novo. Numa Única entre ciclos não existe
+ * ciclo novo: ela retoma o único que tem.
+ */
 export function forcarInicio(p, agora = new Date()) {
+  if (!ehRecorrente(p) && p.status === 'aguardando') return retomarCiclo(p, agora)
   return iniciarCiclo(p, agora)
 }
 
@@ -231,11 +277,18 @@ export const aceitandoRespostas = (p) => p.status === 'rodando'
 export const ehFinal = (p) => p.status === 'encerrada' && !ehRecorrente(p)
 
 /*
- * Quem abre o link de resposta consegue responder? Precisa estar no ar e
- * ainda ter quem responda: com a lista do tamanho do público, todo mundo já
- * respondeu e o formulário não tem mais o que coletar neste ciclo.
+ * Quem abre o link de resposta consegue responder?
+ *
+ * Só com o ciclo correndo. Estar no ar não basta: agendada ainda não saiu,
+ * aguardando está entre ciclos e não guarda o que chegar, e fora do ar é fora
+ * do ar. Antes o portão era "publicada", e por isso quem abria o link de uma
+ * pausada respondia normalmente, e quem abria o de uma agendada respondia
+ * para o nada — a resposta entrava e a próxima poda a tirava.
+ *
+ * A outra metade é ter quem responda: com a lista do tamanho do público,
+ * todo mundo já respondeu e não há mais o que coletar neste ciclo.
  */
-export const aceitaResposta = (p) => estaPublicada(p) && !cicloCheio(p)
+export const aceitaResposta = (p) => aceitandoRespostas(p) && !cicloCheio(p)
 
 /*
  * Republica uma pesquisa que estava fora do ar. Volta a existir, mas sem
@@ -267,12 +320,7 @@ export function publicar(p, agora = new Date()) {
  * por isso vai para "Ativa | Aguardando" e não para "Não ativa".
  */
 export function encerrarCiclo(p, agora = new Date()) {
-  return {
-    ...p,
-    status: 'aguardando',
-    cicloFim: agora.toISOString(),
-    atualizadoEm: agora.toISOString(),
-  }
+  return fecharCiclo(p, agora, 'aguardando')
 }
 
 /*
@@ -315,7 +363,13 @@ export function avaliar(p, agora = new Date()) {
 
     if (atual.status === 'agendada') {
       if (!inicio || agora < inicio) return atual
-      atual = iniciarCiclo(atual, inicio)
+      /* Começa agora, e não na data marcada que já passou. A página pode ter
+         ficado meses fechada, e ancorar no passado abria um ciclo com o prazo
+         já vencido — que fechava na mesma passada, e a recorrente ainda
+         emendava os seguintes. Ninguém pôde responder a nenhum deles: a
+         pesquisa não estava no ar. O que houve foi um envio atrasado, e é
+         daqui que ele conta. */
+      atual = iniciarCiclo(atual, agora)
       continue
     }
 
@@ -327,12 +381,11 @@ export function avaliar(p, agora = new Date()) {
       const cheio = cicloCheio(atual)
       if (!cheio && (!fim || agora < fim)) return atual
       const quando = cheio ? agora : fim
-      atual = {
-        ...atual,
-        status: ehRecorrente(atual) ? 'aguardando' : 'encerrada',
-        cicloFim: quando.toISOString(),
-        atualizadoEm: quando.toISOString(),
-      }
+      atual = fecharCiclo(
+        atual,
+        quando,
+        ehRecorrente(atual) ? 'aguardando' : 'encerrada',
+      )
       continue
     }
 
@@ -391,6 +444,27 @@ export function avaliarLista(lista, agora = new Date()) {
     return atualizada
   })
   return { lista: nova, mudou }
+}
+
+/*
+ * O que a confirmação do Play — e do "Aceitando respostas" ligado — precisa
+ * dizer. Mora aqui, junto da ação, porque as duas telas que a fazem têm de
+ * prometer a mesma coisa, e porque o que ela promete depende do que a ação
+ * vai fazer: numa Única entre ciclos, isso não é abrir um período novo.
+ */
+export function avisoDeInicio(p) {
+  if (!ehRecorrente(p) && p.status === 'aguardando') {
+    return {
+      titulo: 'Voltar a receber respostas?',
+      texto: `"${p.nome}" volta a aceitar respostas agora, no mesmo ciclo em que parou e com o prazo que ele já tinha. Como ela não se repete, nenhum ciclo novo é criado e o que já foi respondido continua valendo.`,
+      rotulo: 'Voltar a receber',
+    }
+  }
+  return {
+    titulo: 'Iniciar agora?',
+    texto: `"${p.nome}" começa imediatamente e passa a receber respostas, ignorando a data de envio agendada. Um novo ciclo é iniciado a partir de agora.`,
+    rotulo: 'Iniciar',
+  }
 }
 
 /* ---- o que a linha da tabela mostra ---- */

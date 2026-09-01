@@ -5,19 +5,22 @@ import s from './Responder.module.css'
 import pipo from '../../assets/images/Pipo-Loading.png'
 
 /*
- * O que quem abre o link vê quando a pesquisa não está recebendo respostas.
+ * O que quem abre o link vê quando a pesquisa não está recebendo respostas —
+ * que é tudo menos um ciclo correndo.
  *
- * É o que o modal "Tirar do ar?" das Configurações promete: despublicar faz o
- * link parar de funcionar. Encerrada e cheia — 100% do público já respondeu —
- * caem aqui pelo mesmo motivo: não há resposta a dar.
+ * São cinco situações e não uma. Antes só encerrada e fora do ar paravam
+ * aqui: quem abria o link de uma pausada respondia como se nada fosse, e quem
+ * abria o de uma agendada respondia para o nada — a resposta entrava e
+ * desaparecia na próxima poda, com a tela de agradecimento já dada.
  *
  * Sem referência no Figma — a moldura é a mesma das outras telas de quem
  * responde, com o cartão centrado da tela final e sem botão nenhum, porque
  * não há o que fazer aqui.
  *
- * O texto muda com o motivo. Dizer "não está no ar" para uma pesquisa que
- * simplesmente acabou mandaria a pessoa cobrar quem enviou por um problema
- * que não existe.
+ * Cada texto diz o que de fato houve, e o que a pessoa pode esperar. Dizer
+ * "não está no ar" para uma pesquisa que simplesmente acabou mandaria alguém
+ * cobrar quem enviou por um problema que não existe; dizer "encerrada" para
+ * uma que ainda vai abrir faria a pessoa jogar o link fora.
  */
 const MOTIVOS = {
   encerrada: {
@@ -30,16 +33,32 @@ const MOTIVOS = {
     texto:
       'Quem cuida dela ainda está preparando o formulário. Tente de novo mais tarde com o mesmo link.',
   },
-  padrao: {
+  agendada: {
+    titulo: 'Esta pesquisa ainda não começou',
+    texto:
+      'Ela já está marcada, mas o período de respostas não abriu. Guarde este link: ele passa a funcionar quando a pesquisa for enviada.',
+  },
+  aguardando: {
+    titulo: 'Esta pesquisa está pausada no momento',
+    texto:
+      'Ela não está recebendo respostas agora. Guarde este link: ele volta a funcionar no próximo período de respostas.',
+  },
+  naoAtiva: {
     titulo: 'Esta pesquisa não está no ar',
     texto:
       'O formulário foi despublicado, então não dá para responder agora. Se você recebeu este link, vale avisar quem enviou.',
+  },
+  padrao: {
+    titulo: 'Esta pesquisa não está recebendo respostas',
+    texto:
+      'O formulário não está aberto agora. Se você recebeu este link, vale avisar quem enviou.',
   },
 }
 
 export default function TelaForaDoAr({ pesquisa }) {
   /* Cheia é o mesmo fim que encerrada, para quem chega: o ciclo já colheu
-     todas as respostas que tinha para colher. */
+     todas as respostas que tinha para colher. Vale mesmo com a pesquisa ainda
+     rodando, e por isso vem antes do status. */
   const cheia = cicloCheio(pesquisa)
   const motivo =
     cheia || pesquisa.status === 'encerrada'
