@@ -1,3 +1,5 @@
+import { daTabela } from './desconhecido.js'
+
 /*
  * Datas do fluxo. Os campos de data e hora da Configuração são texto livre —
  * não há date picker —, então aqui é onde esse texto vira Date de verdade.
@@ -185,8 +187,11 @@ export function fimDoCiclo(inicio, prazo) {
     const dias = diasDoPrazo(prazo)
     return dias === null ? null : somarDias(inicio, dias)
   }
-  const somar = PRAZOS[prazo?.periodo]
-  return somar ? somar(inicio) : somarDias(inicio, 7)
+  /* Período que não é nenhum dos conhecidos: o ciclo não tem fim que se possa
+     calcular. Devolver uma semana por conta própria dava um prazo que ninguém
+     escolheu, com cara de escolhido. */
+  const somar = daTabela(PRAZOS, prazo?.periodo, 'período do prazo')
+  return somar ? somar(inicio) : null
 }
 
 const FREQUENCIAS = {
@@ -209,7 +214,12 @@ export function textoDeEncerramento(encerramento) {
     : encerramento.data
 }
 
+/*
+ * Quando a próxima volta começa. `null` quando a frequência guardada não é
+ * nenhuma das conhecidas — mensal por baixo do pano anunciava uma data que
+ * não saía de escolha nenhuma.
+ */
 export function proximoCiclo(inicio, frequencia) {
-  const somar = FREQUENCIAS[frequencia] ?? FREQUENCIAS.Mensal
-  return somar(inicio)
+  const somar = daTabela(FREQUENCIAS, frequencia, 'frequência da recorrência')
+  return somar ? somar(inicio) : null
 }

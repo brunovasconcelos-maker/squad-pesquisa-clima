@@ -303,3 +303,15 @@
   flex: none;
   background: var(--cor-borda-acao);
 }
+
+/* Pergunta ou resposta guardada num tipo que o projeto não conhece. Fica
+   visível e em vermelho: sumir da tela faria parecer que ela não existe, e é
+   justamente isso que precisa aparecer para alguém ir consertar o dado. */
+.semSuporte {
+  margin: 0;
+  padding: var(--espaco-12) 0;
+  color: var(--cor-vermelho);
+  font-size: 14px;
+  font-weight: var(--peso-medio);
+  line-height: 1.4;
+}

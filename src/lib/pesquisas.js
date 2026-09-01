@@ -1,6 +1,7 @@
 import { paraData, fimDoCiclo, proximoCiclo, formatarCurto } from './datas.js'
 import { cicloCheio, taxaDe, totalDeParticipantes } from './participacao.js'
 import { crescer, materializar } from './respostas.js'
+import { daTabela } from './desconhecido.js'
 
 /*
  * Guarda e faz evoluir as pesquisas.
@@ -35,6 +36,34 @@ export const STATUS = {
   aguardando: { texto: 'Ativa | Aguardando', tom: 'acao' },
   naoAtiva: { texto: 'Não ativa', tom: 'negativo' },
   encerrada: { texto: 'Encerrada', tom: 'padrao' },
+}
+
+/*
+ * O selo de uma pesquisa cujo status não é nenhum dos seis.
+ *
+ * Não é um sétimo estado: é o aviso de que o dado daquela linha está errado.
+ * Por isso não se parece com os outros — fundo neutro, mas em vermelho e com
+ * borda tracejada. Um cinza discreto passaria por "mais um estado normal", e
+ * o problema ficaria invisível justamente para quem precisa vê-lo.
+ */
+export const STATUS_DESCONHECIDO = {
+  texto: 'Status desconhecido',
+  tom: 'desconhecido',
+  desconhecido: true,
+}
+
+/*
+ * O selo de uma pesquisa, sem confiar no que está guardado.
+ *
+ * Uma pesquisa com status estranho — armazenamento corrompido, dado editado
+ * à mão, migração futura — derrubava a lista inteira: `STATUS[p.status]` dava
+ * `undefined` e o `Selo` estourava em `status.tom`. Agora aquela linha aparece
+ * marcada e as outras continuam desenhando. `valor` leva o que estava lá, para
+ * a tela poder dizer qual é o valor estranho em vez de só que existe um.
+ */
+export function statusDe(p) {
+  const conhecido = daTabela(STATUS, p?.status, 'status da pesquisa')
+  return conhecido ?? { ...STATUS_DESCONHECIDO, valor: p?.status }
 }
 
 export function ler() {
@@ -479,7 +508,9 @@ export function avaliar(p, agora = new Date()) {
         return { ...atual, status: 'encerrada', atualizadoEm: agora.toISOString() }
       }
       const proximo = proximoCiclo(inicio, atual.configuracao?.frequencia)
-      if (agora < proximo) return atual
+      /* Sem frequência conhecida o motor não sabe quando a próxima volta
+         começa, e não vai adivinhar: a pesquisa fica onde está. */
+      if (!proximo || agora < proximo) return atual
       /* O ciclo que venceria agora já teria acabado? Então a página ficou
          fechada por mais de um período inteiro, e nenhum deles esteve no ar:
          o selo nunca virou "Rodando" e o link nunca abriu. Replicá-los daria
@@ -560,6 +591,9 @@ export function avisoDeInicio(p) {
 /* ---- o que a linha da tabela mostra ---- */
 
 export function botaoDe(p) {
+  /* Status que o motor não conhece não ganha botão: oferecer o Play numa
+     linha cujo dado já está errado é convidar a rodar o motor em cima dela. */
+  if (!daTabela(STATUS, p.status, 'status da pesquisa')) return null
   if (p.status === 'rascunho' || p.status === 'encerrada') return null
   if (p.status === 'rodando') return ehRecorrente(p) ? 'pausar' : null
   return 'iniciar'
@@ -578,6 +612,7 @@ function eventoDe(p) {
       new Date(p.cicloInicio),
       p.configuracao?.frequencia,
     )
+    if (!proximo) return '—'
     return `Próxima: ${formatarCurto(proximo.toISOString())}`
   }
   return '—'
@@ -590,7 +625,7 @@ export function paraLinha(p, rotuloDoPublico) {
     nome: p.nome,
     publico: rascunho ? '—' : rotuloDoPublico(p.participantes) || '—',
     tipo: rascunho ? '—' : ehRecorrente(p) ? 'Recorrente' : 'Única',
-    status: STATUS[p.status],
+    status: statusDe(p),
     evento: eventoDe(p),
     taxa: rascunho || p.status === 'agendada' ? '—' : `${taxaDe(p)}%`,
     ciclos: rascunho ? '—' : String(p.ciclos),

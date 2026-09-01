@@ -34,3 +34,14 @@
   background: var(--selo-padrao-fundo);
   color: var(--cor-texto-secundario);
 }
+
+/* Status que não é nenhum dos conhecidos. Fundo neutro como o padrão, mas em
+   vermelho e com borda tracejada: precisa ler como problema de dado, e não
+   como mais um estado normal da pesquisa. O padding perde 1px para a borda
+   não deixar a pílula mais alta que as vizinhas na mesma linha. */
+.desconhecido {
+  padding: 3px calc(var(--espaco-12) - 1px);
+  border: 1px dashed var(--cor-vermelho);
+  background: var(--selo-padrao-fundo);
+  color: var(--cor-vermelho);
+}

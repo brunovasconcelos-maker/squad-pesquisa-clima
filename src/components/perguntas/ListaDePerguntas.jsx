@@ -11,6 +11,7 @@ import square from '../../assets/icons/Square.svg'
 import checkSquare from '../../assets/icons/CheckSquare.svg'
 import star from '../../assets/icons/Star.svg'
 import plus from '../../assets/icons/Plus.svg'
+import { avisarValorDesconhecido } from '../../lib/desconhecido.js'
 
 /*
  * Card de abertura, cards de pergunta e a linha de adicionar (Figma 8065:4915).
@@ -235,7 +236,16 @@ export function CorpoDaPergunta({ pergunta, valor, onResponder }) {
         </div>
       )
     default:
-      return null
+      /* Pergunta de tipo desconhecido não pode sumir em silêncio: quem monta
+         precisa ver que ela está no questionário e que não dá para
+         desenhá-la. */
+      avisarValorDesconhecido('tipo da pergunta', pergunta.tipo)
+      return (
+        <p className={s.semSuporte}>
+          Pergunta de um tipo que esta tela não sabe mostrar
+          ({String(pergunta.tipo)}).
+        </p>
+      )
   }
 }
 

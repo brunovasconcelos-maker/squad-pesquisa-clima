@@ -24,6 +24,7 @@ import {
   textoDeEncerramento,
 } from '../../lib/datas.js'
 import { proximoEnvioDe } from '../../lib/geral.js'
+import { daTabela } from '../../lib/desconhecido.js'
 import {
   aceitandoRespostas,
   avaliar,
@@ -307,7 +308,10 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
         <LinhaResumo
           rotulo="Repetir"
           valor={
-            recorrente ? (REPETICAO[c.frequencia] ?? c.frequencia) : 'Não repete'
+            recorrente
+              ? (daTabela(REPETICAO, c.frequencia, 'frequência da recorrência') ??
+                `Frequência desconhecida (${String(c.frequencia)})`)
+              : 'Não repete'
           }
           travado={!recorrente}
           onAbrir={() => setModal('frequencia')}

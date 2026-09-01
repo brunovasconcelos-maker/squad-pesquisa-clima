@@ -5,6 +5,7 @@ import circle from '../../assets/icons/Circle.svg'
 import radioButton from '../../assets/icons/RadioButton.svg'
 import square from '../../assets/icons/Square.svg'
 import checkSquare from '../../assets/icons/CheckSquare.svg'
+import { avisarValorDesconhecido } from '../../lib/desconhecido.js'
 
 /*
  * O que uma pessoa respondeu, desenhado com a mesma geometria da pergunta
@@ -100,6 +101,15 @@ export default function CorpoDaResposta({ pergunta, resposta }) {
         </div>
       )
     default:
-      return null
+      /* Tipo que o projeto não conhece: some da tela se devolver `null`, e a
+         resposta guardada parece não existir. Melhor dizer que ela está lá e
+         que não dá para desenhá-la. */
+      avisarValorDesconhecido('tipo da pergunta', resposta.tipo)
+      return (
+        <p className={s.semSuporte}>
+          Resposta guardada num formato que esta tela não sabe mostrar
+          ({String(resposta.tipo)}).
+        </p>
+      )
   }
 }

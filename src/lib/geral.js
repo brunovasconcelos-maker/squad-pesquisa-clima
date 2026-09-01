@@ -87,10 +87,11 @@ export function proximoEnvioDe(p) {
   if (p.status === 'agendada') return p.cicloInicio
   if (p.status === 'rodando' || p.status === 'aguardando') {
     if (!ehRecorrente(p) || !p.cicloInicio) return null
-    return proximoCiclo(
-      new Date(p.cicloInicio),
-      p.configuracao?.frequencia,
-    ).toISOString()
+    /* Sem frequência conhecida não há próxima data a anunciar. A linha mostra
+       um traço, que é a verdade, em vez de uma data que não saiu de escolha
+       nenhuma. */
+    const proximo = proximoCiclo(new Date(p.cicloInicio), p.configuracao?.frequencia)
+    return proximo ? proximo.toISOString() : null
   }
   const marcada = paraData(p.configuracao?.envio?.data, p.configuracao?.envio?.hora)
   return marcada ? marcada.toISOString() : null

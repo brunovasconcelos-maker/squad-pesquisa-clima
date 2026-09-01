@@ -3,6 +3,7 @@ import { cicloCheio } from '../../lib/participacao.js'
 import s from './Responder.module.css'
 
 import pipo from '../../assets/images/Pipo-Loading.png'
+import { daTabela } from '../../lib/desconhecido.js'
 
 /*
  * O que quem abre o link vê quando a pesquisa não está recebendo respostas —
@@ -63,7 +64,11 @@ export default function TelaForaDoAr({ pesquisa }) {
   const motivo =
     cheia || pesquisa.status === 'encerrada'
       ? MOTIVOS.encerrada
-      : (MOTIVOS[pesquisa.status] ?? MOTIVOS.padrao)
+      : /* Quem recebeu o link não administra a pesquisa: um status estranho
+           não vira diagnóstico na cara dele, cai no aviso genérico. O valor
+           vai para o console, que é onde quem cuida do dado vai procurar. */
+        (daTabela(MOTIVOS, pesquisa.status, 'status da pesquisa') ??
+        MOTIVOS.padrao)
 
   return (
     <VistaResposta pesquisa={pesquisa}>

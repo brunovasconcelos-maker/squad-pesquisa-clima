@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Selo from '../../components/Selo.jsx'
 import Rosca from '../../components/detalhe/Rosca.jsx'
-import { STATUS } from '../../lib/pesquisas.js'
+import { statusDe } from '../../lib/pesquisas.js'
 import {
   camposDe,
   taxaAtualDe,
@@ -143,7 +143,7 @@ export default function AbaGeral({ pesquisa }) {
       <section className={`${s.cartao} ${s.cartaoInfo}`}>
         <h2 className={s.nome}>{pesquisa.nome}</h2>
 
-        <Selo status={STATUS[pesquisa.status]} />
+        <Selo status={statusDe(pesquisa)} />
 
         {/* Quatro campos em duas linhas de dois: os dois primeiros mudam de
             rótulo conforme o status, "Tipo" e "Ciclos" aparecem sempre. */}

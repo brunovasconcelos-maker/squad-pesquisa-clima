@@ -4,6 +4,7 @@ import Botao from '../../components/fluxo/Botao.jsx'
 import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
 import ModalConfirmar from '../../components/fluxo/ModalConfirmar.jsx'
 import iguais from '../../lib/iguais.js'
+import { daTabela } from '../../lib/desconhecido.js'
 import {
   TIPOS,
   converterPergunta,
@@ -129,7 +130,12 @@ export default function EditorPergunta({ pergunta, onSalvar, onFechar }) {
     <div className={s.scrim}>
       <div className={s.modal} role="dialog" aria-label="Editar pergunta">
         <div className={s.cabecalho}>
-          <p className={s.titulo}>{NOME_DO_TIPO[rascunho.tipo]}</p>
+          {/* Tipo que não é nenhum dos seis: o título diz qual é o valor
+              estranho, em vez de ficar em branco. */}
+          <p className={s.titulo}>
+            {daTabela(NOME_DO_TIPO, rascunho.tipo, 'tipo da pergunta') ??
+              `Tipo desconhecido (${String(rascunho.tipo)})`}
+          </p>
           <IconeBotao src={close} rotulo="Fechar" onClick={fechar} />
         </div>
 

@@ -52,8 +52,13 @@ function iniciosAnteriores(p, quantos) {
   const datas = []
   let atual = base
   for (let i = 0; i < quantos; i += 1) {
-    // proximoCiclo anda para a frente; para trás é o mesmo salto invertido.
-    const seguinte = proximoCiclo(atual, frequencia)
+    /* proximoCiclo anda para a frente; para trás é o mesmo salto invertido.
+       Frequência estranha cai no passo de um mês, o mesmo que a Única usa
+       logo acima: estas datas já são reconstrução declarada, e sem passo
+       nenhum os ciclos ficariam sem data. O valor estranho já foi anunciado
+       no console por quem consultou a tabela. */
+    const seguinte =
+      proximoCiclo(atual, frequencia) ?? proximoCiclo(atual, 'Mensal')
     const salto = seguinte - atual
     atual = new Date(atual.getTime() - salto)
     datas.push(atual)
