@@ -3,6 +3,8 @@ import s from './Editor.module.css'
 import Botao from '../../components/fluxo/Botao.jsx'
 import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
 
+import { LIMITE_NOME } from './bancoDePerguntas.js'
+
 import close from '../../assets/icons/Close.svg'
 
 /*
@@ -39,6 +41,7 @@ export default function EditorAbertura({ nome, abertura, definir, onFechar }) {
             <input
               className={s.entrada}
               type="text"
+              maxLength={LIMITE_NOME}
               value={nome}
               placeholder="Nome da pesquisa"
               onChange={(e) => definir({ nome: e.target.value })}

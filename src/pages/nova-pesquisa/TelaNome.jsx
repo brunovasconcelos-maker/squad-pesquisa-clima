@@ -5,6 +5,7 @@ import FluxoLayout from '../../components/fluxo/FluxoLayout.jsx'
 import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
 import ModalParticipantes from './ModalParticipantes.jsx'
 import { usePesquisa, rotuloParticipantes, temParticipantes } from './estado.jsx'
+import { LIMITE_NOME } from './bancoDePerguntas.js'
 
 import caretRight from '../../assets/icons/CaretRight.svg'
 
@@ -39,6 +40,7 @@ export default function TelaNome() {
           <input
             className={s.campoGrande}
             type="text"
+            maxLength={LIMITE_NOME}
             placeholder="Nome da Pesquisa"
             value={pesquisa.nome}
             onChange={(e) => definir({ nome: e.target.value })}

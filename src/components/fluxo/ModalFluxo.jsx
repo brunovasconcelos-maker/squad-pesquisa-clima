@@ -7,10 +7,16 @@ import close from '../../assets/icons/Close.svg'
 /*
  * Casca dos modais do fluxo: scrim, card, título com X e rodapé
  * Voltar / Salvar. O miolo vem por children.
+ *
+ * `salvarDesabilitado` trava o Salvar enquanto o que está preenchido não
+ * serve, e `erro` diz por quê, ao lado do botão. Um modal que aceita um valor
+ * inválido e depois usa outro por baixo é pior do que um que não deixa salvar.
  */
 export default function ModalFluxo({
   titulo,
   espacamento = 40,
+  salvarDesabilitado = false,
+  erro,
   onVoltar,
   onSalvar,
   onFechar,
@@ -33,7 +39,16 @@ export default function ModalFluxo({
 
         <div className={s.rodape}>
           <Botao onClick={onVoltar}>Voltar</Botao>
-          <Botao variante="marca" onClick={onSalvar}>
+          {erro ? (
+            <p className={s.erro} role="alert">
+              {erro}
+            </p>
+          ) : null}
+          <Botao
+            variante="marca"
+            desabilitado={salvarDesabilitado}
+            onClick={onSalvar}
+          >
             Salvar
           </Botao>
         </div>

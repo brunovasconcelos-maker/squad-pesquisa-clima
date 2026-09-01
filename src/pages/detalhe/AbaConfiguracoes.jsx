@@ -18,7 +18,11 @@ import {
 } from '../nova-pesquisa/ModaisConfiguracao.jsx'
 import { rotuloParticipantes } from '../nova-pesquisa/estado.jsx'
 import { estiloDaCapa } from '../../lib/capa.js'
-import { formatarComDia, textoDeEncerramento } from '../../lib/datas.js'
+import {
+  diasDoPrazo,
+  formatarComDia,
+  textoDeEncerramento,
+} from '../../lib/datas.js'
 import { proximoEnvioDe } from '../../lib/geral.js'
 import {
   aceitandoRespostas,
@@ -71,7 +75,15 @@ const REPETICAO = {
 function textoDePrazo(prazo) {
   if (!prazo) return '—'
   if (prazo.tipo === 'data') return `${prazo.data}, as ${prazo.hora}`
-  if (prazo.tipo === 'dias') return prazo.dias ? `${prazo.dias} dias` : '—'
+  if (prazo.tipo === 'dias') {
+    /* O número que o ciclo vai durar de verdade, e não o que está guardado:
+       são o mesmo desde que o campo passou a validar, mas o que foi salvo
+       antes disso pode estar fora da faixa. Mostrar um e usar outro era o
+       defeito. */
+    const dias = diasDoPrazo(prazo)
+    if (dias === null) return '—'
+    return `${dias} ${dias === 1 ? 'dia' : 'dias'}`
+  }
   return prazo.periodo
 }
 

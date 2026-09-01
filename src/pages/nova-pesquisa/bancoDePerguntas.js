@@ -182,5 +182,9 @@ export function converterPergunta(pergunta, tipo) {
   return base
 }
 
+/* O nome cabe no cabeçalho do detalhe e no cartão de quem responde sem
+   empurrar o resto; passando disso o título vira o assunto da tela inteira. */
+export const LIMITE_NOME = 80
+
 export const LIMITE_CURTA = 200
 export const LIMITE_LONGA = 1200

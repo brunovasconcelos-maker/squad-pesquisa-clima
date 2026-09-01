@@ -1,4 +1,5 @@
 import s from './ListaDePerguntas.module.css'
+import { estiloDaEscala } from './escala.js'
 import Interruptor from '../fluxo/Interruptor.jsx'
 import { LIMITE_CURTA, LIMITE_LONGA } from '../../pages/nova-pesquisa/bancoDePerguntas.js'
 
@@ -137,7 +138,7 @@ export function CorpoDaPergunta({ pergunta, valor, onResponder }) {
       return (
         <div className={s.escala} role={responder ? 'radiogroup' : undefined}>
           <p className={s.pontaEscala}>{pergunta.pontaEsquerda}</p>
-          <div className={s.degraus}>
+          <div className={s.degraus} style={estiloDaEscala(degraus.length)}>
             {degraus.map((n) => (
               <Degrau
                 key={n}
@@ -220,7 +221,7 @@ export function CorpoDaPergunta({ pergunta, valor, onResponder }) {
           className={`${s.escala} ${s.escalaCentrada}`}
           role={responder ? 'radiogroup' : undefined}
         >
-          <div className={s.degraus}>
+          <div className={s.degraus} style={estiloDaEscala(ESTRELAS.length)}>
             {ESTRELAS.map((n) => (
               <Degrau
                 key={n}

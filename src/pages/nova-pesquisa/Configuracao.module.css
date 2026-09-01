@@ -227,3 +227,9 @@
   gap: var(--espaco-20);
   align-items: flex-start;
 }
+
+/* Campo fora da faixa: a borda vermelha diz onde está o problema, e o texto
+   ao lado do Salvar diz qual é. */
+.campoInvalido {
+  border-color: var(--cor-vermelho);
+}

@@ -1,4 +1,5 @@
 import s from './ListaDePerguntas.module.css'
+import { estiloDaEscala } from './escala.js'
 
 import circle from '../../assets/icons/Circle.svg'
 import radioButton from '../../assets/icons/RadioButton.svg'
@@ -23,7 +24,7 @@ function Escala({ de, ate, escolhido, esquerda, direita }) {
   return (
     <div className={`${s.escala} ${esquerda ? '' : s.escalaCentrada}`}>
       {esquerda ? <p className={s.pontaEscala}>{esquerda}</p> : null}
-      <div className={s.degraus}>
+      <div className={s.degraus} style={estiloDaEscala(passos.length)}>
         {passos.map((n) => (
           <div key={n} className={s.degrau}>
             <p className={s.numeroDegrau}>{n}</p>

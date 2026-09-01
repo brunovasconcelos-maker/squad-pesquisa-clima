@@ -1,7 +1,13 @@
 import { useState } from 'react'
 import s from './Configuracao.module.css'
 import ModalFluxo from '../../components/fluxo/ModalFluxo.jsx'
-import { deCampoDeData, paraCampoDeData } from '../../lib/datas.js'
+import {
+  DIAS_MAX,
+  DIAS_MIN,
+  deCampoDeData,
+  diasValidos,
+  paraCampoDeData,
+} from '../../lib/datas.js'
 import LinhaResumo from '../../components/fluxo/LinhaResumo.jsx'
 import Interruptor from '../../components/fluxo/Interruptor.jsx'
 
@@ -184,11 +190,20 @@ const PERIODOS = ['1 dia', '1 semana', '1 mês']
 export function ModalPrazo({ valor, onSalvar, onFechar }) {
   const [rascunho, , alterar, salvar] = useRascunho(valor, onSalvar)
   const porData = rascunho.tipo === 'data'
+  /* Só vale enquanto a opção de dias está escolhida: o campo fica lá, com o
+     que a pessoa digitou por último, mesmo depois de ela mudar para período
+     ou data, e travar o Salvar por causa dele seria travar por nada. */
+  const erroDosDias =
+    rascunho.tipo === 'dias' && !diasValidos(rascunho.dias)
+      ? `Escolha de ${DIAS_MIN} a ${DIAS_MAX} dias.`
+      : ''
   const porDias = rascunho.tipo === 'dias'
 
   return (
     <ModalFluxo
       titulo="Prazo pra respostas"
+      salvarDesabilitado={Boolean(erroDosDias)}
+      erro={erroDosDias}
       onVoltar={onFechar}
       onFechar={onFechar}
       onSalvar={salvar}
@@ -213,13 +228,15 @@ export function ModalPrazo({ valor, onSalvar, onFechar }) {
           />
           <div className={s.parDeCampos}>
             <input
-              className={s.campoData}
+              className={`${s.campoData} ${erroDosDias ? s.campoInvalido : ''}`}
               type="number"
-              min="1"
-              max="365"
+              min={DIAS_MIN}
+              max={DIAS_MAX}
+              step="1"
               value={rascunho.dias ?? ''}
               placeholder="15"
               aria-label="Número de dias"
+              aria-invalid={Boolean(erroDosDias)}
               onChange={(e) => alterar({ tipo: 'dias', dias: e.target.value })}
             />
             <span className={s.unidadeCampo}>Dias</span>

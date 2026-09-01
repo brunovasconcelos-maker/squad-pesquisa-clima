@@ -149,6 +149,32 @@ const PRAZOS = {
   '1 mês': (d) => somarMeses(d, 1),
 }
 
+/* Os limites do prazo em dias: um dia é o menor ciclo que faz sentido, e um
+   ano é o maior. Ficam aqui porque o campo, o texto da linha e o motor têm de
+   concordar sobre o que vale. */
+export const DIAS_MIN = 1
+export const DIAS_MAX = 365
+
+export const diasValidos = (dias) => {
+  const n = Number(dias)
+  return Number.isInteger(n) && n >= DIAS_MIN && n <= DIAS_MAX
+}
+
+/*
+ * Quantos dias o prazo vale de fato.
+ *
+ * O campo não deixa mais gravar fora da faixa, mas pesquisas guardadas antes
+ * disso podem ter "-5" ou "9999". O número volta para dentro da faixa aqui, e
+ * é este mesmo número que a linha das Configurações mostra: antes o motor
+ * trocava qualquer valor ≤ 0 por sete dias enquanto a tela seguia exibindo
+ * "-5 dias" — a tela dizia uma coisa e o ciclo durava outra.
+ */
+export function diasDoPrazo(prazo) {
+  const n = Math.round(Number(prazo?.dias))
+  if (!Number.isFinite(n)) return null
+  return Math.min(DIAS_MAX, Math.max(DIAS_MIN, n))
+}
+
 /* Fim do ciclo: um período depois do início, um número de dias, ou a data
    específica escolhida. */
 export function fimDoCiclo(inicio, prazo) {
@@ -156,8 +182,8 @@ export function fimDoCiclo(inicio, prazo) {
     return paraData(prazo.data, prazo.hora)
   }
   if (prazo?.tipo === 'dias') {
-    const dias = Number(prazo.dias)
-    return dias > 0 ? somarDias(inicio, dias) : somarDias(inicio, 7)
+    const dias = diasDoPrazo(prazo)
+    return dias === null ? null : somarDias(inicio, dias)
   }
   const somar = PRAZOS[prazo?.periodo]
   return somar ? somar(inicio) : somarDias(inicio, 7)

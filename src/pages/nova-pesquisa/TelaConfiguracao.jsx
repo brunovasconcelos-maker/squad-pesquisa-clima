@@ -18,7 +18,7 @@ import {
   ModalMensagemFinal,
   ModalAvancadas,
 } from './ModaisConfiguracao.jsx'
-import { textoDeEncerramento } from '../../lib/datas.js'
+import { diasDoPrazo, textoDeEncerramento } from '../../lib/datas.js'
 
 /*
  * Último passo do fluxo (Figma 8067:5498).
@@ -37,9 +37,15 @@ function textoDeEnvio({ imediato, data, hora }) {
   return imediato ? 'Imediatamente' : `${data}, as ${hora}`
 }
 
-function textoDePrazo({ tipo, periodo, dias, data, hora }) {
+function textoDePrazo(prazo) {
+  const { tipo, periodo, data, hora } = prazo
   if (tipo === 'data') return `${data}, as ${hora}`
-  if (tipo === 'dias') return dias ? `${dias} dias` : 'Dias'
+  if (tipo === 'dias') {
+    /* Os dias que o ciclo vai durar, os mesmos que o motor usa. */
+    const dias = diasDoPrazo(prazo)
+    if (dias === null) return 'Dias'
+    return `${dias} ${dias === 1 ? 'dia' : 'dias'}`
+  }
   return periodo
 }
 

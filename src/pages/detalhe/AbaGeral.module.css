@@ -30,9 +30,13 @@
 
 .nome {
   margin: 0;
+  min-width: 0;
   font-size: 20px;
   font-weight: var(--peso-medio);
   letter-spacing: -0.4px;
+  /* Rede de segurança: o campo já limita o nome, mas uma palavra só, sem
+     espaço, esticaria o cartão para fora da tela. Aqui ela quebra. */
+  overflow-wrap: anywhere;
 }
 
 .linhaCampos {

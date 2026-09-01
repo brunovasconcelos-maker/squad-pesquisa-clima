@@ -53,4 +53,16 @@
   width: 100%;
   align-items: center;
   justify-content: space-between;
+  gap: var(--espaco-16);
+}
+
+/* O motivo de o Salvar estar travado, entre os dois botões. Vermelho porque
+   é impedimento, e não recado. */
+.erro {
+  margin: 0;
+  flex: 1 1 auto;
+  color: var(--cor-vermelho);
+  font-size: 13px;
+  line-height: 18px;
+  text-align: right;
 }

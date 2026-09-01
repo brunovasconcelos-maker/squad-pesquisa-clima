@@ -44,10 +44,14 @@
 
 .nome {
   width: 100%;
+  min-width: 0;
   margin: 0;
   font-size: 40px;
   font-weight: var(--peso-medio);
   line-height: normal;
+  /* Rede de segurança: o campo já limita o nome, mas uma palavra só, sem
+     espaço, esticaria o cartão para fora da tela. Aqui ela quebra. */
+  overflow-wrap: anywhere;
 }
 
 .paragrafo {

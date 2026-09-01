@@ -80,6 +80,9 @@
   font-size: 24px;
   font-weight: var(--peso-medio);
   letter-spacing: -0.4px;
+  /* Rede de segurança: o campo já limita o nome, mas uma palavra só, sem
+     espaço, esticaria o cartão para fora da tela. Aqui ela quebra. */
+  overflow-wrap: anywhere;
 }
 
 .introducao {
@@ -122,31 +125,55 @@
 }
 
 /* Escala de nota e fileira de estrelas: rótulos nas pontas, colunas no meio. */
+/*
+ * A escala: rótulo da esquerda, os degraus, rótulo da direita.
+ *
+ * A combinação que estourava era a pior de todas — onze degraus (0 a 10) com
+ * dois rótulos de ponta longos empurravam a linha para 1188px dentro de uma
+ * coluna de 808px, e a página inteira ganhava barra horizontal. Agora cada
+ * parte tem por onde ceder, nesta ordem: o vão entre os degraus encolhe com a
+ * quantidade deles, e os rótulos quebram em quantas linhas precisarem.
+ */
 .escala {
   display: flex;
   width: 100%;
   align-items: flex-end;
   justify-content: space-between;
-  padding: var(--espaco-24) var(--espaco-40);
+  padding: var(--espaco-24) clamp(var(--espaco-8), 3vw, var(--espaco-40));
+  gap: var(--espaco-12);
 }
 
 .escalaCentrada {
   justify-content: center;
 }
 
+/* Rótulo de ponta: quebra em quantas linhas precisar, em vez de esticar a
+   linha da escala. O teto de 150px é o que garante que sobra régua para onze
+   degraus numa linha só — um rótulo longo prefere ficar alto a empurrar os
+   números para baixo. */
 .pontaEscala {
   margin: 0;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: min(26%, 150px);
   font-size: 16px;
   font-weight: var(--peso-regular);
   letter-spacing: -0.4px;
   line-height: 1.6;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
+/* O vão entre os degraus vem de quem desenha a escala, calculado a partir de
+   quantos são (components/perguntas/escala.js). Quebrar linha é a última
+   folga, se ainda assim não couber. */
 .degraus {
   display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
   align-items: flex-start;
-  gap: var(--espaco-40);
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px var(--vao-degraus, var(--espaco-40));
 }
 
 .degrau {
