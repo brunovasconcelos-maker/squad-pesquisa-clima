@@ -17,22 +17,51 @@
      variável própria no arquivo. */
   --cor-item-ativo: #e5e5e5;
 
+  /*
+   * Cinco cores de texto saíram do Figma abaixo do contraste mínimo do WCAG
+   * AA (4.5:1 para texto normal) e foram escurecidas o suficiente para
+   * passar — matiz e saturação preservados, só a luminosidade caiu. O que
+   * cada uma era, e a razão de contraste que tinha e passou a ter no pior
+   * fundo em que aparece:
+   *
+   *   --cor-texto-secundario  #798282 -> #6a7272   3.61 -> 4.51 (sidebar)
+   *   --cor-texto-tenue       #9ba4a4 -> #6d7878   2.55 -> 4.56 (branco)
+   *   --cor-azul              #0091ff -> #006bbc   2.71 -> 4.51 (selo)
+   *   --cor-vermelho          #ff2633 -> #d0000c   3.05 -> 4.51 (selo)
+   *   --cor-destaque          #ff9230 -> #b45500   2.05 -> 4.54 (selo)
+   *
+   * Os fundos dos selos translúcidos foram medidos na tela, e não calculados
+   * sobre branco: eles se assentam na linha da lista, que já é cinza-clara,
+   * então o fundo efetivo é mais escuro do que a conta ingênua diz. Os
+   * valores acima passam nos dois lugares onde o mesmo selo aparece — a
+   * linha da home e o cartão branco do detalhe.
+   *
+   * O laranja é o que mais muda de aparência: laranja saturado não alcança
+   * 4.5:1 sobre fundo claro, e escurecê-lo o bastante o aproxima do marrom.
+   * Vale confirmar os cinco com o design — a decisão aqui foi ficar do lado
+   * de quem precisa enxergar o texto.
+   *
+   * O verde ficou como estava: ele é o fundo do interruptor ligado, não é
+   * texto ali, e trocá-lo mudaria um controle que já contrasta. O texto do
+   * selo verde ganhou token próprio, mais abaixo.
+   */
+
   /* Fluxo de criação de pesquisa (Figma 8057:3447 e irmãos). */
-  --cor-texto-secundario: #798282;   /* texto-icones/secoundary */
+  --cor-texto-secundario: #6a7272;   /* texto-icones/secoundary, escurecido */
   --cor-texto-invertido: #ffffff;    /* texto-icones/invert */
   --cor-marca: #000000;              /* background/marca — pílula preta */
   --cor-borda-acao: #e3e6e6;         /* action/stroke, bordas/default */
   --cor-preto-suave: #0c0d0d;        /* Gray/Black */
-  --cor-texto-tenue: #9ba4a4;        /* Gray/Gray 4 — "56 membros" */
+  --cor-texto-tenue: #6d7878;        /* Gray/Gray 4, escurecido */
   --cor-texto-apoio: #525b5b;        /* "Em média ... para responder" */
   --cor-borda-forte: #b2b9b9;        /* borda do campo de prompt */
-  --cor-destaque: #ff9230;           /* minutos estimados */
+  --cor-destaque: #b45500;           /* accent/orange, escurecido */
   --cor-scrim: rgba(0, 0, 0, 0.2);   /* fundo atrás do modal */
   --cor-fundo-desabilitado: #e3e6e6; /* background/disable */
   --cor-texto-desabilitado: #b2b9b9; /* texto-icones/disable */
   --cor-verde-ativo: #60c60c;        /* accent/green */
-  --cor-azul: #0091ff;               /* accent/blue */
-  --cor-vermelho: #ff2633;           /* accent/red */
+  --cor-azul: #006bbc;               /* accent/blue, escurecido */
+  --cor-vermelho: #d0000c;           /* accent/red, escurecido */
 
   /* Sublinhado da aba ativa no detalhe da pesquisa. Vem como hex cru do
      Figma, sem variável própria, e é um azul mais fechado que o accent/blue
@@ -56,6 +85,16 @@
   --selo-acao-fundo: #fff3e9;
   --selo-negativo-fundo: rgba(255, 38, 51, 0.1);
   --selo-padrao-fundo: #e3e6e6;      /* status/default */
+
+  /* Texto dos selos que não pode usar o accent direto: sobre o fundo tingido
+     do próprio selo, o accent não alcança 4.5:1. Os dois abaixo são o mesmo
+     tom, só mais escuros — e só o texto do selo os usa, então o verde do
+     interruptor e o cinza dos rótulos continuam como estavam. */
+  --selo-positivo-texto: #3a7807;    /* accent/green escurecido */
+  --selo-padrao-texto: #616868;      /* secundário escurecido para o cinza */
+  /* O selo de status desconhecido é vermelho sobre o cinza do selo padrão, e
+     é o par mais apertado dos dois: o vermelho de erro fica em 4.16:1 ali. */
+  --selo-desconhecido-texto: #d1000d;
 
   /* Tipografia — Inter em todo o projeto. */
   --fonte: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
