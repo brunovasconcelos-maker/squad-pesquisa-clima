@@ -1,6 +1,7 @@
 import s from './ModalFluxo.module.css'
 import Botao from './Botao.jsx'
 import IconeBotao from './IconeBotao.jsx'
+import useModal from './useModal.js'
 
 import close from '../../assets/icons/Close.svg'
 
@@ -22,10 +23,13 @@ export default function ModalFluxo({
   onFechar,
   children,
 }) {
+  const caixa = useModal(onFechar)
+
   return (
     <div className={s.scrim}>
       <div
         className={s.modal}
+        ref={caixa}
         role="dialog"
         aria-label={titulo}
         style={{ gap: `${espacamento}px` }}

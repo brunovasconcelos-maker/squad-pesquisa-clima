@@ -2,6 +2,7 @@ import { useState } from 'react'
 import s from './Participantes.module.css'
 import Botao from '../../components/fluxo/Botao.jsx'
 import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
+import useModal from '../../components/fluxo/useModal.js'
 import { GRUPOS, PESSOAS, nomeDaPessoa } from './estado.jsx'
 
 import checkSquare from '../../assets/icons/CheckSquare.svg'
@@ -50,6 +51,7 @@ export default function ModalParticipantes({ selecao, onSalvar, onFechar }) {
   const [gruposAbertos, setGruposAbertos] = useState(
     () => (selecao?.grupos?.length ?? 0) > 0,
   )
+  const caixa = useModal(onFechar)
 
   const alternarEmpresa = () =>
     setRascunho((r) =>
@@ -106,7 +108,7 @@ export default function ModalParticipantes({ selecao, onSalvar, onFechar }) {
 
   return (
     <div className={s.scrim}>
-      <div className={s.modal} role="dialog" aria-label="Participantes">
+      <div className={s.modal} ref={caixa} role="dialog" aria-label="Participantes">
         <div className={s.cabecalho}>
           <p className={s.titulo}>Participantes</p>
           <IconeBotao src={close} rotulo="Fechar" onClick={onFechar} />

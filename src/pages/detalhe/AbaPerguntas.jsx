@@ -3,7 +3,7 @@ import ListaDePerguntas from '../../components/perguntas/ListaDePerguntas.jsx'
 import ModalConfirmar from '../../components/fluxo/ModalConfirmar.jsx'
 import EditorPergunta from '../nova-pesquisa/EditorPergunta.jsx'
 import EditorAbertura from '../nova-pesquisa/EditorAbertura.jsx'
-import { encerrarCiclo } from '../../lib/pesquisas.js'
+import { encerrarCiclo, ehFinal, ehRecorrente } from '../../lib/pesquisas.js'
 import { acertarRespostasDaPergunta } from '../../lib/respostas.js'
 import { acertarPasso } from '../../lib/acertar.js'
 import { registrar } from '../../lib/alteracoes.js'
@@ -33,12 +33,23 @@ export default function AbaPerguntas({ pesquisa, onAlterar }) {
   const [aberturaAberta, setAberturaAberta] = useState(null)
   const [aRemover, setARemover] = useState(null)
   const [pedindoPausa, setPedindoPausa] = useState(false)
+  const [encerradaBloqueou, setEncerradaBloqueou] = useState(false)
 
   const rodando = pesquisa.status === 'rodando'
+  /* Encerrada é o fim, e vale aqui como vale nas Configurações: nenhum ciclo
+     novo vai rodar, então mudar as perguntas não muda nada que ainda vá
+     acontecer — e a alteração era anotada para um ciclo que nunca existiria,
+     sumindo do Histórico. Quem quer o mesmo questionário outra vez duplica,
+     que é o caminho que a lista oferece. */
+  const encerrada = ehFinal(pesquisa)
 
-  /* Um só portão para as três ações: rodando, o clique vira o pedido de
-     pausa; fora disso, segue para o editor. */
+  /* Um só portão para as três ações: encerrada, o clique explica que não dá;
+     rodando, vira o pedido de pausa; fora disso, segue para o editor. */
   const seDerParaMexer = (acao) => () => {
+    if (encerrada) {
+      setEncerradaBloqueou(true)
+      return
+    }
     if (rodando) {
       setPedindoPausa(true)
       return
@@ -100,6 +111,21 @@ export default function AbaPerguntas({ pesquisa, onAlterar }) {
         }
         onAdicionar={seDerParaMexer(() => setEmEdicao(null))}
       />
+
+      {encerradaBloqueou ? (
+        <ModalConfirmar
+          titulo="Pesquisa encerrada"
+          texto={
+            ehRecorrente(pesquisa)
+              ? 'Esta pesquisa chegou à data de encerramento e não roda mais nenhum ciclo, então mudar as perguntas agora não mudaria nada. Para usar este questionário de novo, duplique a pesquisa.'
+              : 'Esta pesquisa não se repete e já foi encerrada, então mudar as perguntas agora não mudaria nada. Para usar este questionário de novo, duplique a pesquisa.'
+          }
+          rotuloConfirmar="Entendi"
+          soAviso
+          onConfirmar={() => setEncerradaBloqueou(false)}
+          onCancelar={() => setEncerradaBloqueou(false)}
+        />
+      ) : null}
 
       {pedindoPausa ? (
         <ModalConfirmar

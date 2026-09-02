@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
 import Aviso from '../../components/Aviso.jsx'
 import TelaDadosIlegiveis from '../../components/TelaDadosIlegiveis.jsx'
+import useModal from '../../components/fluxo/useModal.js'
 import Rosca from '../../components/detalhe/Rosca.jsx'
 import GraficoBarras from '../../components/detalhe/GraficoBarras.jsx'
 import {
@@ -97,6 +98,42 @@ function CartaoDaPergunta({ pesquisa, ciclo, pergunta, respostas }) {
         </>
       )}
     </section>
+  )
+}
+
+/*
+ * As perguntas como foram feitas naquele ciclo. Sem editar nem excluir: é
+ * histórico.
+ *
+ * Está aqui como componente, e não solto no meio do render, porque o gancho
+ * de foco dos modais precisa de um componente que monte e desmonte junto com
+ * o modal.
+ */
+function FolhaDePerguntas({ numero, nome, abertura, perguntas, onFechar }) {
+  const caixa = useModal(onFechar)
+
+  return (
+    <div className={s.scrim}>
+      <div
+        className={s.folha}
+        ref={caixa}
+        role="dialog"
+        aria-label={`Perguntas do ciclo ${numero}`}
+      >
+        <header className={s.cabecalhoFolha}>
+          <p className={s.tituloFolha}>Perguntas do ciclo {numero}</p>
+          <IconeBotao src={close} rotulo="Fechar" onClick={onFechar} />
+        </header>
+        <div className={s.corpoFolha}>
+          <ListaDePerguntas
+            nome={nome}
+            abertura={abertura}
+            perguntas={perguntas}
+            somenteLeitura
+          />
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -320,28 +357,13 @@ export default function TelaCiclo() {
       {/* As perguntas como foram feitas naquele ciclo. Sem editar nem excluir:
           é histórico. */}
       {vendoPerguntas ? (
-        <div className={s.scrim}>
-          <div className={s.folha} role="dialog" aria-label={`Perguntas do ciclo ${ciclo.numero}`}>
-            <header className={s.cabecalhoFolha}>
-              <p className={s.tituloFolha}>
-                Perguntas do ciclo {ciclo.numero}
-              </p>
-              <IconeBotao
-                src={close}
-                rotulo="Fechar"
-                onClick={() => setVendoPerguntas(false)}
-              />
-            </header>
-            <div className={s.corpoFolha}>
-              <ListaDePerguntas
-                nome={pesquisa.nome}
-                abertura={pesquisa.abertura}
-                perguntas={perguntas}
-                somenteLeitura
-              />
-            </div>
-          </div>
-        </div>
+        <FolhaDePerguntas
+          numero={ciclo.numero}
+          nome={pesquisa.nome}
+          abertura={pesquisa.abertura}
+          perguntas={perguntas}
+          onFechar={() => setVendoPerguntas(false)}
+        />
       ) : null}
 
       {confirmacao ? (

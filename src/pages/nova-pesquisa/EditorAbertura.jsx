@@ -2,6 +2,7 @@ import { useState } from 'react'
 import s from './Editor.module.css'
 import Botao from '../../components/fluxo/Botao.jsx'
 import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
+import useModal from '../../components/fluxo/useModal.js'
 
 import { LIMITE_NOME } from './bancoDePerguntas.js'
 
@@ -27,9 +28,13 @@ export default function EditorAbertura({ nome, abertura, definir, onFechar }) {
     onFechar()
   }
 
+  /* Esc desfaz como o X e o Cancelar: aqui os campos escrevem direto no
+     estado do fluxo, então sair sem desfazer deixaria a edição valendo. */
+  const caixa = useModal(cancelar)
+
   return (
     <div className={s.scrim}>
-      <div className={s.modal} role="dialog" aria-label="Editar abertura">
+      <div className={s.modal} ref={caixa} role="dialog" aria-label="Editar abertura">
         <div className={s.cabecalho}>
           <p className={s.titulo}>Abertura</p>
           <IconeBotao src={close} rotulo="Fechar" onClick={cancelar} />

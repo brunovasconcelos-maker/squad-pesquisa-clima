@@ -1,6 +1,7 @@
 import s from './Editor.module.css'
 import Botao from '../../components/fluxo/Botao.jsx'
 import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
+import useModal from '../../components/fluxo/useModal.js'
 
 import close from '../../assets/icons/Close.svg'
 
@@ -13,10 +14,13 @@ import close from '../../assets/icons/Close.svg'
  * modal pelo X dele volta para o fluxo sem decidir nada.
  */
 export default function ModalSairDoFluxo({ onDescartar, onSalvar, onCancelar, erro }) {
+  const caixa = useModal(onCancelar)
+
   return (
     <div className={s.scrim}>
       <div
         className={`${s.modal} ${s.modalCompacto}`}
+        ref={caixa}
         role="dialog"
         aria-label="Sair da criação?"
       >

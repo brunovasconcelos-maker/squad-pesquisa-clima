@@ -1,4 +1,5 @@
 import { fimDoCiclo } from './datas.js'
+import { ehFinal } from './pesquisas.js'
 
 /*
  * Registro de alterações nas perguntas.
@@ -36,6 +37,13 @@ function cicloInterrompido(p) {
 
 export function cicloEmAberto(p) {
   const fechados = p.ciclos ?? 0
+  /* Encerrada não tem ciclo aberto nem próximo: `fechados + 1` apontava para
+     um ciclo que nunca vai existir, e a alteração anotada nele não aparecia
+     em lugar nenhum do Histórico. A aba de Perguntas não deixa editar uma
+     pesquisa encerrada, então na prática ninguém chega aqui assim; isto é o
+     que garante que nada seja anotado num ciclo fantasma se algum caminho
+     novo chegar. */
+  if (ehFinal(p)) return null
   /* Pausada no meio do ciclo, a alteração é do ciclo que acabou de fechar —
      ele é o último contado. Fora disso, do próximo a abrir: o que está
      rodando agora ainda não entrou na conta, então é `fechados + 1` tanto
@@ -47,7 +55,11 @@ export function cicloEmAberto(p) {
 /* Anota uma alteração e devolve a pesquisa. `alvo` é o enunciado da pergunta,
    ou o rótulo do que mudou quando não há uma. */
 export function registrar(p, tipo, alvo) {
-  const numero = String(cicloEmAberto(p))
+  const aberto = cicloEmAberto(p)
+  /* Sem ciclo a que pertencer, a anotação não tem onde morar: guardá-la num
+     número inventado é o que fazia a alteração sumir do Histórico. */
+  if (aberto === null) return p
+  const numero = String(aberto)
   const registro = p.alteracoes || {}
   const doCiclo = registro[numero] || []
   return {

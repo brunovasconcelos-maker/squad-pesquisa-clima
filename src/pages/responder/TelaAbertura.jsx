@@ -51,15 +51,27 @@ export default function TelaAbertura() {
         ) : null}
       </section>
 
-      <div className={s.acaoCentral}>
-        <Botao
-          variante="marca"
-          desabilitado={perguntas.length === 0}
-          onClick={() => navigate(`/responder/${id}/pergunta/1`)}
-        >
-          Começar pesquisa
-        </Botao>
-      </div>
+      {/* Publicada e sem pergunta nenhuma: o botão apagado sem explicação
+          deixava quem abriu o link sem saber o que fazer nem o que houve. O
+          problema é de quem montou a pesquisa, e é isso que a tela diz. */}
+      {perguntas.length === 0 ? (
+        <section className={`${s.cartao} ${s.cartaoCentrado}`} role="alert">
+          <p className={s.paragrafo}>
+            Esta pesquisa ainda não tem perguntas configuradas, então não há o
+            que responder por enquanto. Guarde este link e avise quem enviou —
+            ele volta a funcionar assim que as perguntas forem adicionadas.
+          </p>
+        </section>
+      ) : (
+        <div className={s.acaoCentral}>
+          <Botao
+            variante="marca"
+            onClick={() => navigate(`/responder/${id}/pergunta/1`)}
+          >
+            Começar pesquisa
+          </Botao>
+        </div>
+      )}
     </VistaResposta>
   )
 }

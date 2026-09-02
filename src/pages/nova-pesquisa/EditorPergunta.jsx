@@ -4,6 +4,7 @@ import Botao from '../../components/fluxo/Botao.jsx'
 import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
 import ModalConfirmar from '../../components/fluxo/ModalConfirmar.jsx'
 import iguais from '../../lib/iguais.js'
+import useModal from '../../components/fluxo/useModal.js'
 import { daTabela } from '../../lib/desconhecido.js'
 import {
   TIPOS,
@@ -59,12 +60,15 @@ export default function EditorPergunta({ pergunta, onSalvar, onFechar }) {
     if (alterada) setConfirmandoDescarte(true)
     else onFechar()
   }
+  /* Esc segue o mesmo caminho do X: com algo alterado, passa pela pergunta de
+     descarte em vez de jogar fora direto. */
+  const caixa = useModal(fechar)
 
   /* Sem pergunta ainda: primeiro passo é escolher o tipo. */
   if (!rascunho) {
     return (
       <div className={s.scrim}>
-        <div className={s.modal} role="dialog" aria-label="Nova pergunta">
+        <div className={s.modal} ref={caixa} role="dialog" aria-label="Nova pergunta">
           <div className={s.cabecalho}>
             <p className={s.titulo}>Nova pergunta</p>
             {/* Ainda não há nada para descartar: só se escolheu o tipo. */}
@@ -128,7 +132,7 @@ export default function EditorPergunta({ pergunta, onSalvar, onFechar }) {
 
   return (
     <div className={s.scrim}>
-      <div className={s.modal} role="dialog" aria-label="Editar pergunta">
+      <div className={s.modal} ref={caixa} role="dialog" aria-label="Editar pergunta">
         <div className={s.cabecalho}>
           {/* Tipo que não é nenhum dos seis: o título diz qual é o valor
               estranho, em vez de ficar em branco. */}
