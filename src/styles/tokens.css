@@ -59,7 +59,29 @@
   --cor-scrim: rgba(0, 0, 0, 0.2);   /* fundo atrás do modal */
   --cor-fundo-desabilitado: #e3e6e6; /* background/disable */
   --cor-texto-desabilitado: #b2b9b9; /* texto-icones/disable */
-  --cor-verde-ativo: #60c60c;        /* accent/green */
+  /*
+   * Verde do interruptor ligado. Escurecido de #60c60c: como fundo de um
+   * controle ele tinha 2.19:1 contra a página, abaixo dos 3:1 que o WCAG
+   * pede para o que identifica um componente de interface (1.4.11) — o
+   * interruptor era difícil de achar na página, e o botão branco dentro
+   * dele, de enxergar. Agora são 4.05:1 nos dois.
+   *
+   * Só o interruptor usa este token: o texto do selo verde tem o seu.
+   */
+  --cor-verde-ativo: #458f09;        /* accent/green, escurecido */
+
+  /*
+   * Cinza do interruptor desligado. Token próprio, e não o de texto
+   * desabilitado que ele usava: aquele veste texto de controle desligado,
+   * que é isento de contraste, e escurecê-lo faria texto desabilitado
+   * parecer ativo.
+   *
+   * Fica mais claro que o ligado de propósito — assim os dois estados
+   * diferem em luminosidade, e não só em matiz, para quem não separa verde
+   * de cinza. A posição do botão e o `aria-checked` continuam sendo o que
+   * diz o estado sem depender de cor nenhuma.
+   */
+  --interruptor-desligado: #889393;
   --cor-azul: #006bbc;               /* accent/blue, escurecido */
   --cor-vermelho: #d0000c;           /* accent/red, escurecido */
 

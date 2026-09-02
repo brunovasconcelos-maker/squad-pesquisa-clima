@@ -19,7 +19,7 @@
 
 .desligado {
   justify-content: flex-start;
-  background: var(--cor-texto-desabilitado);
+  background: var(--interruptor-desligado);
 }
 
 .botao {
