@@ -10,11 +10,9 @@ import Interruptor from '../../components/fluxo/Interruptor.jsx'
 import ModalParticipantes from './ModalParticipantes.jsx'
 import { usePesquisa, rotuloParticipantes } from './estado.jsx'
 import {
-  ler,
-  gravar,
   guardar,
   criarDoFluxo,
-  ERRO_AO_GRAVAR,
+  atualizarGuardadas,
 } from '../../lib/pesquisas.js'
 import {
   ModalDataEnvio,
@@ -25,7 +23,11 @@ import {
   ModalMensagemFinal,
   ModalAvancadas,
 } from './ModaisConfiguracao.jsx'
-import { diasDoPrazo, textoDeEncerramento } from '../../lib/datas.js'
+import {
+  diasDoPrazo,
+  textoDeDataHora,
+  textoDeEncerramento,
+} from '../../lib/datas.js'
 
 /*
  * Último passo do fluxo (Figma 8067:5498).
@@ -41,12 +43,12 @@ import { diasDoPrazo, textoDeEncerramento } from '../../lib/datas.js'
  * lista é montado a partir do que foi escolhido.
  */
 function textoDeEnvio({ imediato, data, hora }) {
-  return imediato ? 'Imediatamente' : `${data}, as ${hora}`
+  return imediato ? 'Imediatamente' : textoDeDataHora(data, hora)
 }
 
 function textoDePrazo(prazo) {
   const { tipo, periodo, data, hora } = prazo
-  if (tipo === 'data') return `${data}, as ${hora}`
+  if (tipo === 'data') return textoDeDataHora(data, hora)
   if (tipo === 'dias') {
     /* Os dias que o ciclo vai durar, os mesmos que o motor usa. */
     const dias = diasDoPrazo(prazo)
@@ -158,9 +160,11 @@ export default function TelaConfiguracao() {
           //
           // Sem conseguir gravar, o fluxo não sai: mandar para a home diria
           // que a pesquisa foi criada, e ela não estaria lá.
-          const deu = gravar(guardar(ler(), criarDoFluxo(pesquisa), idDoRascunho))
-          if (deu) navigate('/')
-          else setAviso(ERRO_AO_GRAVAR)
+          const r = atualizarGuardadas((lista) =>
+            guardar(lista, criarDoFluxo(pesquisa), idDoRascunho),
+          )
+          if (r.ok) navigate('/')
+          else setAviso(r.erro)
         }}
       />
 

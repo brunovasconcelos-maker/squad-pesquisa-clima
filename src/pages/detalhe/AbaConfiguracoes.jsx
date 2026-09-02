@@ -22,6 +22,7 @@ import {
   diasDoPrazo,
   formatarComDia,
   textoDeEncerramento,
+  textoDeDataHora,
 } from '../../lib/datas.js'
 import { proximoEnvioDe } from '../../lib/geral.js'
 import { daTabela } from '../../lib/desconhecido.js'
@@ -75,7 +76,7 @@ const REPETICAO = {
 
 function textoDePrazo(prazo) {
   if (!prazo) return '—'
-  if (prazo.tipo === 'data') return `${prazo.data}, as ${prazo.hora}`
+  if (prazo.tipo === 'data') return textoDeDataHora(prazo.data, prazo.hora)
   if (prazo.tipo === 'dias') {
     /* O número que o ciclo vai durar de verdade, e não o que está guardado:
        são o mesmo desde que o campo passou a validar, mas o que foi salvo
@@ -222,10 +223,15 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
 
   /* "Imediatamente" só faz sentido enquanto não há ciclo: com um em curso, o
      que importa é quando sai o próximo. */
-  const textoDoEnvio =
-    !publicada && c.envio?.imediato
-      ? 'Imediatamente'
-      : formatarComDia(proximoEnvioDe(pesquisa))
+  const textoDoEnvio = (() => {
+    if (!publicada && c.envio?.imediato) return 'Imediatamente'
+    const proximo = proximoEnvioDe(pesquisa)
+    if (proximo) return formatarComDia(proximo)
+    /* Sem data calculável. Um traço quando não há data marcada; quando há uma
+       guardada e ela é que não se lê, é isso que a linha diz — senão a tela
+       mostraria "sem data" para um campo preenchido. */
+    return c.envio?.data ? textoDeDataHora(c.envio.data, c.envio.hora) : '—'
+  })()
 
   return (
     <div className={s.coluna}>

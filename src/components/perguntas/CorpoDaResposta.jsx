@@ -44,7 +44,18 @@ function Escala({ de, ate, escolhido, esquerda, direita }) {
   )
 }
 
+/* Mesma regra da lista de perguntas: escolha sem opção nenhuma não vira um
+   espaço em branco, que faria a resposta guardada parecer vazia. */
 function Opcoes({ opcoes, marcadas, unica }) {
+  if (!opcoes.length) {
+    return (
+      <p className={s.semSuporte}>
+        A pergunta desta resposta não tem opção nenhuma guardada, então não dá
+        para mostrar o que foi escolhido.
+      </p>
+    )
+  }
+
   return (
     <div className={s.opcoes}>
       {opcoes.map((opcao, indice) => {

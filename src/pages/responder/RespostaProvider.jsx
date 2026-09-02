@@ -1,6 +1,12 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import { Outlet, useNavigate, useParams } from 'react-router-dom'
-import { aceitaResposta, avaliarLista, gravar, ler } from '../../lib/pesquisas.js'
+import {
+  aceitaResposta,
+  avaliarLista,
+  erroDeLeitura,
+  ler,
+  trocarGuardada,
+} from '../../lib/pesquisas.js'
 import { adicionarResposta, materializar } from '../../lib/respostas.js'
 import { sincronizarHistorico } from '../../lib/historico.js'
 import { ehObrigatoria } from '../../lib/obrigatorias.js'
@@ -58,8 +64,10 @@ export default function RespostaProvider() {
     /* Sem pesquisa com esse id, a tela diz isso. Antes ela desenhava o
        exemplo do Figma como se fosse uma pesquisa de verdade: a pessoa
        respondia tudo, via o agradecimento e as respostas não iam a lugar
-       nenhum, porque não havia onde gravar. */
-    return { pesquisa: guardada ?? null }
+       nenhum, porque não havia onde gravar.
+       Não conseguir ler é outra coisa, e tem outra tela: a pesquisa pode
+       existir e o link estar certo. */
+    return { pesquisa: guardada ?? null, falha: erroDeLeitura() }
   })
   const [ordem] = useState(() => ordemDe(sessao.pesquisa ?? {}))
   const [valores, setValores] = useState({})
@@ -92,22 +100,20 @@ export default function RespostaProvider() {
    */
   const enviar = useCallback(() => {
     const { lista } = avaliarLista(ler())
-    const alvo = lista.find((p) => p.id === id)
-    /* Sumiu entre abrir o link e enviar: a resposta não tem onde entrar, e
-       dizer obrigado seria dizer que ela foi guardada. */
-    if (!alvo) {
+    /* Sumiu entre abrir o link e enviar, ou o armazenamento ficou ilegível:
+       a resposta não tem onde entrar, e dizer obrigado seria dizer que ela
+       foi guardada. */
+    if (erroDeLeitura() || !lista.some((p) => p.id === id)) {
       setFalhouAoEnviar(true)
       return
     }
-    const comResposta = adicionarResposta(alvo, valores)
-    const deu = gravar(
-      lista.map((p) =>
-        p.id === id
-          ? { ...sincronizarHistorico(comResposta), atualizadoEm: new Date().toISOString() }
-          : p,
-      ),
-    )
-    if (!deu) {
+    /* A resposta entra na lista de agora: o motor pode ter andado, e outra
+       aba pode ter mexido no resto — só esta pesquisa é reescrita. */
+    const r = trocarGuardada(id, (p) => ({
+      ...sincronizarHistorico(adicionarResposta(p, valores)),
+      atualizadoEm: new Date().toISOString(),
+    }))
+    if (!r.ok) {
       setFalhouAoEnviar(true)
       return
     }
@@ -133,6 +139,7 @@ export default function RespostaProvider() {
      respondendo termina. */
   const foraDoAr = pesquisa && !aceitaResposta(pesquisa)
 
+  if (sessao.falha) return <TelaNaoEncontrada motivo="dados" />
   if (!pesquisa) return <TelaNaoEncontrada />
   if (falhouAoEnviar) return <TelaNaoEncontrada motivo="envio" />
 

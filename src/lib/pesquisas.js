@@ -135,6 +135,46 @@ export function gravar(lista) {
   }
 }
 
+export const ERRO_AO_LER_ANTES_DE_GRAVAR =
+  'Não é possível salvar agora — não foi possível ler os dados existentes com segurança. Recarregue a página antes de tentar de novo.'
+
+/*
+ * Muda o que está guardado. É por aqui que toda escrita passa.
+ *
+ * Duas coisas que gravar a lista de memória por cima não fazia:
+ *
+ * Relê antes de mudar. Cada tela carregava a lista inteira e regravava tudo,
+ * então duas abas abertas se atropelavam: a aba A duplicava, a aba B gravava
+ * qualquer outra coisa a partir do que tinha lido antes, e a cópia da A
+ * sumia sem aviso. `mudar` recebe a lista de agora, e não a de quando a tela
+ * montou — o que outra aba acrescentou continua lá.
+ *
+ * Recusa quando a leitura falhou. Com o armazenamento ilegível, `ler`
+ * devolve lista vazia; gravar por cima trocava tudo o que existia por um
+ * item só, calado. Não dá para mesclar com o que não se conseguiu ler, então
+ * a escrita não acontece e quem chamou avisa.
+ */
+export function atualizarGuardadas(mudar) {
+  const atual = ler()
+  if (erroDeLeitura()) return { ok: false, erro: ERRO_AO_LER_ANTES_DE_GRAVAR }
+
+  const proxima = mudar(atual)
+  if (!gravar(proxima)) return { ok: false, erro: ERRO_AO_GRAVAR }
+  return { ok: true, lista: proxima }
+}
+
+/* Os três atalhos que cobrem quase toda escrita da aplicação. */
+export const trocarGuardada = (id, transformar) =>
+  atualizarGuardadas((lista) =>
+    lista.map((p) => (p.id === id ? transformar(p) : p)),
+  )
+
+export const acrescentarGuardada = (pesquisa) =>
+  atualizarGuardadas((lista) => [...lista, pesquisa])
+
+export const removerGuardada = (id) =>
+  atualizarGuardadas((lista) => lista.filter((p) => p.id !== id))
+
 const novoId = () =>
   `p_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`
 

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import Aviso from '../../components/Aviso.jsx'
+import TelaDadosIlegiveis from '../../components/TelaDadosIlegiveis.jsx'
 import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
 import {
   ler,
@@ -9,6 +10,8 @@ import {
   ehRecorrente,
   INTERVALO_MS,
   ERRO_AO_GRAVAR,
+  erroDeLeitura,
+  trocarGuardada,
 } from '../../lib/pesquisas.js'
 import { aparar } from '../../lib/respostas.js'
 import { sincronizarHistorico } from '../../lib/historico.js'
@@ -53,6 +56,9 @@ export default function TelaDetalhe() {
   /* Gravação que não passou precisa ser dita: a tela já mostra a alteração,
      e sem o aviso o F5 seguinte a desfaria sem explicação. */
   const [aviso, setAviso] = useState('')
+  /* Leitura que falhou: a tela não pode dizer que a pesquisa não existe
+     quando o que houve foi não conseguir ler. */
+  const [falhaDeLeitura, setFalhaDeLeitura] = useState(null)
   const limparAviso = useCallback(() => setAviso(''), [])
   const { state } = useLocation()
   const [ativa, setAtiva] = useState(
@@ -77,8 +83,12 @@ export default function TelaDetalhe() {
         proxima = lista.map((p) => (p.id === id ? depois : p))
         precisaGravar = true
       }
+      const falha = erroDeLeitura()
+      setFalhaDeLeitura(falha)
       setPesquisas(proxima)
-      if (precisaGravar && !gravar(proxima)) setAviso(ERRO_AO_GRAVAR)
+      /* Sem ter conseguido ler, o que está em `proxima` saiu de uma lista
+         vazia: gravar trocaria tudo o que existe por nada. */
+      if (precisaGravar && !falha && !gravar(proxima)) setAviso(ERRO_AO_GRAVAR)
     }
     rodar()
     const t = setInterval(rodar, INTERVALO_MS)
@@ -91,16 +101,16 @@ export default function TelaDetalhe() {
   /* Grava junto com o setState, como a home: a lista em memória e a guardada
      não podem divergir, senão um F5 desfaz a última edição. */
   const alterar = useCallback(
-    (transformar) =>
-      setPesquisas((lista) => {
-        const proxima = lista.map((p) =>
-          p.id === id
-            ? { ...transformar(p), atualizadoEm: new Date().toISOString() }
-            : p,
-        )
-        if (!gravar(proxima)) setAviso(ERRO_AO_GRAVAR)
-        return proxima
-      }),
+    (transformar) => {
+      /* Relê antes de mudar: só esta pesquisa é reescrita, e o que outra aba
+         tiver acrescentado à lista no meio-tempo continua lá. */
+      const r = trocarGuardada(id, (p) => ({
+        ...transformar(p),
+        atualizadoEm: new Date().toISOString(),
+      }))
+      if (r.ok) setPesquisas(r.lista)
+      else setAviso(r.erro)
+    },
     [id],
   )
 
@@ -108,9 +118,12 @@ export default function TelaDetalhe() {
      cabeçalho sem nome. `pesquisas` nulo é a primeira renderização, antes de
      ler o storage — aí ainda não dá para dizer que não existe. */
   useEffect(() => {
-    if (pesquisas && !pesquisa) navigate('/', { replace: true })
-  }, [pesquisas, pesquisa, navigate])
+    if (pesquisas && !pesquisa && !falhaDeLeitura) navigate('/', { replace: true })
+  }, [pesquisas, pesquisa, falhaDeLeitura, navigate])
 
+  /* Não conseguir ler não é a pesquisa não existir: mandar para a lista aqui
+     faria parecer que ela foi apagada. */
+  if (falhaDeLeitura) return <TelaDadosIlegiveis motivo={falhaDeLeitura} />
   if (!pesquisa) return null
 
   /* Trocar a frequência para "Não repete" com a aba de Histórico aberta some

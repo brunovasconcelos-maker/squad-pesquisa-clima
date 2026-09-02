@@ -18,6 +18,10 @@ import s from './Responder.module.css'
  *   ela sumiu ou a gravação não passou. A resposta não entrou, e dizer
  *   obrigado seria dizer que entrou.
  *
+ * - `dados`: não deu para ler o que está guardado. O link pode estar certo e
+ *   a pesquisa existir — dizer "não encontrada" mandaria a pessoa cobrar de
+ *   quem enviou um problema que não é do link.
+ *
  * Mesma moldura das outras telas de quem responde. Sem capa da pesquisa —
  * não há pesquisa —, então vale o gradiente padrão.
  */
@@ -26,6 +30,11 @@ const MOTIVOS = {
     titulo: 'Pesquisa não encontrada',
     texto:
       'Este link não leva a nenhuma pesquisa. Ele pode ter sido copiado pela metade, ou a pesquisa pode ter sido apagada. Vale confirmar o endereço com quem enviou.',
+  },
+  dados: {
+    titulo: 'Não foi possível carregar a pesquisa',
+    texto:
+      'Os dados guardados neste navegador não puderam ser lidos, então não dá para abrir o formulário agora. O link pode estar correto. Tente de novo mais tarde, ou em outro navegador.',
   },
   envio: {
     titulo: 'Sua resposta não pôde ser enviada',

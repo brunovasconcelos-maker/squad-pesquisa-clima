@@ -213,13 +213,35 @@ const FREQUENCIAS = {
 /* O que a linha "Data de Encerramento" mostra. Sem data estipulada, dizer
    "Não definida" é mais honesto do que um traço: a escolha existe e está
    vazia, não é um campo que não se aplica. */
+export const TEXTO_DATA_INVALIDA = 'Data inválida — reconfigure'
+
+/*
+ * Como uma data guardada aparece numa linha de configuração.
+ *
+ * `paraData` só entende o formato que os seletores de data gravam
+ * ("10 janeiro 2020"). Qualquer outro — dado antigo, editado à mão,
+ * corrompido — devolve `null`, e o motor trata como "sem data": a pesquisa
+ * roda para sempre, o ciclo não tem fim. A tela, enquanto isso, ecoava o
+ * texto guardado como se fosse uma data em vigor.
+ *
+ * Era o mesmo descompasso do "-5 dias": a tela dizia uma coisa e o motor
+ * fazia outra. Data que não se lê é dita como inválida, que é o que ela é
+ * para quem precisa consertá-la.
+ */
+export function textoDeDataHora(data, hora) {
+  if (!data) return '—'
+  if (!paraData(data, hora)) {
+    avisarValorDesconhecido('data guardada', data)
+    return TEXTO_DATA_INVALIDA
+  }
+  return hora ? `${data}, as ${hora}` : String(data)
+}
+
 export function textoDeEncerramento(encerramento) {
   if (!encerramento || encerramento.semData || !encerramento.data) {
     return 'Não definida'
   }
-  return encerramento.hora
-    ? `${encerramento.data}, as ${encerramento.hora}`
-    : encerramento.data
+  return textoDeDataHora(encerramento.data, encerramento.hora)
 }
 
 /*

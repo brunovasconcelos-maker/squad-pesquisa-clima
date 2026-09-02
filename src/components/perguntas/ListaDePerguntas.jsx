@@ -71,6 +71,17 @@ function Degrau({ numero, icone, marcado = false, rotulo, onEscolher }) {
   )
 }
 
+/*
+ * As opções de uma pergunta de escolha.
+ *
+ * `opcoes` ausente derrubava a tela inteira — uma pergunta guardada sem o
+ * campo levava junto a aba de Perguntas e a vista de quem responde, com um
+ * `.map` de `undefined`. Uma lista vazia é o que ela é.
+ *
+ * Vazia não some calada, porém: uma pergunta de escolha sem escolha nenhuma
+ * é uma pergunta que ninguém consegue responder, e quem está montando o
+ * questionário precisa ver isso em vez de um espaço em branco.
+ */
 function ListaDeOpcoes({
   opcoes,
   temOutro,
@@ -79,7 +90,19 @@ function ListaDeOpcoes({
   marcadas = [],
   onAlternar,
 }) {
-  const linhas = temOutro ? [...opcoes, 'Outro'] : opcoes
+  const base = Array.isArray(opcoes) ? opcoes : []
+  const linhas = temOutro ? [...base, 'Outro'] : base
+
+  if (!linhas.length) {
+    return (
+      <p className={s.semOpcoes}>
+        Esta pergunta é de escolha, mas não tem nenhuma opção — ninguém
+        consegue respondê-la assim. Edite a pergunta para acrescentar as
+        opções.
+      </p>
+    )
+  }
+
   return (
     <div className={s.opcoes} role={onAlternar ? 'group' : undefined}>
       {linhas.map((opcao, indice) => {

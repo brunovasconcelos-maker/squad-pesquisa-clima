@@ -315,3 +315,15 @@
   font-weight: var(--peso-medio);
   line-height: 1.4;
 }
+
+/* Pergunta de escolha sem opção nenhuma. Fica visível e em vermelho: um
+   espaço em branco no lugar das opções não diz que a pergunta está quebrada,
+   e é justamente isso que precisa aparecer para alguém ir consertar. */
+.semOpcoes {
+  margin: 0;
+  padding: var(--espaco-12) 0;
+  color: var(--cor-vermelho);
+  font-size: 14px;
+  font-weight: var(--peso-medio);
+  line-height: 1.4;
+}

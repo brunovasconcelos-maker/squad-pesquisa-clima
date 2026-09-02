@@ -8,11 +8,13 @@ import {
   gravar,
   guardar,
   ler,
-  ERRO_AO_GRAVAR,
+  erroDeLeitura,
+  atualizarGuardadas,
 } from '../../lib/pesquisas.js'
 import iguais from '../../lib/iguais.js'
 import ModalSairDoFluxo from './ModalSairDoFluxo.jsx'
 import TelaRascunhoSumido from './TelaRascunhoSumido.jsx'
+import TelaDadosIlegiveis from '../../components/TelaDadosIlegiveis.jsx'
 import { CAPA_PADRAO } from '../../lib/capa.js'
 
 /*
@@ -230,9 +232,15 @@ export default function PesquisaProvider() {
   /* Rascunho que não existe mais: apagado, link velho, id digitado errado.
      Abrir o fluxo em branco fazia o passo seguinte criar uma pesquisa nova
      sem ninguém pedir — quem clicou queria continuar uma que já existia. */
-  const [rascunhoSumiu] = useState(
-    () => Boolean(idDoRascunho) && !ler().some((p) => p.id === idDoRascunho),
-  )
+  /* Não conseguir ler não é o rascunho não existir: são duas telas
+     diferentes, porque dizer "não encontrado" com o armazenamento ilegível
+     sugere que ele foi apagado, e nada foi. */
+  const [leitura] = useState(() => {
+    if (!idDoRascunho) return { falha: null, sumiu: false }
+    const achou = ler().some((p) => p.id === idDoRascunho)
+    const falha = erroDeLeitura()
+    return { falha, sumiu: !falha && !achou }
+  })
 
   const [pesquisa, setPesquisa] = useState(() => {
     if (!idDoRascunho) return estadoInicial()
@@ -323,7 +331,8 @@ export default function PesquisaProvider() {
   /* O rascunho não existe mais: a tela diz isso e oferece a volta, em vez de
      abrir o formulário em branco com cara de pesquisa nova — de onde o passo
      seguinte criaria uma pesquisa que ninguém pediu. */
-  if (rascunhoSumiu) return <TelaRascunhoSumido />
+  if (leitura.falha) return <TelaDadosIlegiveis motivo={leitura.falha} />
+  if (leitura.sumiu) return <TelaRascunhoSumido />
 
   return (
     <Contexto.Provider value={valor}>
@@ -341,15 +350,15 @@ export default function PesquisaProvider() {
             /* Gravação que não passou não pode sair do fluxo como se tivesse
                passado: o rascunho não estaria na lista, e o que foi
                preenchido teria ido embora sem aviso. */
-            const deu = gravar(
+            const r = atualizarGuardadas((lista) =>
               guardar(
-                ler(),
+                lista,
                 criarRascunho(pesquisa, new Date(), passoDaRota(pathname)),
                 idDoRascunho,
               ),
             )
-            if (deu) navigate('/')
-            else setErroAoSalvar(ERRO_AO_GRAVAR)
+            if (r.ok) navigate('/')
+            else setErroAoSalvar(r.erro)
           }}
         />
       ) : null}

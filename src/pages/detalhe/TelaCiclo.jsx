@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
 import Aviso from '../../components/Aviso.jsx'
+import TelaDadosIlegiveis from '../../components/TelaDadosIlegiveis.jsx'
 import Rosca from '../../components/detalhe/Rosca.jsx'
 import GraficoBarras from '../../components/detalhe/GraficoBarras.jsx'
 import {
@@ -10,7 +11,12 @@ import {
 } from '../../components/respostas/LeituraDeRespostas.jsx'
 import ListaDePerguntas from '../../components/perguntas/ListaDePerguntas.jsx'
 import ModalConfirmar from '../../components/fluxo/ModalConfirmar.jsx'
-import { ler, gravar, ERRO_AO_GRAVAR } from '../../lib/pesquisas.js'
+import {
+  ler,
+  erroDeLeitura,
+  trocarGuardada,
+  ERRO_AO_GRAVAR,
+} from '../../lib/pesquisas.js'
 import { sincronizarHistorico } from '../../lib/historico.js'
 import { paraCsv, nomeDeArquivo, gerarEBaixar } from '../../lib/respostas.js'
 import {
@@ -104,34 +110,35 @@ export default function TelaCiclo() {
   const limparAviso = useCallback(() => setAviso(''), [])
   const [vendoPerguntas, setVendoPerguntas] = useState(false)
   const [confirmacao, setConfirmacao] = useState(null)
+  const [falhaDeLeitura, setFalhaDeLeitura] = useState(null)
   const envoltorioMenu = useRef(null)
 
   /* Sincroniza o histórico ao entrar, como o detalhe faz: quem chega direto
      por link precisa do ciclo guardado tanto quanto quem veio da tabela. */
   useEffect(() => {
     const lista = ler()
+    setFalhaDeLeitura(erroDeLeitura())
     const antes = lista.find((x) => x.id === id)
     const depois = antes && sincronizarHistorico(antes)
     if (depois && depois !== antes) {
-      const proxima = lista.map((x) => (x.id === id ? depois : x))
-      if (!gravar(proxima)) setAviso(ERRO_AO_GRAVAR)
-      setPesquisas(proxima)
+      const r = trocarGuardada(id, () => depois)
+      if (r.ok) setPesquisas(r.lista)
+      else setAviso(r.erro)
       return
     }
     setPesquisas(lista)
   }, [id])
 
-  /* Grava junto com o setState, como a home e o detalhe. */
-  const alterar = (transformar) =>
-    setPesquisas((lista) => {
-      const proxima = lista.map((x) =>
-        x.id === id
-          ? { ...transformar(x), atualizadoEm: new Date().toISOString() }
-          : x,
-      )
-      if (!gravar(proxima)) setAviso(ERRO_AO_GRAVAR)
-      return proxima
-    })
+  /* Relê antes de mudar, como a home e o detalhe: só esta pesquisa é
+     reescrita, e o que outra aba mexeu no resto da lista continua lá. */
+  const alterar = (transformar) => {
+    const r = trocarGuardada(id, (x) => ({
+      ...transformar(x),
+      atualizadoEm: new Date().toISOString(),
+    }))
+    if (r.ok) setPesquisas(r.lista)
+    else setAviso(r.erro)
+  }
 
   useEffect(() => {
     if (!menuAberto) return undefined
@@ -149,10 +156,12 @@ export default function TelaCiclo() {
      vez de mostrar uma tela sem conteúdo. */
   useEffect(() => {
     if (!pesquisas) return
+    if (falhaDeLeitura) return
     if (!pesquisa) navigate('/', { replace: true })
     else if (!ciclo) navigate(`/pesquisas/${id}`, { replace: true })
-  }, [pesquisas, pesquisa, ciclo, id, navigate])
+  }, [pesquisas, pesquisa, ciclo, id, falhaDeLeitura, navigate])
 
+  if (falhaDeLeitura) return <TelaDadosIlegiveis motivo={falhaDeLeitura} />
   if (!pesquisa || !ciclo) return null
 
   /* As perguntas são as do ciclo, não as de hoje. */

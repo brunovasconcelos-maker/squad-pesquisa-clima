@@ -11,6 +11,9 @@ import {
   erroDeLeitura,
   TEXTO_DE_LEITURA,
   ERRO_AO_GRAVAR,
+  trocarGuardada,
+  acrescentarGuardada,
+  removerGuardada,
   avaliarLista,
   avisoDeInicio,
   duplicar,
@@ -76,28 +79,36 @@ export default function Home() {
   const [falhaDeLeitura, setFalhaDeLeitura] = useState(null)
   const limparAviso = useCallback(() => setAviso(''), [])
 
-  /* Grava junto com o setState: a lista em memória e a guardada não podem
-     divergir, senão um F5 desfaz a última ação. Gravação que não passou é
-     dita na hora — a tela mostraria a mudança e o F5 seguinte a desfaria. */
-  const aplicar = useCallback((proxima) => {
-    setPesquisas(proxima)
-    if (!gravar(proxima)) setAviso(ERRO_AO_GRAVAR)
+  /*
+   * Toda ação da lista passa por aqui: a escrita relê antes de mudar, e o
+   * que volta dela — a lista guardada de verdade — é o que a tela passa a
+   * mostrar. Antes a tela mostrava a lista de memória e gravava por cima, o
+   * que apagava o que outra aba tivesse acrescentado no meio-tempo.
+   *
+   * Escrita recusada não muda a tela: mostrar a alteração e avisar que ela
+   * não foi salva deixa a tela dizendo uma coisa e o armazenamento outra.
+   */
+  const aplicar = useCallback((resultado) => {
+    if (resultado.ok) setPesquisas(resultado.lista)
+    else setAviso(resultado.erro)
   }, [])
 
   useEffect(() => {
     const rodar = () => {
       const { lista, mudou } = avaliarLista(ler())
-      setFalhaDeLeitura(erroDeLeitura())
+      const falha = erroDeLeitura()
+      setFalhaDeLeitura(falha)
       setPesquisas(lista)
-      if (mudou && !gravar(lista)) setAviso(ERRO_AO_GRAVAR)
+      /* Sem ter conseguido ler, o que o motor calculou saiu de uma lista
+         vazia: gravar isso trocaria tudo o que existe por nada. */
+      if (mudou && !falha && !gravar(lista)) setAviso(ERRO_AO_GRAVAR)
     }
     rodar()
     const id = setInterval(rodar, INTERVALO_MS)
     return () => clearInterval(id)
   }, [])
 
-  const trocar = (id, transformar) =>
-    aplicar(pesquisas.map((p) => (p.id === id ? transformar(p) : p)))
+  const trocar = (id, transformar) => aplicar(trocarGuardada(id, transformar))
 
   const aoTransportar = (p) => {
     /* Pausar fecha o ciclo em curso e deixa a pesquisa em "Ativa |
@@ -140,7 +151,7 @@ export default function Home() {
       titulo: 'Deletar pesquisa?',
       texto: `"${p.nome}" e tudo o que foi respondido nela serão removidos. Não dá para desfazer.`,
       rotulo: 'Deletar',
-      aoConfirmar: () => aplicar(pesquisas.filter((q) => q.id !== p.id)),
+      aoConfirmar: () => aplicar(removerGuardada(p.id)),
     })
 
   const aoCopiarLink = async (p) => {
@@ -218,7 +229,7 @@ export default function Home() {
               pesquisa={paraLinha(p, rotuloParticipantes)}
               onAbrir={() => aoAbrir(p)}
               onTransporte={() => aoTransportar(p)}
-              onDuplicar={() => aplicar([...pesquisas, duplicar(p)])}
+              onDuplicar={() => aplicar(acrescentarGuardada(duplicar(p)))}
               onCopiarLink={() => aoCopiarLink(p)}
               onDeletar={() => aoDeletar(p)}
             />
