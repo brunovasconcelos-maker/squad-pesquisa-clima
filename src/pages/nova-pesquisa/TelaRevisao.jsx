@@ -68,7 +68,7 @@ export default function TelaRevisao() {
           nome={pesquisa.nome}
           abertura={pesquisa.abertura}
           perguntas={pesquisa.perguntas}
-          ehObrigatoria={(pergunta) => ehObrigatoria(pergunta, pesquisa)}
+          ehObrigatoria={ehObrigatoria}
           onEditarAbertura={() => setAberturaAberta(true)}
           onEditarPergunta={(pergunta) => setEmEdicao(pergunta)}
           onRemoverPergunta={(pergunta) => removerPergunta(pergunta.id)}

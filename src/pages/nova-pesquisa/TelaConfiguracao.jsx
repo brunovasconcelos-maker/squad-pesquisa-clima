@@ -28,10 +28,11 @@ import { diasDoPrazo, textoDeDataHora } from '../../lib/datas.js'
  * Os rótulos são os do Figma, com uma exceção: "Frequencia" ganhou o acento
  * que falta no arquivo.
  *
- * O modal de configurações avançadas saiu daqui — lembrete, barra de
- * progresso, embaralhar e obrigatórias por padrão não são mais editáveis. A
- * "Data de Encerramento" saiu junto. Os valores continuam guardados; o que
- * não existe mais é a tela que os mexia.
+ * O modal de configurações avançadas saiu daqui, e o que ele controlava
+ * deixou de ser escolha: a barra de progresso aparece sempre, as perguntas
+ * saem na ordem em que foram montadas e cada uma diz por si se é
+ * obrigatória. A "Data de Encerramento" saiu junto; o campo dela continua
+ * guardado porque o motor de status ainda o lê.
  *
  * Os modais abrem por estado local, não por rota: são passos dentro desta
  * tela, e voltar de um não deveria mexer no histórico do navegador.

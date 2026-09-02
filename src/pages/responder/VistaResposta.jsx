@@ -10,9 +10,12 @@ import s from './Responder.module.css'
  * Fica fora do app interno de propósito — sem sidebar, sem cabeçalho de
  * abas. Quem abre o link de resposta não é quem administra a pesquisa.
  *
- * A barra de progresso só aparece com "Mostrar barra de progresso" ligada. O
- * espaço dos 8px continua reservado quando ela some, senão os botões subiriam
- * e a barra deixaria de ter os 80px do Figma.
+ * A barra de progresso aparece nas três telas do questionário — ela era
+ * opcional, por "Mostrar barra de progresso", e a opção saiu junto com o
+ * modal de avançadas. As telas de beco (link errado, fora do ar) não passam
+ * `progresso`, e aí ela não existe: não há questionário para medir. O espaço
+ * dos 8px continua reservado, senão os botões subiriam e a barra deixaria de
+ * ter os 80px do Figma.
  */
 export default function VistaResposta({
   pesquisa,
@@ -65,8 +68,7 @@ export function RodapeDaVista({
 }) {
   return (
     <RodapeFluxo
-      progresso={progresso ?? 0}
-      mostrarProgresso={progresso !== null}
+      progresso={progresso}
       rotuloProgresso={rotuloProgresso}
       rotuloContinuar={ultima ? 'Finalizar' : 'Continuar'}
       continuarDesabilitado={travado}

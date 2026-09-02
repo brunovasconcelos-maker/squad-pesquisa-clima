@@ -13,7 +13,7 @@ import eyeClosed from '../../assets/icons/EyeClosed.svg'
  * O e-mail e o "Mudar conta" são decorativos: não há login nesta vista.
  */
 export default function TelaAbertura() {
-  const { pesquisa, perguntas, mostrarProgresso, obrigatoria } = useResposta()
+  const { pesquisa, perguntas, obrigatoria } = useResposta()
   const navigate = useNavigate()
   const { id } = useParams()
 
@@ -21,7 +21,7 @@ export default function TelaAbertura() {
   const temObrigatoria = perguntas.some(obrigatoria)
 
   return (
-    <VistaResposta pesquisa={pesquisa} progresso={mostrarProgresso ? 0 : null}>
+    <VistaResposta pesquisa={pesquisa} progresso={0}>
       <section className={s.cartao}>
         <h1 className={s.nome}>{pesquisa.nome}</h1>
         <p className={s.paragrafo}>{pesquisa.abertura}</p>

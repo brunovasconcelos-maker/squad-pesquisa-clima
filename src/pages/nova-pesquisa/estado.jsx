@@ -37,7 +37,7 @@ export const MENSAGEM_FINAL_PADRAO =
 
 /*
  * Configuração do último passo. Os padrões são o que o Figma desenha na tela
- * estática, incluindo os três interruptores do modal de avançadas.
+ * estática.
  *
  * `envio` e `prazo` guardam data e hora como texto solto porque os campos são
  * de texto livre — não há date picker ainda.
@@ -72,17 +72,6 @@ export function configuracaoInicial(hoje = new Date()) {
        comportamento sem que ninguém tivesse mexido nelas. */
     encerramento: { data: '', hora: '18:00', semData: true },
     mensagemFinal: MENSAGEM_FINAL_PADRAO,
-    /* O modal de configurações avançadas saiu do desenho, e com ele a única
-       forma de editar estes quatro. Os valores ficam porque quem responde
-       ainda depende deles — barra de progresso, ordem das perguntas e o
-       padrão de obrigatória —, e mudá-los agora mudaria o formulário de
-       quem já está no ar. */
-    avancadas: {
-      lembrete: 'Diário',
-      barraProgresso: true,
-      embaralhar: false,
-      obrigatorias: true,
-    },
   }
 }
 

@@ -22,13 +22,13 @@ import pipo from '../../assets/images/7T7nCfyZ97uiZuW6Yue_3_VWS87PuS 1@2x.png'
  * que foi seria adivinhar.
  */
 export default function TelaFim() {
-  const { pesquisa, mostrarProgresso, enviou } = useResposta()
+  const { pesquisa, enviou } = useResposta()
   const { id } = useParams()
 
   if (!enviou) return <Navigate to={`/responder/${id}`} replace />
 
   return (
-    <VistaResposta pesquisa={pesquisa} progresso={mostrarProgresso ? 1 : null}>
+    <VistaResposta pesquisa={pesquisa} progresso={1}>
       <section className={`${s.cartao} ${s.cartaoCentrado}`}>
         <h1 className={s.nome}>Sua resposta foi enviada!</h1>
         <p className={s.paragrafo}>{pesquisa.configuracao?.mensagemFinal}</p>

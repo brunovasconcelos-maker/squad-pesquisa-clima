@@ -16,10 +16,6 @@
   background: var(--cor-superficie);
 }
 
-.progressoOculto {
-  background: transparent;
-}
-
 /* A trilha começa 4px à esquerda para que o raio de 360px seja cortado na
    borda da tela — no Figma a ponta esquerda não aparece arredondada. */
 .progressoPreenchido {

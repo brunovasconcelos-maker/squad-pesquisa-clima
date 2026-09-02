@@ -15,10 +15,10 @@ import p from '../../components/perguntas/ListaDePerguntas.module.css'
  * A divisória embaixo do enunciado não vem: nesta vista o Figma desenha o
  * bloco do enunciado sem linha, ao contrário da lista do administrador.
  *
- * A posição vem da URL, e a ordem vem da sessão — que pode estar embaralhada.
+ * A posição vem da URL, e a ordem vem da sessão.
  */
 export default function TelaPergunta() {
-  const { pesquisa, perguntas, valores, responder, enviar, mostrarProgresso, obrigatoria } =
+  const { pesquisa, perguntas, valores, responder, enviar, obrigatoria } =
     useResposta()
   const navigate = useNavigate()
   const { id, numero } = useParams()
@@ -45,7 +45,7 @@ export default function TelaPergunta() {
       rodape={
         <RodapeDaVista
           rotuloProgresso={`Pergunta ${posicao} de ${perguntas.length}`}
-          progresso={mostrarProgresso ? progresso : null}
+          progresso={progresso}
           ultima={ultima}
           travado={travado}
           onVoltar={() => irPara(indice === 0 ? '' : `/pergunta/${posicao - 1}`)}

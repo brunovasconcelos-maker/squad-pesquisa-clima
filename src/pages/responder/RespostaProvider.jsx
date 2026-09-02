@@ -18,8 +18,7 @@ import TelaForaDoAr from './TelaForaDoAr.jsx'
  *
  * Vive na rota-mãe de /responder/:id, como o provider do fluxo de criação:
  * nasce ao abrir o link e morre ao sair. É o que faz "Voltar" não perder o
- * que já foi respondido e o embaralhamento acontecer uma vez só — sortear a
- * cada navegação embaralharia a pesquisa no meio de quem está respondendo.
+ * que já foi respondido.
  *
  * A pesquisa é lida uma vez, no começo: quem está respondendo não deve ver o
  * questionário mudar debaixo do dedo se alguém editar do outro lado. Na hora
@@ -27,20 +26,6 @@ import TelaForaDoAr from './TelaForaDoAr.jsx'
  * resposta entra.
  */
 const Contexto = createContext(null)
-
-/* Fisher-Yates. Só quando "Embaralhar perguntas" está ligada. */
-function ordemDe(pesquisa) {
-  const ids = (pesquisa.perguntas || []).map((q) => q.id)
-  if (!pesquisa.configuracao?.avancadas?.embaralhar) return ids
-  const baralho = [...ids]
-  for (let i = baralho.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1))
-    const troca = baralho[i]
-    baralho[i] = baralho[j]
-    baralho[j] = troca
-  }
-  return baralho
-}
 
 /* Vazio é vazio: 0 e uma lista com um item marcado contam como resposta; ''
    e uma lista vazia, não. */
@@ -69,7 +54,12 @@ export default function RespostaProvider() {
        existir e o link estar certo. */
     return { pesquisa: guardada ?? null, falha: erroDeLeitura() }
   })
-  const [ordem] = useState(() => ordemDe(sessao.pesquisa ?? {}))
+  /* A ordem desta sessão: a mesma em que as perguntas foram montadas.
+     Havia um embaralhamento opcional aqui, do modal de avançadas; ele saiu
+     junto com o modal, e a ordem passou a ser uma só. Continua fixada no
+     começo da sessão para que uma edição do outro lado não reordene o
+     questionário debaixo de quem está respondendo. */
+  const [ordem] = useState(() => (sessao.pesquisa?.perguntas || []).map((q) => q.id))
   const [valores, setValores] = useState({})
   /* Envio que não conseguiu gravar. A tela de agradecimento não pode aparecer
      em cima de uma resposta que se perdeu. */
@@ -82,7 +72,7 @@ export default function RespostaProvider() {
   const pesquisa = sessao.pesquisa
 
   /* As perguntas na ordem desta sessão. Uma pergunta apagada da pesquisa
-     depois do sorteio simplesmente não aparece. */
+     depois do começo dela simplesmente não aparece. */
   const perguntas = useMemo(
     () =>
       ordem
@@ -133,8 +123,7 @@ export default function RespostaProvider() {
       responder,
       enviar,
       enviou,
-      mostrarProgresso: Boolean(pesquisa?.configuracao?.avancadas?.barraProgresso),
-      obrigatoria: (pergunta) => ehObrigatoria(pergunta, pesquisa),
+      obrigatoria: ehObrigatoria,
     }),
     [pesquisa, perguntas, valores, responder, enviar, enviou],
   )

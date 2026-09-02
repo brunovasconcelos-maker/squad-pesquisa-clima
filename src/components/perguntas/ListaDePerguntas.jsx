@@ -12,6 +12,7 @@ import checkSquare from '../../assets/icons/CheckSquare.svg'
 import star from '../../assets/icons/Star.svg'
 import plus from '../../assets/icons/Plus.svg'
 import { avisarValorDesconhecido } from '../../lib/desconhecido.js'
+import { ehObrigatoria as obrigatoriaPadrao } from '../../lib/obrigatorias.js'
 
 /*
  * Card de abertura, cards de pergunta e a linha de adicionar (Figma 8065:4915).
@@ -277,7 +278,9 @@ export default function ListaDePerguntas({
   abertura,
   perguntas,
   somenteLeitura = false,
-  ehObrigatoria = () => false,
+  /* Quem não passar a função vê o que a própria pergunta diz. O padrão era
+     `false`, que mentia: pergunta sem marcação é obrigatória. */
+  ehObrigatoria = obrigatoriaPadrao,
   onEditarAbertura,
   onEditarPergunta,
   onRemoverPergunta,

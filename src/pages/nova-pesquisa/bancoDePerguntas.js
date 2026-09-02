@@ -153,13 +153,22 @@ export function gerarPerguntas(template, fraseDeParticipantes, quantidade) {
     ...base,
     id: proximoId(),
     enunciado: base.enunciado.replaceAll('{p}', fraseDeParticipantes),
+    obrigatoria: true,
     ...(base.tipo === 'nota' ? { maximo: 5 } : {}),
     ...(base.opcoes ? { opcoes: [...base.opcoes], temOutro: false } : {}),
   }))
 }
 
+/*
+ * Pergunta nova nasce obrigatória — aqui e na geração acima.
+ *
+ * Era o que o padrão da pesquisa fazia enquanto as configurações avançadas
+ * existiam. Sem elas, o padrão vira este: o caminho comum é querer resposta
+ * em todas, e desmarcar as poucas que são opcionais dá menos trabalho do que
+ * marcar todas as outras uma a uma.
+ */
 export function perguntaVazia(tipo) {
-  const base = { id: proximoId(), tipo, enunciado: '' }
+  const base = { id: proximoId(), tipo, enunciado: '', obrigatoria: true }
   if (tipo === 'nota') {
     return { ...base, maximo: 5, pontaEsquerda: '', pontaDireita: '' }
   }

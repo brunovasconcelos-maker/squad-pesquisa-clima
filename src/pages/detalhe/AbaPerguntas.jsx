@@ -88,7 +88,7 @@ export default function AbaPerguntas({ pesquisa, onAlterar }) {
         nome={pesquisa.nome}
         abertura={pesquisa.abertura}
         perguntas={pesquisa.perguntas || []}
-        ehObrigatoria={(pergunta) => ehObrigatoria(pergunta, pesquisa)}
+        ehObrigatoria={ehObrigatoria}
         onAlternarObrigatoria={(pergunta) =>
           seDerParaMexer(() =>
             onAlterar((p) =>

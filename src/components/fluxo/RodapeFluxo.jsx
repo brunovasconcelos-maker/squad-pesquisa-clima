@@ -12,7 +12,6 @@ import Botao from './Botao.jsx'
 export default function RodapeFluxo({
   progresso,
   rotuloProgresso,
-  mostrarProgresso = true,
   mostrarContinuar = true,
   rotuloContinuar = 'Continuar',
   mostrarPular = false,
@@ -23,23 +22,19 @@ export default function RodapeFluxo({
 }) {
   return (
     <div className={s.rodape}>
-      {/* Sem trilha à mostra o vão continua: são os 8px que, com os 72 dos
-          botões, dão os 80px da barra. */}
       <div
-        className={`${s.progresso} ${mostrarProgresso ? '' : s.progressoOculto}`}
-        role={mostrarProgresso ? 'progressbar' : undefined}
-        aria-label={mostrarProgresso ? 'Progresso' : undefined}
-        aria-valuemin={mostrarProgresso ? 0 : undefined}
-        aria-valuemax={mostrarProgresso ? 100 : undefined}
-        aria-valuenow={mostrarProgresso ? Math.round(progresso * 100) : undefined}
-        aria-valuetext={mostrarProgresso ? rotuloProgresso : undefined}
+        className={s.progresso}
+        role="progressbar"
+        aria-label="Progresso"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(progresso * 100)}
+        aria-valuetext={rotuloProgresso}
       >
-        {mostrarProgresso ? (
-          <div
-            className={s.progressoPreenchido}
-            style={{ width: `calc(${progresso * 100}% + 4px)` }}
-          />
-        ) : null}
+        <div
+          className={s.progressoPreenchido}
+          style={{ width: `calc(${progresso * 100}% + 4px)` }}
+        />
       </div>
       <div className={s.acoes}>
         <Botao onClick={onVoltar}>Voltar</Botao>
