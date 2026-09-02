@@ -16,8 +16,11 @@ import {
 } from '../../lib/datas.js'
 import { CICLOS_MAX, CICLOS_MIN } from '../../lib/pesquisas.js'
 
+import calendarBlank from '../../assets/icons/CalendarBlank.svg'
 import caretDown from '../../assets/icons/CaretDown.svg'
+import caretUpDown from '../../assets/icons/CaretUpDown.svg'
 import circle from '../../assets/icons/Circle.svg'
+import clock from '../../assets/icons/Clock.svg'
 import radioButton from '../../assets/icons/RadioButton.svg'
 import square from '../../assets/icons/Square.svg'
 import checkSquare from '../../assets/icons/CheckSquare.svg'
@@ -86,8 +89,7 @@ function ListaDeOpcoes({ opcoes, marcada, onEscolher }) {
  * que o Chrome expõe para isso, e onde ele não existe o clique cai no
  * comportamento nativo do próprio input.
  *
- * O ícone do Figma não está em src/assets/icons — o espaço dele fica
- * reservado, do tamanho certo, em vez de receber uma forma inventada.
+ * O ícone é decorativo: quem abre o seletor é a caixa inteira, e não ele.
  */
 function abrirSeletor(e) {
   const campo = e.currentTarget.querySelector('input')
@@ -105,7 +107,7 @@ function abrirSeletor(e) {
   }
 }
 
-function Campo({ tipo, valor, rotulo, desabilitado, mascara, onMudar }) {
+function Campo({ tipo, valor, rotulo, desabilitado, mascara, icone, onMudar }) {
   return (
     <div
       className={`${s.campo} ${desabilitado ? s.campoDesligado : ''}`}
@@ -113,9 +115,13 @@ function Campo({ tipo, valor, rotulo, desabilitado, mascara, onMudar }) {
       role="presentation"
     >
       <span className={s.campoTexto}>{mascara}</span>
-      {/* Reservado para o ícone do Figma (CalendarBlank / Clock), que ainda
-          não está em src/assets/icons. */}
-      <span className={s.campoIcone} aria-hidden="true" />
+      <img
+        className={s.campoIcone}
+        src={icone}
+        alt=""
+        width={24}
+        height={24}
+      />
       <input
         className={s.campoNativo}
         type={tipo}
@@ -136,6 +142,7 @@ function ParDeCampos({ data, hora, onMudar, desabilitado = false }) {
         rotulo="Data"
         valor={paraCampoDeData(data)}
         mascara={formatarCampoCurto(data)}
+        icone={calendarBlank}
         desabilitado={desabilitado}
         onMudar={(e) => onMudar({ data: deCampoDeData(e.target.value) })}
       />
@@ -144,11 +151,20 @@ function ParDeCampos({ data, hora, onMudar, desabilitado = false }) {
         rotulo="Hora"
         valor={hora}
         mascara={hora}
+        icone={clock}
         desabilitado={desabilitado}
         onMudar={(e) => onMudar({ hora: e.target.value })}
       />
     </div>
   )
+}
+
+/* Um passo no número, sem sair da faixa. Campo vazio ou ilegível começa do
+   mínimo: é o primeiro valor que vale, e não um palpite. */
+function somar(quantidade, passo) {
+  const n = Math.round(Number(quantidade))
+  if (!Number.isFinite(n)) return CICLOS_MIN
+  return Math.min(CICLOS_MAX, Math.max(CICLOS_MIN, n + passo))
 }
 
 /* Mesma ideia do prazo em dias: o campo não deixa salvar fora da faixa que o
@@ -404,19 +420,49 @@ export function ModalCiclos({ valor, envio, frequencia, onSalvar, onFechar }) {
               marcada={definido}
               onEscolher={() => alterar({ tipo: 'definido' })}
             />
-            <input
+            {/* O <input type="number"> já anda de 1 em 1 pelas setas do
+                teclado e pelo esticador do navegador; o ícone do Figma é o
+                mesmo par de setas, então ele fica clicável e move o número —
+                senão seriam dois controles dizendo a mesma coisa e só um
+                funcionando. */}
+            <div
               className={`${s.campoNumero} ${erroDaQuantidade ? s.campoInvalido : ''}`}
-              type="number"
-              min={CICLOS_MIN}
-              max={CICLOS_MAX}
-              step="1"
-              value={rascunho.quantidade ?? ''}
-              aria-label="Quantidade de ciclos"
-              aria-invalid={Boolean(erroDaQuantidade)}
-              onChange={(e) =>
-                alterar({ tipo: 'definido', quantidade: e.target.value })
-              }
-            />
+            >
+              <input
+                className={s.campoNumeroEntrada}
+                type="number"
+                min={CICLOS_MIN}
+                max={CICLOS_MAX}
+                step="1"
+                value={rascunho.quantidade ?? ''}
+                aria-label="Quantidade de ciclos"
+                aria-invalid={Boolean(erroDaQuantidade)}
+                onChange={(e) =>
+                  alterar({ tipo: 'definido', quantidade: e.target.value })
+                }
+              />
+              <span className={s.esticador}>
+                <button
+                  type="button"
+                  className={s.meiaSeta}
+                  aria-label="Mais um ciclo"
+                  onClick={() => alterar({ tipo: 'definido', quantidade: somar(rascunho.quantidade, 1) })}
+                />
+                <button
+                  type="button"
+                  className={s.meiaSeta}
+                  aria-label="Menos um ciclo"
+                  onClick={() => alterar({ tipo: 'definido', quantidade: somar(rascunho.quantidade, -1) })}
+                />
+                <img
+                  className={s.campoIcone}
+                  src={caretUpDown}
+                  alt=""
+                  width={24}
+                  height={24}
+                />
+              </span>
+            </div>
           </div>
         </div>
 
