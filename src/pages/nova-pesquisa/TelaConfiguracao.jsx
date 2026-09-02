@@ -14,6 +14,8 @@ import {
   atualizarGuardadas,
 } from '../../lib/pesquisas.js'
 import {
+  ModalCiclos,
+  textoDeCiclos,
   ModalDataEnvio,
   ModalRecorrencia,
   ModalFrequencia,
@@ -121,13 +123,12 @@ export default function TelaConfiguracao() {
                   valor={c.frequencia}
                   onAbrir={() => setModal('frequencia')}
                 />
-                {/* Quantas voltas a recorrente dá antes de parar. Por
-                    enquanto só o rótulo e o valor: escolher um número é a
-                    próxima etapa do desenho, e não há modal para abrir, então
-                    a linha vai travada em vez de prometer uma seta que não
-                    leva a lugar nenhum. "Indefinido" é o que ela é hoje — a
-                    recorrente repete sem fim marcado. */}
-                <LinhaResumo rotulo="Número de ciclos" valor="Indefinido" travado />
+                {/* Quantas voltas a recorrente dá antes de parar. */}
+                <LinhaResumo
+                  rotulo="Número de ciclos"
+                  valor={textoDeCiclos(c.ciclos)}
+                  onAbrir={() => setModal('ciclos')}
+                />
               </>
             ) : null}
             <LinhaResumo
@@ -196,6 +197,16 @@ export default function TelaConfiguracao() {
         <ModalFrequencia
           valor={c.frequencia}
           onSalvar={salvar('frequencia')}
+          onFechar={fechar}
+        />
+      ) : null}
+
+      {modal === 'ciclos' ? (
+        <ModalCiclos
+          valor={c.ciclos}
+          envio={c.envio}
+          frequencia={c.frequencia}
+          onSalvar={salvar('ciclos')}
           onFechar={fechar}
         />
       ) : null}

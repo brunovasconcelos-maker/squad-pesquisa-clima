@@ -1,7 +1,7 @@
 import { paraData, fimDoCiclo, proximoCiclo, formatarCurto } from './datas.js'
 import { cicloCheio, taxaDe, totalDeParticipantes } from './participacao.js'
 import { crescer, materializar } from './respostas.js'
-import { daTabela } from './desconhecido.js'
+import { avisarValorDesconhecido, daTabela } from './desconhecido.js'
 
 /*
  * Guarda e faz evoluir as pesquisas.
@@ -200,6 +200,12 @@ const novoId = () =>
 
 export const ehRecorrente = (p) => p.configuracao?.recorrencia === 'Recorrente'
 
+/* Os limites do número de ciclos. Um é a menor repetição que ainda é uma
+   repetição; cem voltas é mais do que qualquer pesquisa precisa e segura o
+   campo contra um número digitado sem querer. */
+export const CICLOS_MIN = 1
+export const CICLOS_MAX = 100
+
 /*
  * Até quando a pesquisa existe, quando alguém estipulou uma data.
  *
@@ -215,6 +221,28 @@ export function fimDaPesquisa(p) {
   const marcado = p.configuracao?.encerramento
   if (!marcado || marcado.semData) return null
   return paraData(marcado.data, marcado.hora)
+}
+
+/*
+ * Quantas voltas a pesquisa dá, quando alguém estipulou um número.
+ *
+ * É o irmão de `fimDaPesquisa`: um marca o fim por data, este por contagem.
+ * `null` é "sem teto" — indefinido, que é o padrão, e o que uma Única sempre
+ * foi (ela tem um ciclo só, e o fim dela vem do prazo, não daqui).
+ *
+ * Número que não se lê também é `null`, e sai anunciado: um teto ilegível não
+ * pode encerrar pesquisa nenhuma calado.
+ */
+export function tetoDeCiclos(p) {
+  if (!ehRecorrente(p)) return null
+  const ciclos = p.configuracao?.ciclos
+  if (!ciclos || ciclos.tipo !== 'definido') return null
+  const n = Math.round(Number(ciclos.quantidade))
+  if (!Number.isInteger(n) || n < CICLOS_MIN || n > CICLOS_MAX) {
+    avisarValorDesconhecido('número de ciclos', ciclos.quantidade)
+    return null
+  }
+  return n
 }
 
 /* Início do ciclo: a data de envio, ou agora quando marcado "imediatamente". */
@@ -598,9 +626,13 @@ export function avaliar(p, agora = new Date()) {
       if (chegouAoFim) motivos.push(acaba)
       const quando = new Date(Math.min(...motivos.map(Number)))
 
-      /* Acabou a pesquisa, e não só o ciclo, quando ela não se repete ou
-         quando a data de encerramento já tinha chegado nesse momento. */
-      const final = !ehRecorrente(atual) || (acaba && quando >= acaba)
+      /* Acabou a pesquisa, e não só o ciclo, quando ela não se repete, quando
+         a data de encerramento já tinha chegado nesse momento, ou quando esta
+         volta é a última das estipuladas — `fecharCiclo` conta esta, então o
+         teto é comparado já com ela somada. */
+      const teto = tetoDeCiclos(atual)
+      const ultima = teto !== null && (atual.ciclos ?? 0) + 1 >= teto
+      const final = !ehRecorrente(atual) || (acaba && quando >= acaba) || ultima
       atual = fecharCiclo(atual, quando, final ? 'encerrada' : 'aguardando')
       continue
     }
@@ -615,10 +647,19 @@ export function avaliar(p, agora = new Date()) {
          pesquisa acabou. O ciclo anterior já fechou e já foi contado, então
          aqui só o selo muda — `cicloFim` continua sendo quando ele acabou. */
       const acaba = fimDaPesquisa(atual)
-      if (acaba && agora >= acaba) {
+      /* Ou o número de voltas estipulado já foi cumprido. O ciclo anterior
+         pode ter fechado como "aguardando" antes de o teto existir — baixar o
+         número no meio é o caso —, e é aqui que ele encontra o fim. */
+      const teto = tetoDeCiclos(atual)
+      const cumpriu = teto !== null && (atual.ciclos ?? 0) >= teto
+      if ((acaba && agora >= acaba) || cumpriu) {
         return { ...atual, status: 'encerrada', atualizadoEm: agora.toISOString() }
       }
-      const proximo = proximoCiclo(inicio, atual.configuracao?.frequencia)
+      const proximo = proximoCiclo(
+        inicio,
+        atual.configuracao?.frequencia,
+        atual.configuracao,
+      )
       /* Sem frequência conhecida o motor não sabe quando a próxima volta
          começa, e não vai adivinhar: a pesquisa fica onde está. */
       if (!proximo || agora < proximo) return atual
@@ -722,6 +763,7 @@ function eventoDe(p) {
     const proximo = proximoCiclo(
       new Date(p.cicloInicio),
       p.configuracao?.frequencia,
+      p.configuracao,
     )
     if (!proximo) return '—'
     return `Próxima: ${formatarCurto(proximo.toISOString())}`

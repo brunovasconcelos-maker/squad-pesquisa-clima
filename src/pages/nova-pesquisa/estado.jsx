@@ -2,7 +2,7 @@ import { createContext, useContext, useMemo, useState } from 'react'
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { gerarPerguntas } from './bancoDePerguntas.js'
 import { ABERTURA_TEMPLATE, ABERTURA_BRANCO } from './perguntasExemplo.js'
-import { formatarLongo, somarDias } from '../../lib/datas.js'
+import { formatarLongo, somarDias, REGRA_PADRAO } from '../../lib/datas.js'
 import {
   criarRascunho,
   gravar,
@@ -71,6 +71,10 @@ export function configuracaoInicial(hoje = new Date()) {
        valor, e tirá-lo faria as pesquisas já guardadas mudarem de
        comportamento sem que ninguém tivesse mexido nelas. */
     encerramento: { data: '', hora: '18:00', semData: true },
+    /* Quantas voltas a recorrente dá, e por que regra a data de cada uma é
+       calculada. Não confundir com `pesquisa.ciclos`, que é a contagem das
+       voltas já cumpridas: este é o combinado, aquele é o placar. */
+    ciclos: { tipo: 'indefinido', quantidade: 5, regra: REGRA_PADRAO },
     mensagemFinal: MENSAGEM_FINAL_PADRAO,
   }
 }
@@ -213,6 +217,58 @@ export function montarPrompt(template, participantes) {
   return construir ? construir(fraseParticipantes(participantes)) : ''
 }
 
+/*
+ * A mensagem final sugerida, um texto por template.
+ *
+ * Mesma ideia do prompt: o projeto não chama modelo nenhum, e o que a tela
+ * chama de sugestão é este texto montado com o que já se sabe da pesquisa —
+ * o template escolhido e quem vai responder. Fica editável no modal, e daí em
+ * diante o que vale é o que a pessoa escreveu.
+ *
+ * O caminho em branco não tem template, e por isso cai na genérica: ela serve
+ * a qualquer pesquisa, ao contrário do prompt, que sem template não tem o que
+ * dizer e fica vazio.
+ */
+const generica = (p) =>
+  `Obrigado por dedicar esses minutos pra compartilhar sua visão. Cada resposta ajuda ${p} a crescer e trabalhar melhor, juntos. Até a próxima pesquisa.`
+
+const MENSAGENS = {
+  clima: generica,
+  feedback: (p) =>
+    `Obrigado pelo seu feedback. O que você contou aqui ajuda ${p} a ajustar o que não está funcionando e a repetir o que está. Até a próxima.`,
+  solicitacao: (p) =>
+    `Obrigado por registrar sua solicitação. Ela entra na fila junto com as de ${p}, e você fica sabendo assim que houver uma resposta.`,
+  desligamento: (p) =>
+    `Obrigado por dedicar esses minutos numa hora de despedida. O que você contou fica com ${p} e ajuda quem continua. Desejamos tudo de bom no que vem agora.`,
+}
+
+export function montarMensagemFinal(template, participantes) {
+  const construir = MENSAGENS[template] ?? generica
+  return construir(fraseParticipantes(participantes))
+}
+
+/*
+ * A mensagem final segue o template e o público, como o prompt — e pela mesma
+ * regra: só é refeita enquanto for a que o projeto sugeriu. Editada no modal,
+ * ela fica; reescrever por cima apagaria o que a pessoa escreveu.
+ *
+ * A comparação é contra a sugestão do par anterior, e não contra a nova: é
+ * assim que dá para saber se o texto que está lá saiu daqui ou de alguém.
+ */
+function comMensagemSugerida(pesquisa, template, participantes) {
+  const configuracao = pesquisa.configuracao
+  const anterior = montarMensagemFinal(pesquisa.template, pesquisa.participantes)
+  const intacta =
+    !configuracao?.mensagemFinal ||
+    configuracao.mensagemFinal === anterior ||
+    configuracao.mensagemFinal === MENSAGEM_FINAL_PADRAO
+  if (!intacta) return configuracao
+  return {
+    ...configuracao,
+    mensagemFinal: montarMensagemFinal(template, participantes),
+  }
+}
+
 const Contexto = createContext(null)
 
 export function usePesquisa() {
@@ -291,6 +347,11 @@ export default function PesquisaProvider() {
           perguntas: [],
           abertura:
             template === 'blank' ? ABERTURA_BRANCO : ABERTURA_TEMPLATE,
+          configuracao: comMensagemSugerida(
+            pesquisa,
+            template,
+            pesquisa.participantes,
+          ),
         }),
 
       /*
@@ -314,6 +375,11 @@ export default function PesquisaProvider() {
           prompt: intacto
             ? montarPrompt(pesquisa.template, participantes)
             : pesquisa.prompt,
+          configuracao: comMensagemSugerida(
+            pesquisa,
+            pesquisa.template,
+            participantes,
+          ),
         })
       },
 

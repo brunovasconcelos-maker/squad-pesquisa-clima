@@ -9,10 +9,12 @@ import ModalConfirmar from '../../components/fluxo/ModalConfirmar.jsx'
 import ModalCapa from '../../components/ModalCapa.jsx'
 import ModalParticipantes from '../nova-pesquisa/ModalParticipantes.jsx'
 import {
+  ModalCiclos,
   ModalDataEnvio,
   ModalFrequencia,
   ModalMensagemFinal,
   ModalPrazo,
+  textoDeCiclos,
 } from '../nova-pesquisa/ModaisConfiguracao.jsx'
 import { rotuloParticipantes } from '../nova-pesquisa/estado.jsx'
 import { estiloDaCapa } from '../../lib/capa.js'
@@ -296,6 +298,15 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
           travado={!recorrente}
           onAbrir={() => setModal('frequencia')}
         />
+        {/* Quantas voltas ela ainda dá. Só recorrente tem essa pergunta: a
+            Única acaba quando o prazo do seu único ciclo vence. */}
+        {recorrente ? (
+          <LinhaResumo
+            rotulo="Número de ciclos"
+            valor={textoDeCiclos(c.ciclos)}
+            onAbrir={() => setModal('ciclos')}
+          />
+        ) : null}
         <LinhaResumo
           rotulo="Aceitar resposta"
           valor={textoDePrazo(c.prazo)}
@@ -367,6 +378,26 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
         <ModalFrequencia
           valor={c.frequencia}
           onSalvar={(frequencia) => salvarConfig({ frequencia })}
+          onFechar={fechar}
+        />
+      ) : null}
+
+      {modal === 'ciclos' ? (
+        <ModalCiclos
+          valor={c.ciclos}
+          envio={c.envio}
+          frequencia={c.frequencia}
+          /* Acerta o passo junto: baixar o número para o que já foi cumprido
+             encerra a pesquisa agora, e esperar o próximo giro do motor
+             deixaria o selo mentindo por até 30s. */
+          onSalvar={(ciclos) => {
+            onAlterar((p) =>
+              acertarPasso(
+                avaliar({ ...p, configuracao: { ...p.configuracao, ciclos } }),
+              ),
+            )
+            fechar()
+          }}
           onFechar={fechar}
         />
       ) : null}

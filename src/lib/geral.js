@@ -42,7 +42,11 @@ export function camposDe(p) {
     }
     if (p.status === 'aguardando') {
       const proximo = p.cicloInicio
-        ? proximoCiclo(new Date(p.cicloInicio), p.configuracao?.frequencia)
+        ? proximoCiclo(
+            new Date(p.cicloInicio),
+            p.configuracao?.frequencia,
+            p.configuracao,
+          )
         : null
       return [
         { rotulo: 'Último envio', valor: formatarMedio(p.cicloInicio) },
@@ -90,7 +94,11 @@ export function proximoEnvioDe(p) {
     /* Sem frequência conhecida não há próxima data a anunciar. A linha mostra
        um traço, que é a verdade, em vez de uma data que não saiu de escolha
        nenhuma. */
-    const proximo = proximoCiclo(new Date(p.cicloInicio), p.configuracao?.frequencia)
+    const proximo = proximoCiclo(
+      new Date(p.cicloInicio),
+      p.configuracao?.frequencia,
+      p.configuracao,
+    )
     return proximo ? proximo.toISOString() : null
   }
   const marcada = paraData(p.configuracao?.envio?.data, p.configuracao?.envio?.hora)

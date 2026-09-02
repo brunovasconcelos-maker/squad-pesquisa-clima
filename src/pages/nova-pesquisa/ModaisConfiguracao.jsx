@@ -4,11 +4,19 @@ import ModalFluxo from '../../components/fluxo/ModalFluxo.jsx'
 import {
   DIAS_MAX,
   DIAS_MIN,
+  REGRAS,
+  REGRA_PADRAO,
   deCampoDeData,
   diasValidos,
+  formatarCampoCurto,
+  frequenciaTemRegra,
   paraCampoDeData,
+  paraData,
+  textoDaRegra,
 } from '../../lib/datas.js'
+import { CICLOS_MAX, CICLOS_MIN } from '../../lib/pesquisas.js'
 
+import caretDown from '../../assets/icons/CaretDown.svg'
 import circle from '../../assets/icons/Circle.svg'
 import radioButton from '../../assets/icons/RadioButton.svg'
 import square from '../../assets/icons/Square.svg'
@@ -70,28 +78,84 @@ function ListaDeOpcoes({ opcoes, marcada, onEscolher }) {
  *
  * O campo fala ISO curto; o que fica guardado continua no formato longo que
  * `paraData` lê. A conversão mora em lib/datas.js.
+ *
+ * O que se vê é a máscara do Figma (8200:7444): "14 Ago 26" e "10:30", com o
+ * ícone à direita. O <input> nativo continua ali por baixo, transparente e do
+ * tamanho do campo — é ele que tem o foco, o teclado e o seletor. Clicar em
+ * qualquer ponto do campo abre o seletor, e não só no ícone: `showPicker` é o
+ * que o Chrome expõe para isso, e onde ele não existe o clique cai no
+ * comportamento nativo do próprio input.
+ *
+ * O ícone do Figma não está em src/assets/icons — o espaço dele fica
+ * reservado, do tamanho certo, em vez de receber uma forma inventada.
  */
-function ParDeCampos({ data, hora, onMudar, desabilitado = false }) {
+function abrirSeletor(e) {
+  const campo = e.currentTarget.querySelector('input')
+  if (!campo || campo.disabled) return
+  campo.focus()
+  if (typeof campo.showPicker === 'function') {
+    /* Chrome recusa showPicker fora de um gesto do usuário e em alguns
+       estados do campo; o clique já está no input por baixo, então não há o
+       que fazer além de deixar o nativo seguir. */
+    try {
+      campo.showPicker()
+    } catch {
+      /* segue o clique nativo */
+    }
+  }
+}
+
+function Campo({ tipo, valor, rotulo, desabilitado, mascara, onMudar }) {
   return (
-    <div className={s.parDeCampos}>
+    <div
+      className={`${s.campo} ${desabilitado ? s.campoDesligado : ''}`}
+      onClick={abrirSeletor}
+      role="presentation"
+    >
+      <span className={s.campoTexto}>{mascara}</span>
+      {/* Reservado para o ícone do Figma (CalendarBlank / Clock), que ainda
+          não está em src/assets/icons. */}
+      <span className={s.campoIcone} aria-hidden="true" />
       <input
-        className={s.campoData}
-        type="date"
-        value={paraCampoDeData(data)}
+        className={s.campoNativo}
+        type={tipo}
+        value={valor}
         disabled={desabilitado}
-        aria-label="Data"
-        onChange={(e) => onMudar({ data: deCampoDeData(e.target.value) })}
-      />
-      <input
-        className={s.campoData}
-        type="time"
-        value={hora}
-        disabled={desabilitado}
-        aria-label="Hora"
-        onChange={(e) => onMudar({ hora: e.target.value })}
+        aria-label={rotulo}
+        onChange={onMudar}
       />
     </div>
   )
+}
+
+function ParDeCampos({ data, hora, onMudar, desabilitado = false }) {
+  return (
+    <div className={s.parDeCampos}>
+      <Campo
+        tipo="date"
+        rotulo="Data"
+        valor={paraCampoDeData(data)}
+        mascara={formatarCampoCurto(data)}
+        desabilitado={desabilitado}
+        onMudar={(e) => onMudar({ data: deCampoDeData(e.target.value) })}
+      />
+      <Campo
+        tipo="time"
+        rotulo="Hora"
+        valor={hora}
+        mascara={hora}
+        desabilitado={desabilitado}
+        onMudar={(e) => onMudar({ hora: e.target.value })}
+      />
+    </div>
+  )
+}
+
+/* Mesma ideia do prazo em dias: o campo não deixa salvar fora da faixa que o
+   motor sabe usar. */
+const quantidadeValida = (n) => {
+  const numero = Number(n)
+  return Number.isInteger(numero) && numero >= CICLOS_MIN && numero <= CICLOS_MAX
 }
 
 /* Fecha e devolve, ou fecha e descarta — o par que todo modal daqui usa. */
@@ -106,7 +170,7 @@ export function ModalDataEnvio({ valor, onSalvar, onFechar }) {
 
   return (
     <ModalFluxo
-      titulo="Data e Hora de Envio"
+      titulo="Data e hora de envio"
       onVoltar={onFechar}
       onFechar={onFechar}
       onSalvar={salvar}
@@ -134,18 +198,20 @@ export function ModalDataEnvio({ valor, onSalvar, onFechar }) {
             width={24}
             height={24}
           />
-          <span className={s.textoCheck}>Enviar imediatamente</span>
+          <span className={s.textoCheck}>Enviar imediatamente quando finalizar</span>
         </button>
       </div>
     </ModalFluxo>
   )
 }
 
+/* "Tipo" é como a linha e o modal se chamam desde o desenho novo (Figma
+   8201:7543); o valor guardado continua sendo `recorrencia`. */
 export function ModalRecorrencia({ valor, onSalvar, onFechar }) {
   const [rascunho, setRascunho] = useState(valor)
   return (
     <ModalFluxo
-      titulo="Recorrência"
+      titulo="Tipo"
       onVoltar={onFechar}
       onFechar={onFechar}
       onSalvar={() => onSalvar(rascunho)}
@@ -266,6 +332,142 @@ export function ModalPrazo({ valor, onSalvar, onFechar }) {
   )
 }
 
+/* O que a linha "Número de ciclos" mostra nas duas telas. Sem número
+   estipulado ela diz "Indefinido", que é o que a pesquisa é: repete até
+   alguém parar. */
+export function textoDeCiclos(ciclos) {
+  if (ciclos?.tipo !== 'definido') return 'Indefinido'
+  const n = Math.round(Number(ciclos.quantidade))
+  if (!Number.isFinite(n)) return 'Indefinido'
+  return `${n} ${n === 1 ? 'ciclo' : 'ciclos'}`
+}
+
+/*
+ * Número de ciclos (Figma 8201:7912 fechado, 8201:8053 aberto).
+ *
+ * Duas escolhas: repetir sem fim marcado, ou parar depois de um número de
+ * voltas. O número não é enfeite — `tetoDeCiclos` no motor encerra a pesquisa
+ * quando a última volta fecha.
+ *
+ * "Configurações avançadas" mora dentro deste modal, e não tem parentesco com
+ * o modal de mesmo nome que saiu do projeto: aquele guardava quatro chaves
+ * soltas, este diz de que jeito a data da próxima volta é calculada.
+ *
+ * A seção só aparece de mês para cima. No semanal a volta cai sempre no mesmo
+ * dia da semana e as três opções diriam a mesma coisa — mostrá-las seria
+ * oferecer uma escolha sem consequência.
+ */
+export function ModalCiclos({ valor, envio, frequencia, onSalvar, onFechar }) {
+  const [rascunho, , alterar, salvar] = useRascunho(
+    { tipo: 'indefinido', quantidade: 5, regra: REGRA_PADRAO, ...valor },
+    onSalvar,
+  )
+  const [avancadasAbertas, setAvancadasAbertas] = useState(false)
+  const definido = rascunho.tipo === 'definido'
+
+  /* Só trava enquanto a opção do número está escolhida: o campo guarda o que
+     foi digitado por último mesmo com "Indefinido" marcado, e travar o Salvar
+     por causa dele seria travar por nada. */
+  const erroDaQuantidade =
+    definido && !quantidadeValida(rascunho.quantidade)
+      ? `Escolha de ${CICLOS_MIN} a ${CICLOS_MAX} ciclos.`
+      : ''
+
+  /* As frases das avançadas nomeiam a data de envio escolhida. Sem data
+     legível não há o que escrever, e a seção inteira sai: escolher entre três
+     regras sobre um dia que ninguém sabe qual é não decide nada. */
+  const ancora = paraData(envio?.data, envio?.hora)
+  const temAvancadas = frequenciaTemRegra(frequencia) && Boolean(ancora)
+
+  return (
+    <ModalFluxo
+      titulo="Número de ciclos"
+      salvarDesabilitado={Boolean(erroDaQuantidade)}
+      erro={erroDaQuantidade}
+      onVoltar={onFechar}
+      onFechar={onFechar}
+      onSalvar={salvar}
+    >
+      <div className={s.blocoCiclos}>
+        <div className={s.opcoes} role="radiogroup" aria-label="Número de ciclos">
+          <Opcao
+            texto="Indefinido"
+            marcada={!definido}
+            onEscolher={() => alterar({ tipo: 'indefinido' })}
+          />
+
+          {/* Escolher o rádio ou mexer no número é a mesma coisa — quem
+              digita está escolhendo. */}
+          <div className={s.opcaoComCampos}>
+            <Opcao
+              texto="Quantidade definida"
+              marcada={definido}
+              onEscolher={() => alterar({ tipo: 'definido' })}
+            />
+            <input
+              className={`${s.campoNumero} ${erroDaQuantidade ? s.campoInvalido : ''}`}
+              type="number"
+              min={CICLOS_MIN}
+              max={CICLOS_MAX}
+              step="1"
+              value={rascunho.quantidade ?? ''}
+              aria-label="Quantidade de ciclos"
+              aria-invalid={Boolean(erroDaQuantidade)}
+              onChange={(e) =>
+                alterar({ tipo: 'definido', quantidade: e.target.value })
+              }
+            />
+          </div>
+        </div>
+
+        {temAvancadas ? (
+          <>
+            <button
+              type="button"
+              className={s.linhaAvancadas}
+              aria-expanded={avancadasAbertas}
+              onClick={() => setAvancadasAbertas((aberta) => !aberta)}
+            >
+              <span className={s.rotuloAvancadas}>Configurações avançadas</span>
+              <img
+                className={`${s.icone} ${avancadasAbertas ? s.setaAberta : ''}`}
+                src={caretDown}
+                alt=""
+                width={24}
+                height={24}
+              />
+            </button>
+
+            {avancadasAbertas ? (
+              <div
+                className={s.opcoes}
+                role="radiogroup"
+                aria-label="Como a data de cada ciclo é calculada"
+              >
+                {REGRAS.map((regra) => (
+                  <Opcao
+                    key={regra}
+                    texto={textoDaRegra(regra, ancora, frequencia)}
+                    marcada={(rascunho.regra ?? REGRA_PADRAO) === regra}
+                    onEscolher={() => alterar({ regra })}
+                  />
+                ))}
+              </div>
+            ) : null}
+          </>
+        ) : null}
+      </div>
+    </ModalFluxo>
+  )
+}
+
+/*
+ * A caixa já chega escrita: o que está em `valor` é a sugestão montada em
+ * estado.jsx a partir do template e de quem responde — o mesmo caminho do
+ * prompt, e a mesma sugestão de mentira, porque o projeto não chama modelo
+ * nenhum. Daqui em diante o texto é de quem escreve: editado uma vez, ele
+ * para de ser refeito quando o template ou o público mudam.
+ */
 export function ModalMensagemFinal({ valor, onSalvar, onFechar }) {
   const [rascunho, setRascunho] = useState(valor)
   return (

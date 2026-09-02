@@ -223,3 +223,172 @@
 .campoInvalido {
   border-color: var(--cor-vermelho);
 }
+
+/* ---- campos de data e hora ----
+ *
+ * A máscara do Figma por cima, o seletor nativo por baixo. O <input> ocupa a
+ * caixa inteira e é transparente: ele é quem tem o foco e o teclado, e é o
+ * clique nele que abre o calendário ou o relógio em qualquer ponto do campo.
+ */
+.campo {
+  position: relative;
+  display: flex;
+  flex: 1 0 0;
+  min-width: 0;
+  height: 56px;
+  align-items: center;
+  gap: var(--espaco-10, 10px);
+  padding: var(--espaco-16) var(--espaco-24);
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-campo);
+  cursor: pointer;
+}
+
+/* O foco vive no input invisível; sem isto ele não apareceria em lugar
+   nenhum, e quem anda de Tab não saberia onde está. */
+.campo:focus-within {
+  border-color: var(--cor-texto);
+}
+
+.campoTexto {
+  flex: 1 0 0;
+  min-width: 0;
+  color: var(--cor-texto-apoio);
+  font-size: 16px;
+  font-weight: var(--peso-medio);
+  letter-spacing: -0.23px;
+  line-height: 1.1;
+}
+
+/* O lugar do ícone do Figma (CalendarBlank / Clock), que ainda não está em
+   src/assets/icons. Reservado com a medida certa: quando o arquivo chegar,
+   ele entra aqui sem mexer no resto do campo. */
+.campoIcone {
+  display: block;
+  flex: none;
+  width: 24px;
+  height: 24px;
+}
+
+.campoNativo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: transparent;
+  font-family: inherit;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.campoNativo:focus {
+  outline: none;
+}
+
+/* O indicador nativo sai: quem abre o seletor é o campo inteiro, e deixá-lo
+   à mostra poria dois ícones lado a lado. */
+.campoNativo::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.campoNativo::-webkit-datetime-edit,
+.campoNativo::-webkit-inner-spin-button,
+.campoNativo::-webkit-clear-button {
+  display: none;
+}
+
+/* Desligado quando a data não vale — imediato marcado, ou prazo por período. */
+.campoDesligado {
+  border-color: var(--cor-borda-acao);
+  cursor: default;
+}
+
+.campoDesligado .campoTexto {
+  color: var(--cor-texto-desabilitado);
+}
+
+.campoDesligado .campoNativo {
+  cursor: default;
+}
+
+/* ---- número de ciclos ---- */
+
+.blocoCiclos {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: var(--espaco-32);
+  align-items: flex-start;
+}
+
+/* O campo do número, ao lado do rádio: 210px no Figma (8201:8046). */
+.campoNumero {
+  flex: none;
+  width: 210px;
+  height: 56px;
+  padding: var(--espaco-16) var(--espaco-24);
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-campo);
+  background: transparent;
+  color: var(--cor-texto-apoio);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: var(--peso-medio);
+  letter-spacing: -0.23px;
+  line-height: 1.1;
+}
+
+.campoNumero:focus {
+  outline: none;
+  border-color: var(--cor-texto);
+}
+
+/* A linha que abre e fecha as avançadas. */
+.linhaAvancadas {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.rotuloAvancadas {
+  color: var(--cor-texto-secundario);
+  font-size: 14px;
+  font-weight: var(--peso-regular);
+  letter-spacing: -0.4px;
+}
+
+/* A seta aponta para baixo fechada e para cima aberta. */
+.setaAberta {
+  transform: rotate(180deg);
+}
+
+/* A opção do número divide a linha com o campo, então o texto dela não pode
+   empurrar: sem isto "Quantidade definida" e os 210px do campo somam por cima
+   dos 484 do miolo. */
+.opcaoComCampos .textoOpcao {
+  flex: 1 0 0;
+  min-width: 0;
+  white-space: normal;
+}
+
+/* As frases das avançadas são longas e passam da largura do card. */
+.opcoes .textoOpcao {
+  white-space: normal;
+  text-align: left;
+}
