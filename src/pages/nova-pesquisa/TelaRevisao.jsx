@@ -27,8 +27,8 @@ import { alternarObrigatoria, ehObrigatoria } from '../../lib/obrigatorias.js'
  * campo da tela 1 leem e escrevem o mesmo pesquisa.nome.
  *
  * Passo 5 de 6 na trilha: depois daqui vêm as configurações. O caminho em
- * branco chega aqui vindo do passo 2, então a barra dá um salto — é o que
- * mostra que ele pulou o contador e o prompt.
+ * branco chega aqui vindo do passo 2 — o nome —, então a barra dá um salto:
+ * é o que mostra que ele pulou o contador e o prompt.
  */
 export default function TelaRevisao() {
   const navigate = useNavigate()
@@ -39,9 +39,10 @@ export default function TelaRevisao() {
   const [capaAberta, setCapaAberta] = useState(false)
 
   const ehBranco = pesquisa.template === 'blank'
-  /* O branco volta para a escolha de template e não tem o que perder; o
-     caminho com template volta para o prompt e passa pela confirmação. */
-  const voltar = () => navigate(ehBranco ? '../template' : '../prompt')
+  /* O branco volta para o nome e não tem o que perder; o caminho com
+     template volta para o prompt, de onde continuar gera as perguntas de
+     novo por cima destas — daí a confirmação. */
+  const voltar = () => navigate(ehBranco ? '../nome' : '../prompt')
 
   return (
     <div className={s.tela}>

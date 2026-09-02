@@ -8,8 +8,6 @@ import {
   diasValidos,
   paraCampoDeData,
 } from '../../lib/datas.js'
-import LinhaResumo from '../../components/fluxo/LinhaResumo.jsx'
-import Interruptor from '../../components/fluxo/Interruptor.jsx'
 
 import circle from '../../assets/icons/Circle.svg'
 import radioButton from '../../assets/icons/RadioButton.svg'
@@ -268,61 +266,6 @@ export function ModalPrazo({ valor, onSalvar, onFechar }) {
   )
 }
 
-/*
- * Até quando a pesquisa existe — o limite de vida dela, não o de um ciclo.
- *
- * É a única forma de uma recorrente chegar a "Encerrada" de verdade: sem
- * data, ela repete para sempre, e "Não ativa" só a tira do ar (o que é
- * reversível). Não se confunde com o "Prazo pra respostas", que diz quanto
- * tempo cada ciclo fica aberto: um é o fim da pesquisa, o outro é o fim de
- * cada volta.
- *
- * Mesma casca do modal de Data e Hora de Envio, e pelo mesmo motivo: são a
- * mesma pergunta em pontas opostas da vida da pesquisa.
- */
-export function ModalEncerramento({ valor, onSalvar, onFechar }) {
-  const [rascunho, , alterar, salvar] = useRascunho(
-    valor ?? { data: '', hora: '18:00', semData: true },
-    onSalvar,
-  )
-
-  return (
-    <ModalFluxo
-      titulo="Data de Encerramento"
-      onVoltar={onFechar}
-      onFechar={onFechar}
-      onSalvar={salvar}
-    >
-      <div className={s.blocoEnvio}>
-        {/* Sem data estipulada os campos desligam: eles deixam de valer, e
-            deixá-los editáveis sugeriria o contrário. */}
-        <ParDeCampos
-          data={rascunho.data}
-          hora={rascunho.hora}
-          desabilitado={rascunho.semData}
-          onMudar={alterar}
-        />
-        <button
-          type="button"
-          className={s.linhaCheck}
-          role="checkbox"
-          aria-checked={rascunho.semData}
-          onClick={() => alterar({ semData: !rascunho.semData })}
-        >
-          <img
-            className={s.icone}
-            src={rascunho.semData ? checkSquare : square}
-            alt=""
-            width={24}
-            height={24}
-          />
-          <span className={s.textoCheck}>Não estipular data</span>
-        </button>
-      </div>
-    </ModalFluxo>
-  )
-}
-
 export function ModalMensagemFinal({ valor, onSalvar, onFechar }) {
   const [rascunho, setRascunho] = useState(valor)
   return (
@@ -339,98 +282,5 @@ export function ModalMensagemFinal({ valor, onSalvar, onFechar }) {
         onChange={(e) => setRascunho(e.target.value)}
       />
     </ModalFluxo>
-  )
-}
-
-/* Sem spec própria: três opções que cobrem os casos usuais de lembrete. */
-const LEMBRETES = ['Diário', 'Semanal', 'Nunca']
-
-export function ModalLembrete({ valor, onSalvar, onFechar }) {
-  const [rascunho, setRascunho] = useState(valor)
-  return (
-    <ModalFluxo
-      titulo="Enviar lembrete"
-      onVoltar={onFechar}
-      onFechar={onFechar}
-      onSalvar={() => onSalvar(rascunho)}
-    >
-      <ListaDeOpcoes
-        opcoes={LEMBRETES}
-        marcada={rascunho}
-        onEscolher={setRascunho}
-      />
-    </ModalFluxo>
-  )
-}
-
-export function ModalAvancadas({ valor, onSalvar, onFechar }) {
-  const [rascunho, , alterar, salvar] = useRascunho(valor, onSalvar)
-  const [lembreteAberto, setLembreteAberto] = useState(false)
-
-  return (
-    <>
-      <ModalFluxo
-        titulo="Configurações avançadas"
-        espacamento={32}
-        onVoltar={onFechar}
-        onFechar={onFechar}
-        onSalvar={salvar}
-      >
-        <div className={s.listaAvancada}>
-          <LinhaResumo
-            rotulo="Enviar lembrete"
-            valor={rascunho.lembrete}
-            onAbrir={() => setLembreteAberto(true)}
-          />
-          <LinhaResumo
-            rotulo="Mostrar barra de progresso"
-            controle={
-              <Interruptor
-                ligado={rascunho.barraProgresso}
-                rotulo="Mostrar barra de progresso"
-                onAlternar={() =>
-                  alterar({ barraProgresso: !rascunho.barraProgresso })
-                }
-              />
-            }
-          />
-          <LinhaResumo
-            rotulo="Embaralhar perguntas"
-            controle={
-              <Interruptor
-                ligado={rascunho.embaralhar}
-                rotulo="Embaralhar perguntas"
-                onAlternar={() => alterar({ embaralhar: !rascunho.embaralhar })}
-              />
-            }
-          />
-          <LinhaResumo
-            rotulo="Tornar as perguntas obrigatórias por padrão"
-            controle={
-              <Interruptor
-                ligado={rascunho.obrigatorias}
-                rotulo="Tornar as perguntas obrigatórias por padrão"
-                onAlternar={() =>
-                  alterar({ obrigatorias: !rascunho.obrigatorias })
-                }
-              />
-            }
-          />
-        </div>
-      </ModalFluxo>
-
-      {/* O seletor de lembrete abre por cima e devolve para o rascunho daqui,
-          então sair dele não perde o que já foi mexido nos interruptores. */}
-      {lembreteAberto ? (
-        <ModalLembrete
-          valor={rascunho.lembrete}
-          onSalvar={(lembrete) => {
-            alterar({ lembrete })
-            setLembreteAberto(false)
-          }}
-          onFechar={() => setLembreteAberto(false)}
-        />
-      ) : null}
-    </>
   )
 }

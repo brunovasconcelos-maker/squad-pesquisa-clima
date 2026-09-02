@@ -7,12 +7,14 @@ import { GRUPOS, PESSOAS, nomeDaPessoa } from './estado.jsx'
 
 import checkSquare from '../../assets/icons/CheckSquare.svg'
 import square from '../../assets/icons/Square.svg'
+import radioButton from '../../assets/icons/RadioButton.svg'
+import circle from '../../assets/icons/Circle.svg'
 import caretDown from '../../assets/icons/CaretDown.svg'
 import search from '../../assets/icons/Search.svg'
 import close from '../../assets/icons/Close.svg'
 
 /*
- * Tela 2 (Figma 8057:3674): modal de participantes.
+ * Modal de participantes (Figma 8195:1510 fechado, 8195:1571 aberto).
  *
  * A seleção é editada numa cópia local e só sobe no "Salvar" — é o que faz o
  * "Voltar" descartar as marcações sem precisar desfazer nada.
@@ -21,6 +23,11 @@ import close from '../../assets/icons/Close.svg'
  * inteira, e marcar a empresa limpa os grupos. São duas formas de dizer a
  * mesma coisa — quem é o público —, e as duas ligadas ao mesmo tempo não
  * querem dizer nada além do que "Toda empresa" já diz.
+ *
+ * Por isso "Toda empresa" é um rádio e os grupos são caixas: o rádio diz que
+ * ali só cabe uma resposta, as caixas dizem que dá para juntar grupos. Como
+ * todo rádio, clicar no que já está marcado não desmarca — o que tira a
+ * empresa inteira do caminho é escolher um grupo ou uma pessoa.
  *
  * A lista de grupos começa fechada: quem escolhe a empresa inteira não
  * precisa ver os grupos, e quem quer um grupo abre.
@@ -53,11 +60,9 @@ export default function ModalParticipantes({ selecao, onSalvar, onFechar }) {
   )
   const caixa = useModal(onFechar)
 
-  const alternarEmpresa = () =>
+  const escolherEmpresa = () =>
     setRascunho((r) =>
-      r.todaEmpresa
-        ? { ...r, todaEmpresa: false }
-        : { ...r, todaEmpresa: true, grupos: [], pessoas: [] },
+      r.todaEmpresa ? r : { ...r, todaEmpresa: true, grupos: [], pessoas: [] },
     )
 
   const alternarGrupo = (grupo) =>
@@ -92,11 +97,23 @@ export default function ModalParticipantes({ selecao, onSalvar, onFechar }) {
      escolha não pode sumir de vista só porque o campo foi limpo. */
   const escolhidas = (rascunho.pessoas || []).filter((e) => !achadas.includes(e))
 
-  const Item = ({ nome, apoio = '56 membros', marcado, onAlternar }) => (
-    <button type="button" className={s.item} onClick={onAlternar}>
+  /* `radio` troca a arte e o papel do item: rádio para a escolha única de
+     "Toda empresa", caixa para os grupos e as pessoas, que somam. */
+  const Item = ({ nome, apoio = '56 membros', marcado, radio = false, onAlternar }) => (
+    <button
+      type="button"
+      className={s.item}
+      role={radio ? 'radio' : 'checkbox'}
+      aria-checked={Boolean(marcado)}
+      onClick={onAlternar}
+    >
       <img
         className={s.caixa}
-        src={marcado ? checkSquare : square}
+        src={
+          radio
+            ? (marcado ? radioButton : circle)
+            : (marcado ? checkSquare : square)
+        }
         alt=""
         width={24}
         height={24}
@@ -116,11 +133,16 @@ export default function ModalParticipantes({ selecao, onSalvar, onFechar }) {
 
         <div className={s.corpo}>
           <div className={s.grupos}>
-            <Item
-              nome="Toda empresa"
-              marcado={rascunho.todaEmpresa}
-              onAlternar={alternarEmpresa}
-            />
+            {/* Um rádio sozinho ainda é um rádio: o grupo existe para o
+                leitor de tela saber que ali a escolha é única. */}
+            <div className={s.blocoEmpresa} role="radiogroup" aria-label="Público da pesquisa">
+              <Item
+                nome="Toda empresa"
+                radio
+                marcado={rascunho.todaEmpresa}
+                onAlternar={escolherEmpresa}
+              />
+            </div>
 
             <button
               type="button"

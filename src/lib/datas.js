@@ -237,13 +237,6 @@ export function textoDeDataHora(data, hora) {
   return hora ? `${data}, as ${hora}` : String(data)
 }
 
-export function textoDeEncerramento(encerramento) {
-  if (!encerramento || encerramento.semData || !encerramento.data) {
-    return 'Não definida'
-  }
-  return textoDeDataHora(encerramento.data, encerramento.hora)
-}
-
 /*
  * Quando a próxima volta começa. `null` quando a frequência guardada não é
  * nenhuma das conhecidas — mensal por baixo do pano anunciava uma data que

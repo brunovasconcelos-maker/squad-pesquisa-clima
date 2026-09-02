@@ -69,6 +69,12 @@
   align-items: flex-start;
 }
 
+/* O rádio de "Toda empresa" mora num grupo só dele, e o grupo tem de ocupar
+   a linha inteira para o item dentro não encolher. */
+.blocoEmpresa {
+  width: 100%;
+}
+
 .item {
   display: flex;
   width: 100%;

@@ -30,11 +30,17 @@ import TelaFim from './pages/responder/TelaFim.jsx'
  * /responder é a vista de quem responde e não compartilha moldura nenhuma
  * com o app interno: quem abre o link não administra a pesquisa.
  */
-/* Os seis passos do fluxo, montados uma vez e usados nas duas entradas. */
+/*
+ * Os seis passos do fluxo, montados uma vez e usados nas duas entradas.
+ *
+ * A escolha do template é a porta de entrada: ela vem antes do nome, então é
+ * ela que ocupa a rota índice. O nome e os participantes ganharam caminho
+ * próprio — /nome —, que é onde o fluxo passa a ter algo a perder.
+ */
 const passosDoFluxo = (
   <>
-    <Route index element={<TelaNome />} />
-    <Route path="template" element={<TelaTemplate />} />
+    <Route index element={<TelaTemplate />} />
+    <Route path="nome" element={<TelaNome />} />
     <Route path="perguntas" element={<TelaPerguntas />} />
     <Route path="prompt" element={<TelaPrompt />} />
     <Route path="carregando" element={<TelaCarregando />} />

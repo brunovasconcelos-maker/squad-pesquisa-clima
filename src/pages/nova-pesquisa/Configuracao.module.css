@@ -11,8 +11,7 @@
   justify-content: center;
 }
 
-/* Coluna de 532 começando 60px abaixo do cabeçalho, com 60 de folga entre a
-   lista e o link de configurações avançadas. */
+/* Coluna de 532 começando 60px abaixo do cabeçalho. */
 .coluna {
   display: flex;
   width: var(--largura-miolo);
@@ -217,15 +216,6 @@
 
 .mensagem:focus {
   outline: none;
-}
-
-/* Lista do modal de avançadas: linhas de resumo com 20 de folga. */
-.listaAvancada {
-  display: flex;
-  width: 100%;
-  flex-direction: column;
-  gap: var(--espaco-20);
-  align-items: flex-start;
 }
 
 /* Campo fora da faixa: a borda vermelha diz onde está o problema, e o texto

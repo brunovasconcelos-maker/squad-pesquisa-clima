@@ -50,7 +50,7 @@ export default function TelaCarregando() {
             template, ou monte as perguntas à mão a partir de uma pesquisa em
             branco.
           </p>
-          <Botao onClick={() => navigate('../template', { replace: true })}>
+          <Botao onClick={() => navigate('..', { replace: true })}>
             Escolher outro template
           </Botao>
         </div>

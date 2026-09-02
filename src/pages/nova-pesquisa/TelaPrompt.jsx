@@ -4,7 +4,7 @@ import FluxoLayout from '../../components/fluxo/FluxoLayout.jsx'
 import { usePesquisa } from './estado.jsx'
 
 /*
- * Tela 6 (Figma 8064:4871).
+ * O que a pesquisa quer coletar (Figma 8195:1750).
  *
  * O texto já vem montado no estado desde a escolha do template, então aqui a
  * textarea só lê e escreve — sem efeito de preenchimento no mount, que
@@ -22,7 +22,7 @@ export default function TelaPrompt() {
 
   return (
     <FluxoLayout
-      titulo="Feedback time de Design"
+      titulo={pesquisa.nome || 'Nova Pesquisa'}
       progresso={4 / 6}
       centrada
       onFechar={sair}

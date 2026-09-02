@@ -314,6 +314,7 @@ export default function ListaDePerguntas({
                 <div className={s.grupoObrigatoria}>
                   <span className={s.rotuloObrigatoria}>Tornar obrigatória</span>
                   <Interruptor
+                    pequeno
                     ligado={ehObrigatoria(pergunta)}
                     rotulo={`Tornar obrigatória a pergunta ${indice + 1}`}
                     onAlternar={() => onAlternarObrigatoria(pergunta)}

@@ -64,9 +64,19 @@ export function configuracaoInicial(hoje = new Date()) {
       hora: '10:30',
     },
     /* Sem data de encerramento: a recorrente repete indefinidamente até
-       alguém estipular um fim. É a única forma de ela chegar a "Encerrada". */
+       alguém estipular um fim. É a única forma de ela chegar a "Encerrada".
+
+       O campo continua aqui sem tela que o edite: a linha "Data de
+       Encerramento" saiu do desenho, mas o motor de status ainda lê este
+       valor, e tirá-lo faria as pesquisas já guardadas mudarem de
+       comportamento sem que ninguém tivesse mexido nelas. */
     encerramento: { data: '', hora: '18:00', semData: true },
     mensagemFinal: MENSAGEM_FINAL_PADRAO,
+    /* O modal de configurações avançadas saiu do desenho, e com ele a única
+       forma de editar estes quatro. Os valores ficam porque quem responde
+       ainda depende deles — barra de progresso, ordem das perguntas e o
+       padrão de obrigatória —, e mudá-los agora mudaria o formulário de
+       quem já está no ar. */
     avancadas: {
       lembrete: 'Diário',
       barraProgresso: true,
@@ -122,7 +132,7 @@ export function doRascunho(guardada) {
  * a pessoa estava: o índice é o último pedaço do caminho, e não tem nome.
  */
 export const PASSOS = [
-  'template',
+  'nome',
   'perguntas',
   'prompt',
   'carregando',
@@ -130,7 +140,8 @@ export const PASSOS = [
   'configuracao',
 ]
 
-/* O passo de um caminho do fluxo. Vazio na tela 1, que é a rota índice. */
+/* O passo de um caminho do fluxo. Vazio na escolha de template, que é a rota
+   índice — e que, por não guardar rascunho, nunca chega a ser gravada. */
 export function passoDaRota(caminho) {
   const ultimo = caminho.split('/').filter(Boolean).pop()
   return PASSOS.includes(ultimo) ? ultimo : ''
@@ -292,6 +303,30 @@ export default function PesquisaProvider() {
           abertura:
             template === 'blank' ? ABERTURA_BRANCO : ABERTURA_TEMPLATE,
         }),
+
+      /*
+       * Trocar o público refaz o prompt, porque ele nomeia esse público —
+       * "clima de toda a empresa", "clima do time de Design".
+       *
+       * Com o template escolhido antes do nome, o prompt montado ali nasce
+       * falando de "toda a empresa", que é o padrão da tela seguinte. Sem
+       * isto ele continuaria dizendo isso mesmo depois de a pessoa escolher
+       * um grupo, e a geração das perguntas seguiria o texto errado.
+       *
+       * Só refaz o que ninguém escreveu: se o texto não é mais o que o
+       * projeto montou — porque foi editado na tela de prompt —, ele fica
+       * como está. Reescrever por cima apagaria o que a pessoa digitou.
+       */
+      definirParticipantes: (participantes) => {
+        const automatico = montarPrompt(pesquisa.template, pesquisa.participantes)
+        const intacto = pesquisa.prompt === '' || pesquisa.prompt === automatico
+        definir({
+          participantes,
+          prompt: intacto
+            ? montarPrompt(pesquisa.template, participantes)
+            : pesquisa.prompt,
+        })
+      },
 
       /*
        * Chamada pela tela de carregamento, no fim dos 3 segundos. Devolve

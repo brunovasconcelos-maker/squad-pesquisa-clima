@@ -4,7 +4,6 @@ import s from './Configuracao.module.css'
 import CabecalhoFluxo from '../../components/fluxo/CabecalhoFluxo.jsx'
 import Aviso from '../../components/Aviso.jsx'
 import RodapeFluxo from '../../components/fluxo/RodapeFluxo.jsx'
-import Botao from '../../components/fluxo/Botao.jsx'
 import LinhaResumo from '../../components/fluxo/LinhaResumo.jsx'
 import Interruptor from '../../components/fluxo/Interruptor.jsx'
 import ModalParticipantes from './ModalParticipantes.jsx'
@@ -16,25 +15,23 @@ import {
 } from '../../lib/pesquisas.js'
 import {
   ModalDataEnvio,
-  ModalEncerramento,
   ModalRecorrencia,
   ModalFrequencia,
   ModalPrazo,
   ModalMensagemFinal,
-  ModalAvancadas,
 } from './ModaisConfiguracao.jsx'
-import {
-  diasDoPrazo,
-  textoDeDataHora,
-  textoDeEncerramento,
-} from '../../lib/datas.js'
+import { diasDoPrazo, textoDeDataHora } from '../../lib/datas.js'
 
 /*
- * Último passo do fluxo (Figma 8067:5498).
+ * Último passo do fluxo (Figma 8195:1786).
  *
- * O Figma rotula a seção como "Configurações" e o link como "Ver settings
- * avançadas"; os textos aqui seguem o combinado: "Configuração" e "Ver
- * configurações avançadas". "Frequencia" também ganhou o acento.
+ * Os rótulos são os do Figma, com uma exceção: "Frequencia" ganhou o acento
+ * que falta no arquivo.
+ *
+ * O modal de configurações avançadas saiu daqui — lembrete, barra de
+ * progresso, embaralhar e obrigatórias por padrão não são mais editáveis. A
+ * "Data de Encerramento" saiu junto. Os valores continuam guardados; o que
+ * não existe mais é a tela que os mexia.
  *
  * Os modais abrem por estado local, não por rota: são passos dentro desta
  * tela, e voltar de um não deveria mexer no histórico do navegador.
@@ -75,12 +72,15 @@ export default function TelaConfiguracao() {
 
   return (
     <div className={s.tela}>
-      <CabecalhoFluxo titulo="Nova Pesquisa" onFechar={sair} />
+      {/* Do nome em diante o cabeçalho é o nome da pesquisa. Sem nome
+          guardado — um rascunho antigo retomado direto aqui — sobra o
+          título do fluxo. */}
+      <CabecalhoFluxo titulo={pesquisa.nome || 'Nova Pesquisa'} onFechar={sair} />
 
       <div className={s.miolo}>
         <div className={s.coluna}>
           <div className={s.lista}>
-            <p className={s.secao}>Configuração</p>
+            <p className={s.secao}>Configurações</p>
 
             <LinhaResumo
               rotulo="Participantes"
@@ -102,32 +102,32 @@ export default function TelaConfiguracao() {
               }
             />
             <LinhaResumo
-              rotulo="Data de Envio"
+              rotulo="Data e hora de envio"
               valor={textoDeEnvio(c.envio)}
               onAbrir={() => setModal('envio')}
             />
-            {/* Até quando a pesquisa existe, logo abaixo de quando ela
-                começa. Só faz pergunta para quem repete: a Única acaba
-                sozinha quando o prazo do seu único ciclo vence. */}
-            {c.recorrencia === 'Recorrente' ? (
-              <LinhaResumo
-                rotulo="Data de Encerramento"
-                valor={textoDeEncerramento(c.encerramento)}
-                onAbrir={() => setModal('encerramento')}
-              />
-            ) : null}
             <LinhaResumo
-              rotulo="Recorrência"
+              rotulo="Tipo"
               valor={c.recorrencia}
               onAbrir={() => setModal('recorrencia')}
             />
-            {/* Sem recorrência não há frequência que faça sentido. */}
+            {/* Sem recorrência não há frequência nem ciclos que façam
+                sentido: a Única roda uma vez e acaba. */}
             {c.recorrencia === 'Recorrente' ? (
-              <LinhaResumo
-                rotulo="Frequência"
-                valor={c.frequencia}
-                onAbrir={() => setModal('frequencia')}
-              />
+              <>
+                <LinhaResumo
+                  rotulo="Frequência"
+                  valor={c.frequencia}
+                  onAbrir={() => setModal('frequencia')}
+                />
+                {/* Quantas voltas a recorrente dá antes de parar. Por
+                    enquanto só o rótulo e o valor: escolher um número é a
+                    próxima etapa do desenho, e não há modal para abrir, então
+                    a linha vai travada em vez de prometer uma seta que não
+                    leva a lugar nenhum. "Indefinido" é o que ela é hoje — a
+                    recorrente repete sem fim marcado. */}
+                <LinhaResumo rotulo="Número de ciclos" valor="Indefinido" travado />
+              </>
             ) : null}
             <LinhaResumo
               rotulo="Prazo pra respostas"
@@ -141,10 +141,6 @@ export default function TelaConfiguracao() {
               onAbrir={() => setModal('mensagem')}
             />
           </div>
-
-          <Botao onClick={() => setModal('avancadas')}>
-            Ver configurações avançadas
-          </Botao>
         </div>
       </div>
 
@@ -211,26 +207,10 @@ export default function TelaConfiguracao() {
         />
       ) : null}
 
-      {modal === 'encerramento' ? (
-        <ModalEncerramento
-          valor={c.encerramento}
-          onSalvar={salvar('encerramento')}
-          onFechar={fechar}
-        />
-      ) : null}
-
       {modal === 'mensagem' ? (
         <ModalMensagemFinal
           valor={c.mensagemFinal}
           onSalvar={salvar('mensagemFinal')}
-          onFechar={fechar}
-        />
-      ) : null}
-
-      {modal === 'avancadas' ? (
-        <ModalAvancadas
-          valor={c.avancadas}
-          onSalvar={salvar('avancadas')}
           onFechar={fechar}
         />
       ) : null}

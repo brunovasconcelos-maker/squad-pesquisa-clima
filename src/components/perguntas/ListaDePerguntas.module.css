@@ -277,21 +277,24 @@
   cursor: pointer;
 }
 
-/* Rótulo e interruptor são um controle só, então andam juntos e coladinhos;
-   os 16px do `.acoes` separam esse par dos ícones. */
+/* Rótulo e interruptor são um controle só, então andam juntos; os 12px são
+   os do Figma (8197:3657), e os 16px do `.acoes` separam esse par dos
+   ícones. */
 .grupoObrigatoria {
   display: flex;
   align-items: center;
-  gap: var(--espaco-8);
+  gap: var(--espaco-12);
 }
 
 /* Rótulo do interruptor de obrigatória: cinza e discreto, como os outros
-   rótulos de apoio do projeto. */
+   rótulos de apoio do projeto. Peso regular, e não médio: junto do
+   interruptor pequeno ele é o apoio de um controle secundário, não um
+   rótulo de linha. */
 .rotuloObrigatoria {
   color: var(--cor-texto-secundario);
   font-size: 14px;
-  font-weight: var(--peso-medio);
-  letter-spacing: -0.08px;
+  font-weight: var(--peso-regular);
+  letter-spacing: -0.4px;
   white-space: nowrap;
 }
 

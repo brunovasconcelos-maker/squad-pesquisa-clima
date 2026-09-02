@@ -130,12 +130,15 @@ export default function Home() {
    * o fluxo, na tela em que ele foi salvo.
    *
    * Um rascunho de antes de o passo ser guardado não tem onde cair, e aí vale
-   * a regra antiga: com perguntas já geradas vai para a revisão, porque o
-   * passo de template refaz a geração e apagaria o que estava lá.
+   * a regra antiga: com perguntas já geradas vai para a revisão, porque
+   * escolher o template de novo refaz a geração e apagaria o que estava lá.
+   * Sem perguntas, cai no nome — que é onde o fluxo começa a ter o que
+   * guardar, e onde estes rascunhos foram salvos quando essa era a primeira
+   * tela.
    */
   const passoDoRascunho = (p) => {
     if (p.passo) return `/${p.passo}`
-    return (p.perguntas?.length ?? 0) > 0 ? '/revisao' : ''
+    return (p.perguntas?.length ?? 0) > 0 ? '/revisao' : '/nome'
   }
 
   const aoAbrir = (p) => {

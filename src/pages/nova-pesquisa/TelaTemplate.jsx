@@ -11,7 +11,8 @@ import arrowUpRight from '../../assets/icons/ArrowUpRight.svg'
 import plus from '../../assets/icons/Plus.svg'
 
 /*
- * Tela 4 (Figma 8060:4673). Coluna larga: 808px em vez dos 532 das demais.
+ * Escolha do template (Figma 8195:1460), agora o primeiro passo do fluxo.
+ * Coluna larga: 808px em vez dos 532 das demais.
  *
  * O "Continuar" existe no Figma mas está com opacity 0 — some, sem deixar
  * buraco no rodapé. Aqui a moldura recebe mostrarContinuar={false}: mesmo
@@ -32,26 +33,33 @@ export default function TelaTemplate() {
   const navigate = useNavigate()
   const { escolherTemplate, sair } = usePesquisa()
 
+  /* Os dois caminhos seguem para a mesma tela: nome e participantes vêm
+     logo depois da escolha, com template ou em branco. Onde eles se separam
+     é no Continuar de lá — com template segue para o contador de perguntas,
+     em branco vai direto para a lista. */
   const escolher = (id) => {
     escolherTemplate(id)
-    navigate('../perguntas')
-  }
-
-  /* O branco pula o contador, o prompt e o carregamento: não há o que gerar.
-     Vai direto para a revisão, que abre só com a Abertura. */
-  const escolherBranco = () => {
-    escolherTemplate('blank')
-    navigate('../revisao')
+    navigate('nome')
   }
 
   return (
     <FluxoLayout
-      titulo="Feedback time de Design"
-      progresso={2 / 6}
+      titulo="Nova Pesquisa"
+      progresso={1 / 6}
       larga
       mostrarContinuar={false}
+      /*
+       * Primeiro passo: daqui o Voltar e o X saem do fluxo, e não recuam
+       * para outra tela.
+       *
+       * `sair` é o mesmo dos outros passos, e num fluxo recém-aberto — que é
+       * o caso desta tela — ele vai direto para a home, sem perguntar nada e
+       * sem guardar rascunho: não há o que perder. Só pergunta se a pessoa
+       * tiver voltado até aqui com algo já preenchido, e aí perguntar é o
+       * certo: sem isso, o Voltar apagaria em silêncio o que ela escreveu.
+       */
       onFechar={sair}
-      onVoltar={() => navigate('..')}
+      onVoltar={sair}
     >
       <div className={s.conteudo}>
         <p className={s.rotulo}>Para que vai servir essa Pesquisa?</p>
@@ -89,7 +97,11 @@ export default function TelaTemplate() {
           ))}
         </div>
 
-        <button type="button" className={s.branco} onClick={escolherBranco}>
+        <button
+          type="button"
+          className={s.branco}
+          onClick={() => escolher('blank')}
+        >
           <span className={s.nomeBranco}>Criar pesquisa em Branco</span>
           <img className={s.icone} src={plus} alt="" width={24} height={24} />
         </button>

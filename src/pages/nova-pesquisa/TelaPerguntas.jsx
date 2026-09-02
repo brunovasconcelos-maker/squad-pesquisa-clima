@@ -12,12 +12,15 @@ import minus from '../../assets/icons/Minus.svg'
 import plus from '../../assets/icons/Plus.svg'
 
 /*
- * Tela 5 (Figma 8063:4769).
+ * Quantas perguntas gerar (Figma 8195:1726).
  *
  * Os minutos estimados acompanham o contador: 45 segundos por pergunta.
  *
- * Só o caminho com template passa por aqui — o branco vai da escolha direto
- * para a revisão.
+ * Só o caminho com template passa por aqui — o branco vai do nome direto
+ * para a lista de perguntas.
+ *
+ * Daqui em diante o cabeçalho mostra o nome da pesquisa, e não mais "Nova
+ * Pesquisa": o nome já foi escolhido no passo anterior.
  */
 export default function TelaPerguntas() {
   const navigate = useNavigate()
@@ -34,11 +37,11 @@ export default function TelaPerguntas() {
 
   return (
     <FluxoLayout
-      titulo="Feedback time de Design"
+      titulo={pesquisa.nome || 'Nova Pesquisa'}
       progresso={3 / 6}
       centrada
       onFechar={sair}
-      onVoltar={() => navigate('../template')}
+      onVoltar={() => navigate('../nome')}
       onContinuar={() => navigate('../prompt')}
     >
       <div className={s.conteudo}>

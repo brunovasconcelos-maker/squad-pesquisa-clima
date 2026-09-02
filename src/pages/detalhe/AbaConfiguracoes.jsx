@@ -11,19 +11,12 @@ import ModalParticipantes from '../nova-pesquisa/ModalParticipantes.jsx'
 import {
   ModalDataEnvio,
   ModalFrequencia,
-  ModalEncerramento,
-  ModalLembrete,
   ModalMensagemFinal,
   ModalPrazo,
 } from '../nova-pesquisa/ModaisConfiguracao.jsx'
 import { rotuloParticipantes } from '../nova-pesquisa/estado.jsx'
 import { estiloDaCapa } from '../../lib/capa.js'
-import {
-  diasDoPrazo,
-  formatarComDia,
-  textoDeEncerramento,
-  textoDeDataHora,
-} from '../../lib/datas.js'
+import { diasDoPrazo, formatarComDia, textoDeDataHora } from '../../lib/datas.js'
 import { proximoEnvioDe } from '../../lib/geral.js'
 import { daTabela } from '../../lib/desconhecido.js'
 import {
@@ -124,7 +117,6 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
   const [aviso, setAviso] = useState('')
   const limparAviso = useCallback(() => setAviso(''), [])
   const c = pesquisa.configuracao || {}
-  const avancadas = c.avancadas || {}
   /*
    * Única ou Recorrente é escolha da criação, e não muda mais depois.
    *
@@ -155,15 +147,6 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
     onAlterar((p) => ({ ...p, configuracao: { ...p.configuracao, ...campos } }))
     fechar()
   }
-
-  const salvarAvancada = (campos) =>
-    onAlterar((p) => ({
-      ...p,
-      configuracao: {
-        ...p.configuracao,
-        avancadas: { ...p.configuracao?.avancadas, ...campos },
-      },
-    }))
 
   const aoPublicar = () => {
     if (publicada) {
@@ -299,15 +282,6 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
           valor={textoDoEnvio}
           onAbrir={() => setModal('envio')}
         />
-        {/* Até quando a pesquisa existe. Só recorrente tem essa pergunta: a
-            Única acaba sozinha quando o prazo do seu único ciclo vence. */}
-        {recorrente ? (
-          <LinhaResumo
-            rotulo="Data de Encerramento"
-            valor={textoDeEncerramento(c.encerramento)}
-            onAbrir={() => setModal('encerramento')}
-          />
-        ) : null}
         {/* Recorrente escolhe de quanto em quanto tempo repete; Única não
             tem o que escolher aqui. A linha fica, para a pesquisa dizer o que
             ela é, mas travada — ver a explicação em `recorrente`. */}
@@ -326,11 +300,6 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
           rotulo="Aceitar resposta"
           valor={textoDePrazo(c.prazo)}
           onAbrir={() => setModal('prazo')}
-        />
-        <LinhaResumo
-          rotulo="Enviar lembrete"
-          valor={avancadas.lembrete || '—'}
-          onAbrir={() => setModal('lembrete')}
         />
       </Cartao>
 
@@ -366,25 +335,6 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
           cortar
           onAbrir={() => setModal('mensagem')}
         />
-        <LinhaInterruptor
-          rotulo="Mostrar barra de progresso"
-          ligado={Boolean(avancadas.barraProgresso)}
-          onAlternar={() =>
-            salvarAvancada({ barraProgresso: !avancadas.barraProgresso })
-          }
-        />
-        <LinhaInterruptor
-          rotulo="Embaralhar perguntas"
-          ligado={Boolean(avancadas.embaralhar)}
-          onAlternar={() => salvarAvancada({ embaralhar: !avancadas.embaralhar })}
-        />
-        <LinhaInterruptor
-          rotulo="Tornar as perguntas obrigatórias por padrão"
-          ligado={Boolean(avancadas.obrigatorias)}
-          onAlternar={() =>
-            salvarAvancada({ obrigatorias: !avancadas.obrigatorias })
-          }
-        />
       </Cartao>
 
       {modal === 'participantes' ? (
@@ -411,27 +361,6 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
         />
       ) : null}
 
-      {modal === 'encerramento' ? (
-        <ModalEncerramento
-          valor={c.encerramento}
-          onSalvar={(encerramento) => {
-            /* Acertar o passo junto: a data pode já ter passado, e aí a
-               pesquisa encerra agora — esperar o próximo giro do motor
-               deixaria o selo mentindo por até 30s. */
-            onAlterar((p) =>
-              acertarPasso(
-                avaliar({
-                  ...p,
-                  configuracao: { ...p.configuracao, encerramento },
-                }),
-              ),
-            )
-            fechar()
-          }}
-          onFechar={fechar}
-        />
-      ) : null}
-
       {modal === 'frequencia' ? (
         /* Só chega aqui uma recorrente, e o modal muda o intervalo dela — o
            tipo não entra na gravação. */
@@ -446,17 +375,6 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
         <ModalPrazo
           valor={c.prazo}
           onSalvar={(prazo) => salvarConfig({ prazo })}
-          onFechar={fechar}
-        />
-      ) : null}
-
-      {modal === 'lembrete' ? (
-        <ModalLembrete
-          valor={avancadas.lembrete}
-          onSalvar={(lembrete) => {
-            salvarAvancada({ lembrete })
-            fechar()
-          }}
           onFechar={fechar}
         />
       ) : null}
