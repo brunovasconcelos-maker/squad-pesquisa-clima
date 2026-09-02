@@ -107,7 +107,30 @@ export default function useModal(aoFechar) {
 
     document.addEventListener('keydown', aoTeclar, true)
 
+    /*
+     * O miolo do modal pode ser trocado com ele aberto — escolher o tipo de
+     * uma pergunta nova troca a tela de escolha pelo editor, dentro do mesmo
+     * diálogo. O elemento que tinha o foco some junto, e o foco cai no
+     * `body`: a armadilha continua valendo, mas a pessoa precisa de um Tab
+     * para voltar para dentro. Aqui ele volta sozinho.
+     *
+     * Só age quando o foco está mesmo fora: mutação que não mexe no foco —
+     * um contador que muda, uma lista que cresce — não tira ninguém do lugar.
+     * E só o modal de cima age, senão ele brigaria com o foco do modal que
+     * abriu por cima dele.
+     */
+    const observador = new MutationObserver(() => {
+      if (!elemento.isConnected) return
+      if (abertos[abertos.length - 1] !== elemento) return
+      if (elemento.contains(document.activeElement)) return
+      const lista = focaveisDe(elemento)
+      if (lista[0]) lista[0].focus()
+      else elemento.focus()
+    })
+    observador.observe(elemento, { childList: true, subtree: true })
+
     return () => {
+      observador.disconnect()
       document.removeEventListener('keydown', aoTeclar, true)
       const i = abertos.indexOf(elemento)
       if (i >= 0) abertos.splice(i, 1)

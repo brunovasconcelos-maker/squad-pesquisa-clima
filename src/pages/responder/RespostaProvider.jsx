@@ -74,6 +74,10 @@ export default function RespostaProvider() {
   /* Envio que não conseguiu gravar. A tela de agradecimento não pode aparecer
      em cima de uma resposta que se perdeu. */
   const [falhouAoEnviar, setFalhouAoEnviar] = useState(false)
+  /* Se esta sessão chegou a enviar alguma coisa. A tela de agradecimento
+     depende disto: ela afirma que a resposta foi enviada, e afirmar isso
+     porque a URL diz `/fim` não é saber que foi. */
+  const [enviou, setEnviou] = useState(false)
 
   const pesquisa = sessao.pesquisa
 
@@ -117,6 +121,7 @@ export default function RespostaProvider() {
       setFalhouAoEnviar(true)
       return
     }
+    setEnviou(true)
     navigate(`/responder/${id}/fim`)
   }, [id, navigate, valores])
 
@@ -127,10 +132,11 @@ export default function RespostaProvider() {
       valores,
       responder,
       enviar,
+      enviou,
       mostrarProgresso: Boolean(pesquisa?.configuracao?.avancadas?.barraProgresso),
       obrigatoria: (pergunta) => ehObrigatoria(pergunta, pesquisa),
     }),
-    [pesquisa, perguntas, valores, responder, enviar],
+    [pesquisa, perguntas, valores, responder, enviar, enviou],
   )
 
   /* Sem poder responder — fora do ar, encerrada ou já com todo mundo

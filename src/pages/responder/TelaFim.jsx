@@ -1,3 +1,4 @@
+import { Navigate, useParams } from 'react-router-dom'
 import VistaResposta from './VistaResposta.jsx'
 import { useResposta } from './RespostaProvider.jsx'
 import s from './Responder.module.css'
@@ -11,9 +12,20 @@ import pipo from '../../assets/images/7T7nCfyZ97uiZuW6Yue_3_VWS87PuS 1@2x.png'
  * pesquisa tem configurada; abaixo dele vem a ilustração do Pipo.
  *
  * Sem botão nenhum: acabou.
+ *
+ * Só aparece para quem acabou de enviar. Abrir ou recarregar este endereço
+ * mostrava "Sua resposta foi enviada!" sem que nada tivesse sido enviado — a
+ * afirmação vinha da URL, e não do que aconteceu. Sem envio nesta sessão, o
+ * caminho é a abertura da pesquisa, que é o estado verdadeiro: dá para
+ * responder. Recarregar depois de enviar cai lá também — a sessão se perdeu e
+ * o aplicativo não tem como saber que foi esta pessoa que respondeu; afirmar
+ * que foi seria adivinhar.
  */
 export default function TelaFim() {
-  const { pesquisa, mostrarProgresso } = useResposta()
+  const { pesquisa, mostrarProgresso, enviou } = useResposta()
+  const { id } = useParams()
+
+  if (!enviou) return <Navigate to={`/responder/${id}`} replace />
 
   return (
     <VistaResposta pesquisa={pesquisa} progresso={mostrarProgresso ? 1 : null}>
