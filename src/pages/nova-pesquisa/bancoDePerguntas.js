@@ -1,4 +1,4 @@
-import { daTabela } from '../../lib/desconhecido.js'
+import { daTabela, avisarValorDesconhecido } from '../../lib/desconhecido.js'
 
 /*
  * Bancos de perguntas de exemplo, um por template.
@@ -115,6 +115,32 @@ const proximoId = () => {
 
 /* Monta a lista final: pega as `quantidade` primeiras do banco do template e
    troca o {p} pela seleção de participantes. */
+/* A faixa de quantas perguntas uma pesquisa pode gerar. Mora aqui, junto de
+   quem gera, e `estado.jsx` reexporta: as duas telas que mexem nisso já
+   importavam de lá. */
+export const PERGUNTAS_MIN = 1
+export const PERGUNTAS_MAX = 20
+
+/*
+ * Quantas perguntas tirar do banco.
+ *
+ * Os botões da tela de quantidade não deixam sair da faixa, mas um valor
+ * guardado antes disso — ou mexido por fora — passava direto para o `slice`:
+ * negativo cortava do fim ("as 10 primeiras" viravam "todas menos 3"),
+ * e zero gerava lista vazia. O número volta para a faixa aqui, e o valor
+ * estranho é anunciado em vez de aparado calado.
+ */
+function quantasGerar(quantidade) {
+  const n = Math.round(Number(quantidade))
+  if (!Number.isFinite(n)) {
+    avisarValorDesconhecido('quantidade de perguntas', quantidade)
+    return PERGUNTAS_MAX
+  }
+  const dentro = Math.min(PERGUNTAS_MAX, Math.max(PERGUNTAS_MIN, n))
+  if (dentro !== n) avisarValorDesconhecido('quantidade de perguntas', quantidade)
+  return dentro
+}
+
 export function gerarPerguntas(template, fraseDeParticipantes, quantidade) {
   /* Sem banco para o template não há o que gerar. A lista vazia é a resposta
      honesta — inventar perguntas de outro tema seria pior —, mas quem chama
@@ -123,7 +149,7 @@ export function gerarPerguntas(template, fraseDeParticipantes, quantidade) {
   const banco = daTabela(BANCOS, template, 'template da pesquisa')
   if (!banco) return []
 
-  return banco.slice(0, quantidade).map((base) => ({
+  return banco.slice(0, quantasGerar(quantidade)).map((base) => ({
     ...base,
     id: proximoId(),
     enunciado: base.enunciado.replaceAll('{p}', fraseDeParticipantes),

@@ -48,6 +48,25 @@ export default function CartaoPesquisa({
     pesquisa
   const botao = transporte ? TRANSPORTE[transporte] : null
 
+  /*
+   * O nome acessível da linha carrega o que está em cada coluna.
+   *
+   * Os cabeçalhos são `<span>` visuais soltos, e a linha é um botão: para
+   * quem usa leitor de tela, "Ativa | Rodando" e "16%" eram palavras avulsas,
+   * sem ligação com a pesquisa a que pertencem. Dobrar o conteúdo da linha no
+   * rótulo resolve isso sem inventar navegação de tabela que o aplicativo não
+   * tem — a linha continua sendo o que é, um botão que abre a pesquisa.
+   */
+  const rotuloDaLinha = [
+    nome,
+    `público ${publico}`,
+    `tipo ${tipo}`,
+    `status ${status?.texto ?? '—'}`,
+    `evento ${evento}`,
+    `taxa de resposta ${taxa}`,
+    `ciclos ${ciclos}`,
+  ].join(', ')
+
   /* A linha inteira abre a pesquisa. Como é uma div, e não um link, o papel
      e o teclado entram na mão; os botões de ação ficam numa ilha que não
      deixa o clique subir. */
@@ -62,7 +81,7 @@ export default function CartaoPesquisa({
       className={s.cartao}
       role="button"
       tabIndex={0}
-      aria-label={`Abrir ${nome}`}
+      aria-label={`Abrir ${rotuloDaLinha}`}
       onClick={onAbrir}
       onKeyDown={aoTeclar}
     >

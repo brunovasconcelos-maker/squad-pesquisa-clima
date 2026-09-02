@@ -163,11 +163,31 @@ export function atualizarGuardadas(mudar) {
   return { ok: true, lista: proxima }
 }
 
+export const ERRO_PESQUISA_SUMIU =
+  'Esta pesquisa não está mais guardada — ela pode ter sido apagada em outra aba. A alteração não foi salva.'
+
 /* Os três atalhos que cobrem quase toda escrita da aplicação. */
-export const trocarGuardada = (id, transformar) =>
-  atualizarGuardadas((lista) =>
-    lista.map((p) => (p.id === id ? transformar(p) : p)),
+
+/*
+ * Muda uma pesquisa pelo id.
+ *
+ * Some da lista entre a tela abrir e a alteração acontecer — outra aba
+ * apagou — e o `map` não achava ninguém para trocar: a lista voltava igual e
+ * a escrita se dizia bem-sucedida. A alteração ia embora calada, e a tela
+ * ainda mandava para a lista sem explicar. Agora a ausência é dita.
+ */
+export function trocarGuardada(id, transformar) {
+  let achou = false
+  const r = atualizarGuardadas((lista) =>
+    lista.map((p) => {
+      if (p.id !== id) return p
+      achou = true
+      return transformar(p)
+    }),
   )
+  if (r.ok && !achou) return { ok: false, sumiu: true, erro: ERRO_PESQUISA_SUMIU }
+  return r
+}
 
 export const acrescentarGuardada = (pesquisa) =>
   atualizarGuardadas((lista) => [...lista, pesquisa])

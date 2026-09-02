@@ -172,7 +172,9 @@ export default function Home() {
   return (
     <div className={s.layout}>
       <Sidebar />
-      <div className={s.coluna}>
+      {/* Marco principal da página: sem ele, quem navega por marcos não tem
+          como pular a sidebar e cair no conteúdo. */}
+      <main className={s.coluna}>
         <div className={s.cabecalho}>
           <div className={s.tituloLinha}>
             <h1 className={s.titulo}>Pesquisa de Clima</h1>
@@ -214,7 +216,10 @@ export default function Home() {
           </div>
         ) : null}
 
-        <div className={s.tabela}>
+        {/* Cabeçalhos só visuais: o nome de cada coluna já vai junto do valor
+            no rótulo de cada linha, e lê-los aqui de novo seria uma fila de
+            sete palavras soltas antes da lista. */}
+        <div className={s.tabela} aria-hidden="true">
           {COLUNAS.map(({ nome, largura }) => (
             <span key={nome} className={s.coluna1} style={{ width: largura }}>
               {nome}
@@ -222,7 +227,11 @@ export default function Home() {
           ))}
         </div>
 
-        <div className={s.linhas}>
+        {/* `group` e não `list`: as linhas são botões, e uma lista cujos
+            itens não são `listitem` é ARIA inválida — o leitor de tela
+            ignoraria a lista ou anunciaria errado. O grupo dá o nome sem
+            mentir sobre a estrutura. */}
+        <div className={s.linhas} role="group" aria-label="Pesquisas">
           {encontradas.map((p) => (
             <CartaoPesquisa
               key={p.id}
@@ -243,7 +252,7 @@ export default function Home() {
             </p>
           ) : null}
         </div>
-      </div>
+      </main>
 
       <Aviso texto={aviso} onSumir={limparAviso} />
 

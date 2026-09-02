@@ -148,6 +148,7 @@ export default function TelaCiclo() {
   const [vendoPerguntas, setVendoPerguntas] = useState(false)
   const [confirmacao, setConfirmacao] = useState(null)
   const [falhaDeLeitura, setFalhaDeLeitura] = useState(null)
+  const [sumiu, setSumiu] = useState(null)
   const envoltorioMenu = useRef(null)
 
   /* Sincroniza o histórico ao entrar, como o detalhe faz: quem chega direto
@@ -174,6 +175,7 @@ export default function TelaCiclo() {
       atualizadoEm: new Date().toISOString(),
     }))
     if (r.ok) setPesquisas(r.lista)
+    else if (r.sumiu) setSumiu(r.erro)
     else setAviso(r.erro)
   }
 
@@ -193,10 +195,10 @@ export default function TelaCiclo() {
      vez de mostrar uma tela sem conteúdo. */
   useEffect(() => {
     if (!pesquisas) return
-    if (falhaDeLeitura) return
+    if (falhaDeLeitura || sumiu) return
     if (!pesquisa) navigate('/', { replace: true })
     else if (!ciclo) navigate(`/pesquisas/${id}`, { replace: true })
-  }, [pesquisas, pesquisa, ciclo, id, falhaDeLeitura, navigate])
+  }, [pesquisas, pesquisa, ciclo, id, falhaDeLeitura, sumiu, navigate])
 
   if (falhaDeLeitura) return <TelaDadosIlegiveis motivo={falhaDeLeitura} />
   if (!pesquisa || !ciclo) return null
@@ -376,6 +378,20 @@ export default function TelaCiclo() {
             setConfirmacao(null)
           }}
           onCancelar={() => setConfirmacao(null)}
+        />
+      ) : null}
+
+      {/* A pesquisa sumiu enquanto esta tela estava aberta. O modal fica por
+          cima do que já está desenhado: trocar a tela inteira por ele
+          esconderia o contexto de onde a pessoa estava. */}
+      {sumiu ? (
+        <ModalConfirmar
+          titulo="Pesquisa não encontrada"
+          texto={sumiu}
+          rotuloConfirmar="Ir para as pesquisas"
+          soAviso
+          onConfirmar={() => navigate('/', { replace: true })}
+          onCancelar={() => navigate('/', { replace: true })}
         />
       ) : null}
 

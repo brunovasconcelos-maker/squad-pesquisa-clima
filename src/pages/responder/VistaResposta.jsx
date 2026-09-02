@@ -17,6 +17,10 @@ import s from './Responder.module.css'
 export default function VistaResposta({
   pesquisa,
   progresso = null,
+  /* O que a barra significa em palavras — "Pergunta 2 de 5". A barra era só
+     um retângulo que cresce: quem não a enxerga não tinha como saber onde
+     está no questionário. */
+  rotuloProgresso,
   rodape = null,
   children,
 }) {
@@ -30,7 +34,15 @@ export default function VistaResposta({
 
       {/* Nas telas sem Voltar/Continuar a barra é só a trilha. */}
       {progresso !== null && rodape === null ? (
-        <div className={s.trilhaSozinha}>
+        <div
+          className={s.trilhaSozinha}
+          role="progressbar"
+          aria-label="Progresso da pesquisa"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(progresso * 100)}
+          aria-valuetext={rotuloProgresso}
+        >
           <div
             className={s.trilhaPreenchida}
             style={{ width: `calc(${progresso * 100}% + 4px)` }}
@@ -45,6 +57,7 @@ export default function VistaResposta({
    mesma trilha de 8px cortada na borda, mesmos Voltar e Continuar. */
 export function RodapeDaVista({
   progresso,
+  rotuloProgresso,
   ultima,
   travado,
   onVoltar,
@@ -54,6 +67,7 @@ export function RodapeDaVista({
     <RodapeFluxo
       progresso={progresso ?? 0}
       mostrarProgresso={progresso !== null}
+      rotuloProgresso={rotuloProgresso}
       rotuloContinuar={ultima ? 'Finalizar' : 'Continuar'}
       continuarDesabilitado={travado}
       onVoltar={onVoltar}

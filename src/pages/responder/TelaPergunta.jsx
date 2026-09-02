@@ -41,8 +41,10 @@ export default function TelaPergunta() {
   return (
     <VistaResposta
       pesquisa={pesquisa}
+      rotuloProgresso={`Pergunta ${posicao} de ${perguntas.length}`}
       rodape={
         <RodapeDaVista
+          rotuloProgresso={`Pergunta ${posicao} de ${perguntas.length}`}
           progresso={mostrarProgresso ? progresso : null}
           ultima={ultima}
           travado={travado}

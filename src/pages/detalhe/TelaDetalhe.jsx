@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import Aviso from '../../components/Aviso.jsx'
+import ModalConfirmar from '../../components/fluxo/ModalConfirmar.jsx'
 import TelaDadosIlegiveis from '../../components/TelaDadosIlegiveis.jsx'
 import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
 import {
@@ -59,6 +60,10 @@ export default function TelaDetalhe() {
   /* Leitura que falhou: a tela não pode dizer que a pesquisa não existe
      quando o que houve foi não conseguir ler. */
   const [falhaDeLeitura, setFalhaDeLeitura] = useState(null)
+  /* A pesquisa sumiu enquanto esta tela estava aberta. Um modal, e não um
+     aviso passageiro: a tela vai embora em seguida, e um aviso de 2,5s
+     desapareceria junto com ela sem ninguém ler. */
+  const [sumiu, setSumiu] = useState(null)
   const limparAviso = useCallback(() => setAviso(''), [])
   const { state } = useLocation()
   const [ativa, setAtiva] = useState(
@@ -109,6 +114,7 @@ export default function TelaDetalhe() {
         atualizadoEm: new Date().toISOString(),
       }))
       if (r.ok) setPesquisas(r.lista)
+      else if (r.sumiu) setSumiu(r.erro)
       else setAviso(r.erro)
     },
     [id],
@@ -118,8 +124,8 @@ export default function TelaDetalhe() {
      cabeçalho sem nome. `pesquisas` nulo é a primeira renderização, antes de
      ler o storage — aí ainda não dá para dizer que não existe. */
   useEffect(() => {
-    if (pesquisas && !pesquisa && !falhaDeLeitura) navigate('/', { replace: true })
-  }, [pesquisas, pesquisa, falhaDeLeitura, navigate])
+    if (pesquisas && !pesquisa && !falhaDeLeitura && !sumiu) navigate('/', { replace: true })
+  }, [pesquisas, pesquisa, falhaDeLeitura, sumiu, navigate])
 
   /* Não conseguir ler não é a pesquisa não existir: mandar para a lista aqui
      faria parecer que ela foi apagada. */
@@ -175,6 +181,20 @@ export default function TelaDetalhe() {
           <AbaConfiguracoes pesquisa={pesquisa} onAlterar={alterar} />
         ) : null}
       </div>
+
+      {/* A pesquisa sumiu enquanto esta tela estava aberta. O modal fica por
+          cima do que já está desenhado: trocar a tela inteira por ele
+          esconderia o contexto de onde a pessoa estava. */}
+      {sumiu ? (
+        <ModalConfirmar
+          titulo="Pesquisa não encontrada"
+          texto={sumiu}
+          rotuloConfirmar="Ir para as pesquisas"
+          soAviso
+          onConfirmar={() => navigate('/', { replace: true })}
+          onCancelar={() => navigate('/', { replace: true })}
+        />
+      ) : null}
 
       <Aviso texto={aviso} onSumir={limparAviso} />
     </div>

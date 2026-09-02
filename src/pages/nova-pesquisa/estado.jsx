@@ -155,8 +155,9 @@ export function nomeDaPessoa(email) {
     .join(' ')
 }
 
-export const PERGUNTAS_MIN = 1
-export const PERGUNTAS_MAX = 20
+/* Reexportadas de onde a geração acontece — as telas continuam importando
+   daqui, e a faixa tem um dono só. */
+export { PERGUNTAS_MIN, PERGUNTAS_MAX } from './bancoDePerguntas.js'
 
 /* 45 segundos por pergunta, arredondando para o minuto mais próximo. O .5
    sobe: 10 perguntas dão 7,5 minutos e viram 8. Nunca chega a zero, porque
