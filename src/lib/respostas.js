@@ -269,10 +269,20 @@ export function aparar(p) {
   return { ...p, respostas: atuais.slice(0, total) }
 }
 
-/* Uma resposta de verdade, enviada pela vista de quem responde. Entra na
-   mesma lista das simuladas, no fim, e a taxa sobe sozinha porque é contada
-   dela. */
-export function adicionarResposta(p, valores, agora = new Date()) {
+/*
+ * Uma resposta de verdade, enviada pela vista de quem responde. Entra na
+ * mesma lista das simuladas, no fim, e a taxa sobe sozinha porque é contada
+ * dela.
+ *
+ * `extras` são as perguntas condicionais que dispararam nesta sessão — a
+ * "pergunta extra quando a resposta for negativa" (lib/perguntaExtra.js).
+ * Elas não existem em `p.perguntas`: são sintéticas, nascidas da resposta que
+ * as disparou, e só esta resposta sabe qual foi o enunciado gerado. Sem
+ * guardar isso aqui, a aba Respostas não teria como mostrar o que foi
+ * perguntado — só o texto que a pessoa escreveu, sem a pergunta que ele
+ * respondia.
+ */
+export function adicionarResposta(p, valores, extras = [], agora = new Date()) {
   return {
     ...p,
     respostas: [
@@ -281,6 +291,7 @@ export function adicionarResposta(p, valores, agora = new Date()) {
         id: `${p.id}_r${agora.getTime().toString(36)}`,
         em: agora.toISOString(),
         valores,
+        ...(extras.length ? { extras } : {}),
       },
     ],
   }

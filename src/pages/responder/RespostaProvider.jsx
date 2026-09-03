@@ -10,6 +10,7 @@ import {
 import { adicionarResposta, materializar } from '../../lib/respostas.js'
 import { sincronizarHistorico } from '../../lib/historico.js'
 import { ehObrigatoria } from '../../lib/obrigatorias.js'
+import { respostaENegativa, gerarPerguntaExtra } from '../../lib/perguntaExtra.js'
 import TelaNaoEncontrada from './TelaNaoEncontrada.jsx'
 import TelaForaDoAr from './TelaForaDoAr.jsx'
 
@@ -71,15 +72,32 @@ export default function RespostaProvider() {
 
   const pesquisa = sessao.pesquisa
 
-  /* As perguntas na ordem desta sessão. Uma pergunta apagada da pesquisa
-     depois do começo dela simplesmente não aparece. */
-  const perguntas = useMemo(
-    () =>
-      ordem
-        .map((idPergunta) => (pesquisa?.perguntas || []).find((q) => q.id === idPergunta))
-        .filter(Boolean),
-    [ordem, pesquisa],
-  )
+  /*
+   * As perguntas na ordem desta sessão, com as extras condicionais já
+   * intercaladas — "Gerar pergunta extra quando a resposta for negativa"
+   * (lib/perguntaExtra.js). Uma pergunta apagada da pesquisa depois do
+   * começo dela simplesmente não aparece.
+   *
+   * Recalculada a cada resposta, e não só uma vez no começo: é o que faz uma
+   * extra aparecer assim que a resposta que a dispara é dada, e sumir de
+   * volta se a pessoa voltar e trocar a resposta por uma que não dispara
+   * mais nenhuma. O total de passos — e a barra de progresso, que é
+   * `perguntas.length` — anda junto.
+   */
+  const perguntas = useMemo(() => {
+    const base = ordem
+      .map((idPergunta) => (pesquisa?.perguntas || []).find((q) => q.id === idPergunta))
+      .filter(Boolean)
+    const sequencia = []
+    for (const pergunta of base) {
+      sequencia.push(pergunta)
+      const valor = valores[pergunta.id]
+      if (respostaENegativa(pergunta, valor)) {
+        sequencia.push(gerarPerguntaExtra(pergunta, valor))
+      }
+    }
+    return sequencia
+  }, [ordem, pesquisa, valores])
 
   const responder = useCallback(
     (idPergunta, valor) => setValores((v) => ({ ...v, [idPergunta]: valor })),
@@ -101,10 +119,26 @@ export default function RespostaProvider() {
       setFalhouAoEnviar(true)
       return
     }
+    /* Só o que ainda está na sequência de agora: uma extra que apareceu e
+       depois sumiu — a pessoa voltou e trocou a resposta que a disparava —
+       deixa a chave para trás em `valores`, e ela não deveria ir para o
+       registro como se tivesse sido perguntada. */
+    const idsAtuais = new Set(perguntas.map((q) => q.id))
+    const valoresAtuais = Object.fromEntries(
+      Object.entries(valores).filter(([idPergunta]) => idsAtuais.has(idPergunta)),
+    )
+    const extras = perguntas
+      .filter((q) => q.extra)
+      .map(({ id: idExtra, tipo, enunciado, origemId }) => ({
+        id: idExtra,
+        tipo,
+        enunciado,
+        origemId,
+      }))
     /* A resposta entra na lista de agora: o motor pode ter andado, e outra
        aba pode ter mexido no resto — só esta pesquisa é reescrita. */
     const r = trocarGuardada(id, (p) => ({
-      ...sincronizarHistorico(adicionarResposta(p, valores)),
+      ...sincronizarHistorico(adicionarResposta(p, valoresAtuais, extras)),
       atualizadoEm: new Date().toISOString(),
     }))
     if (!r.ok) {
@@ -113,7 +147,7 @@ export default function RespostaProvider() {
     }
     setEnviou(true)
     navigate(`/responder/${id}/fim`)
-  }, [id, navigate, valores])
+  }, [id, navigate, valores, perguntas])
 
   const valor = useMemo(
     () => ({

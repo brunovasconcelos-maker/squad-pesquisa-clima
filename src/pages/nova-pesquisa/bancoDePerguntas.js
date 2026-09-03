@@ -218,6 +218,10 @@ export function converterPergunta(pergunta, tipo) {
       ...base,
       opcoes: pergunta.opcoes ?? ['', ''],
       temOutro: pergunta.temOutro ?? false,
+      /* Única e múltipla compartilham a mesma lista de opções, então os
+         índices que "Marque as opções negativas" guardou continuam apontando
+         para a opção certa — só muda quantas a pergunta deixa marcar. */
+      ...(pergunta.perguntaExtra ? { perguntaExtra: pergunta.perguntaExtra } : {}),
     }
   }
   return base

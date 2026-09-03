@@ -2,10 +2,10 @@ import { useState } from 'react'
 import s from './Editor.module.css'
 import Botao from '../../components/fluxo/Botao.jsx'
 import IconeBotao from '../../components/fluxo/IconeBotao.jsx'
+import Interruptor from '../../components/fluxo/Interruptor.jsx'
 import ModalConfirmar from '../../components/fluxo/ModalConfirmar.jsx'
 import iguais from '../../lib/iguais.js'
 import useModal from '../../components/fluxo/useModal.js'
-import { daTabela } from '../../lib/desconhecido.js'
 import {
   TIPOS,
   converterPergunta,
@@ -13,6 +13,13 @@ import {
   LIMITE_CURTA,
   LIMITE_LONGA,
 } from './bancoDePerguntas.js'
+import {
+  suportaExtra,
+  perguntaExtraDe,
+  opcoesNegativasDe,
+  perguntaExtraNaEscala,
+  perguntaExtraSemOpcao,
+} from '../../lib/perguntaExtra.js'
 
 import close from '../../assets/icons/Close.svg'
 import trash from '../../assets/icons/Trash.svg'
@@ -28,8 +35,6 @@ const TETOS = Array.from(
   { length: NOTA_MAX - NOTA_MIN + 1 },
   (_, i) => NOTA_MIN + i,
 )
-
-const NOME_DO_TIPO = Object.fromEntries(TIPOS.map((t) => [t.id, t.nome]))
 
 /*
  * Editor de pergunta. Serve para os dois casos: editar uma existente e criar
@@ -47,7 +52,7 @@ const NOME_DO_TIPO = Object.fromEntries(TIPOS.map((t) => [t.id, t.nome]))
  * pergunta se houver o que perder; sem nada alterado desde que abriu, fecha
  * direto.
  */
-export default function EditorPergunta({ pergunta, onSalvar, onFechar }) {
+export default function EditorPergunta({ pergunta, numero, onSalvar, onFechar }) {
   const [rascunho, setRascunho] = useState(pergunta)
   /* A pergunta como estava ao abrir o editor — é com ela que o rascunho se
      compara para saber se há alterações. Numa pergunta nova ela nasce junto
@@ -119,7 +124,15 @@ export default function EditorPergunta({ pergunta, onSalvar, onFechar }) {
     })
 
   const removerOpcao = (indice) =>
-    alterar({ opcoes: rascunho.opcoes.filter((_, i) => i !== indice) })
+    alterar({
+      opcoes: rascunho.opcoes.filter((_, i) => i !== indice),
+      /* A opção some, e as negativas marcadas nela ou depois dela têm de
+         acompanhar — senão a marca ficaria apontando para a opção que tomou
+         o lugar da removida. */
+      ...(rascunho.perguntaExtra
+        ? { perguntaExtra: perguntaExtraSemOpcao(rascunho.perguntaExtra, indice) }
+        : {}),
+    })
 
   const temOpcoes =
     rascunho.tipo === 'escolhaUnica' || rascunho.tipo === 'escolhaMultipla'
@@ -130,16 +143,19 @@ export default function EditorPergunta({ pergunta, onSalvar, onFechar }) {
     rascunho.enunciado.trim() !== '' &&
     (!temOpcoes || rascunho.opcoes.every((o) => o.trim() !== ''))
 
+  const extra = perguntaExtraDe(rascunho)
+  const opcoesNegativas = suportaExtra(rascunho.tipo)
+    ? opcoesNegativasDe(rascunho)
+    : []
+
   return (
     <div className={s.scrim}>
       <div className={s.modal} ref={caixa} role="dialog" aria-label="Editar pergunta">
         <div className={s.cabecalho}>
-          {/* Tipo que não é nenhum dos seis: o título diz qual é o valor
-              estranho, em vez de ficar em branco. */}
-          <p className={s.titulo}>
-            {daTabela(NOME_DO_TIPO, rascunho.tipo, 'tipo da pergunta') ??
-              `Tipo desconhecido (${String(rascunho.tipo)})`}
-          </p>
+          {/* O número da pergunta na lista, e não mais o tipo — é o que o
+              Figma passou a desenhar (8203:14400 e irmãos). Quem quer saber
+              o tipo olha o próprio seletor, logo abaixo. */}
+          <p className={s.titulo}>Pergunta {numero}</p>
           <IconeBotao src={close} rotulo="Fechar" onClick={fechar} />
         </div>
 
@@ -179,7 +195,24 @@ export default function EditorPergunta({ pergunta, onSalvar, onFechar }) {
                 <select
                   className={s.entrada}
                   value={rascunho.maximo}
-                  onChange={(e) => alterar({ maximo: Number(e.target.value) })}
+                  onChange={(e) => {
+                    const maximo = Number(e.target.value)
+                    alterar({
+                      maximo,
+                      /* O teto pode baixar; uma nota marcada como negativa
+                         que ficou fora da escala nova não pode continuar
+                         marcada, senão a lista mostraria uma opção que a
+                         pergunta não tem mais. */
+                      ...(rascunho.perguntaExtra
+                        ? {
+                            perguntaExtra: perguntaExtraNaEscala(
+                              rascunho.perguntaExtra,
+                              maximo,
+                            ),
+                          }
+                        : {}),
+                    })
+                  }}
                 >
                   {TETOS.map((teto) => (
                     <option key={teto} value={teto}>
@@ -277,6 +310,63 @@ export default function EditorPergunta({ pergunta, onSalvar, onFechar }) {
           ) : null}
           {rascunho.tipo === 'estrelas' ? (
             <p className={s.dica}>A escala é sempre de 5 estrelas.</p>
+          ) : null}
+
+          {/* Só nos quatro tipos com um conjunto fechado de respostas — nota,
+              estrelas, única e múltipla. Texto curto e texto longo não têm o
+              que marcar como negativo (Figma 8203:14400, 8203:9794). */}
+          {suportaExtra(rascunho.tipo) ? (
+            <div className={s.campo}>
+              <div className={s.linhaExtra}>
+                <span className={s.rotuloExtra}>
+                  Gerar pergunta extra quando a resposta for negativa
+                </span>
+                <Interruptor
+                  pequeno
+                  ligado={extra.ativa}
+                  rotulo="Gerar pergunta extra quando a resposta for negativa"
+                  onAlternar={() =>
+                    alterar({ perguntaExtra: { ...extra, ativa: !extra.ativa } })
+                  }
+                />
+              </div>
+
+              {extra.ativa ? (
+                <div className={s.listaNegativas}>
+                  <p className={s.tituloNegativas}>Marque as opções negativas</p>
+                  {opcoesNegativas.map(({ valor, texto }) => {
+                    const marcada = extra.negativas.includes(valor)
+                    return (
+                      <button
+                        key={valor}
+                        type="button"
+                        className={s.opcaoNegativa}
+                        aria-pressed={marcada}
+                        onClick={() =>
+                          alterar({
+                            perguntaExtra: {
+                              ...extra,
+                              negativas: marcada
+                                ? extra.negativas.filter((v) => v !== valor)
+                                : [...extra.negativas, valor],
+                            },
+                          })
+                        }
+                      >
+                        <img
+                          className={s.icone}
+                          src={marcada ? checkSquare : square}
+                          alt=""
+                          width={24}
+                          height={24}
+                        />
+                        <span>{texto}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              ) : null}
+            </div>
           ) : null}
         </div>
 

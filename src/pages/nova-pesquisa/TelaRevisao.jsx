@@ -115,6 +115,13 @@ export default function TelaRevisao() {
       {emEdicao !== false ? (
         <EditorPergunta
           pergunta={emEdicao}
+          /* Editando, é a posição em que ela já está; criando, é o fim da
+             lista — onde `salvarPergunta` a acrescenta. */
+          numero={
+            emEdicao
+              ? pesquisa.perguntas.findIndex((q) => q.id === emEdicao.id) + 1
+              : pesquisa.perguntas.length + 1
+          }
           onSalvar={(pergunta) => {
             salvarPergunta(pergunta)
             setEmEdicao(false)

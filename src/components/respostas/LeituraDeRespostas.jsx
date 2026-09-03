@@ -217,6 +217,26 @@ export function Individual({ perguntas, respostas, onBaixar, onDeletar }) {
           resposta={pessoa}
         />
       ))}
+
+      {/*
+       * As perguntas condicionais que dispararam nesta resposta — "Gerar
+       * pergunta extra quando a resposta for negativa" (lib/perguntaExtra.js).
+       * Não vêm de `perguntas`: são sintéticas, nasceram desta resposta, e só
+       * ela sabe qual foi o enunciado gerado. Por isso o rótulo diz "Pergunta
+       * extra" em vez de continuar a numeração de cima — misturar as duas
+       * numerações sugeriria que a pesquisa sempre teve essa pergunta a mais,
+       * que não é o caso: ela só apareceu porque esta pessoa respondeu o que
+       * respondeu.
+       */}
+      {(pessoa.extras || []).map((extra) => (
+        <CartaoResposta
+          key={extra.id}
+          rotulo="Pergunta extra:"
+          enunciado={extra.enunciado}
+          pergunta={extra}
+          resposta={pessoa}
+        />
+      ))}
     </>
   )
 }

@@ -184,6 +184,11 @@ export default function AbaPerguntas({ pesquisa, onAlterar }) {
       {emEdicao !== false ? (
         <EditorPergunta
           pergunta={emEdicao}
+          numero={
+            emEdicao
+              ? (pesquisa.perguntas || []).findIndex((q) => q.id === emEdicao.id) + 1
+              : (pesquisa.perguntas || []).length + 1
+          }
           onSalvar={(pergunta) => {
             salvarPergunta(pergunta)
             setEmEdicao(false)
