@@ -25,6 +25,9 @@ import close from '../../assets/icons/Close.svg'
 import trash from '../../assets/icons/Trash.svg'
 import checkSquare from '../../assets/icons/CheckSquare.svg'
 import square from '../../assets/icons/Square.svg'
+import caretDown from '../../assets/icons/CaretDown.svg'
+import caretUpDown from '../../assets/icons/CaretUpDown.svg'
+import plus from '../../assets/icons/Plus.svg'
 
 const NOTA_MIN = 3
 const NOTA_MAX = 10
@@ -40,9 +43,12 @@ const TETOS = Array.from(
  * Editor de pergunta. Serve para os dois casos: editar uma existente e criar
  * uma nova — a diferença é só a pergunta que entra.
  *
- * Não há Figma para estas telas. O desenho segue a convenção de construtor de
- * formulário (Typeform, Google Forms): modal, campos rotulados, opções em
- * lista com remover ao lado, e o tipo escolhido antes de tudo quando é nova.
+ * O corpo segue o Figma por tipo (8197:5921 Avaliação, 8201:9071/8203:12280
+ * Múltipla/Única, 8203:13413 Curta/Longa): campos rotulados, opções em lista
+ * com remover ao lado, e o tipo escolhido antes de tudo quando é nova — a
+ * escolha inicial do tipo (tela "Escolha o tipo da pergunta" logo abaixo)
+ * não tem frame próprio no Figma, e segue a mesma convenção de construtor de
+ * formulário do resto do modal.
  *
  * A edição acontece numa cópia: só o "Salvar" devolve, então fechar descarta.
  *
@@ -150,7 +156,12 @@ export default function EditorPergunta({ pergunta, numero, onSalvar, onFechar })
 
   return (
     <div className={s.scrim}>
-      <div className={s.modal} ref={caixa} role="dialog" aria-label="Editar pergunta">
+      <div
+        className={`${s.modal} ${s.modalPergunta}`}
+        ref={caixa}
+        role="dialog"
+        aria-label="Editar pergunta"
+      >
         <div className={s.cabecalho}>
           {/* O número da pergunta na lista, e não mais o tipo — é o que o
               Figma passou a desenhar (8203:14400 e irmãos). Quem quer saber
@@ -159,22 +170,25 @@ export default function EditorPergunta({ pergunta, numero, onSalvar, onFechar })
           <IconeBotao src={close} rotulo="Fechar" onClick={fechar} />
         </div>
 
-        <div className={s.corpo}>
+        <div className={`${s.corpo} ${s.corpoPergunta}`}>
           {/* Trocar o tipo aqui troca os campos abaixo: o que não vale mais
               para o tipo novo sai do rascunho junto. */}
           <label className={s.campo}>
             <span className={s.rotulo}>Tipo</span>
-            <select
-              className={s.entrada}
-              value={rascunho.tipo}
-              onChange={(e) => trocarTipo(e.target.value)}
-            >
-              {TIPOS.map(({ id, nome }) => (
-                <option key={id} value={id}>
-                  {nome}
-                </option>
-              ))}
-            </select>
+            <span className={s.selecaoEnvoltorio}>
+              <select
+                className={`${s.entrada} ${s.selecaoEntrada}`}
+                value={rascunho.tipo}
+                onChange={(e) => trocarTipo(e.target.value)}
+              >
+                {TIPOS.map(({ id, nome }) => (
+                  <option key={id} value={id}>
+                    {nome}
+                  </option>
+                ))}
+              </select>
+              <img className={s.selecaoIcone} src={caretDown} alt="" width={24} height={24} />
+            </span>
           </label>
 
           <label className={s.campo}>
@@ -190,37 +204,62 @@ export default function EditorPergunta({ pergunta, numero, onSalvar, onFechar })
 
           {rascunho.tipo === 'nota' ? (
             <>
-              <label className={s.campo}>
+              <div className={s.campo}>
                 <span className={s.rotulo}>Escala</span>
-                <select
-                  className={s.entrada}
-                  value={rascunho.maximo}
-                  onChange={(e) => {
-                    const maximo = Number(e.target.value)
-                    alterar({
-                      maximo,
-                      /* O teto pode baixar; uma nota marcada como negativa
-                         que ficou fora da escala nova não pode continuar
-                         marcada, senão a lista mostraria uma opção que a
-                         pergunta não tem mais. */
-                      ...(rascunho.perguntaExtra
-                        ? {
-                            perguntaExtra: perguntaExtraNaEscala(
-                              rascunho.perguntaExtra,
-                              maximo,
-                            ),
-                          }
-                        : {}),
-                    })
-                  }}
-                >
-                  {TETOS.map((teto) => (
-                    <option key={teto} value={teto}>
-                      0 a {teto}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                {/* Duas caixas unidas por "a" (Figma 8200:6811): a piso é
+                    sempre zero neste projeto, então a caixa da esquerda é só
+                    visual — quem muda é o teto, na caixa da direita. */}
+                <div className={s.linhaEscala}>
+                  <div className={s.caixaEscala} aria-hidden="true">
+                    <span>0</span>
+                    <img
+                      className={s.icone}
+                      src={caretUpDown}
+                      alt=""
+                      width={24}
+                      height={24}
+                    />
+                  </div>
+                  <span className={s.escalaSeparador}>a</span>
+                  <span className={s.selecaoEnvoltorio}>
+                    <select
+                      className={`${s.entrada} ${s.selecaoEntrada}`}
+                      value={rascunho.maximo}
+                      onChange={(e) => {
+                        const maximo = Number(e.target.value)
+                        alterar({
+                          maximo,
+                          /* O teto pode baixar; uma nota marcada como
+                             negativa que ficou fora da escala nova não pode
+                             continuar marcada, senão a lista mostraria uma
+                             opção que a pergunta não tem mais. */
+                          ...(rascunho.perguntaExtra
+                            ? {
+                                perguntaExtra: perguntaExtraNaEscala(
+                                  rascunho.perguntaExtra,
+                                  maximo,
+                                ),
+                              }
+                            : {}),
+                        })
+                      }}
+                    >
+                      {TETOS.map((teto) => (
+                        <option key={teto} value={teto}>
+                          {teto}
+                        </option>
+                      ))}
+                    </select>
+                    <img
+                      className={s.selecaoIcone}
+                      src={caretUpDown}
+                      alt=""
+                      width={24}
+                      height={24}
+                    />
+                  </span>
+                </div>
+              </div>
               <div className={s.duasColunas}>
                 <label className={s.campo}>
                   <span className={s.rotulo}>Rótulo da esquerda</span>
@@ -273,14 +312,18 @@ export default function EditorPergunta({ pergunta, numero, onSalvar, onFechar })
                     </button>
                   </div>
                 ))}
+                {/* A própria lista de opções ganha uma última linha para
+                    adicionar (Figma 8203:12280) — não é mais um botão solto
+                    abaixo dela. */}
+                <button
+                  type="button"
+                  className={s.linhaAdicionar}
+                  onClick={() => alterar({ opcoes: [...rascunho.opcoes, ''] })}
+                >
+                  <span className={s.caixaAdicionar}>Adicionar opção</span>
+                  <img className={s.icone} src={plus} alt="" width={24} height={24} />
+                </button>
               </div>
-              <button
-                type="button"
-                className={s.secundario}
-                onClick={() => alterar({ opcoes: [...rascunho.opcoes, ''] })}
-              >
-                Adicionar opção
-              </button>
               <button
                 type="button"
                 className={s.alternador}
@@ -318,17 +361,31 @@ export default function EditorPergunta({ pergunta, numero, onSalvar, onFechar })
           {suportaExtra(rascunho.tipo) ? (
             <div className={s.campo}>
               <div className={s.linhaExtra}>
-                <span className={s.rotuloExtra}>
-                  Gerar pergunta extra quando a resposta for negativa
+                <span className={s.rotuloEInterruptor}>
+                  <span className={s.rotuloExtra}>
+                    Gerar pergunta extra quando a resposta for negativa
+                  </span>
+                  <Interruptor
+                    pequeno
+                    ligado={extra.ativa}
+                    rotulo="Gerar pergunta extra quando a resposta for negativa"
+                    onAlternar={() =>
+                      alterar({ perguntaExtra: { ...extra, ativa: !extra.ativa } })
+                    }
+                  />
                 </span>
-                <Interruptor
-                  pequeno
-                  ligado={extra.ativa}
-                  rotulo="Gerar pergunta extra quando a resposta for negativa"
-                  onAlternar={() =>
-                    alterar({ perguntaExtra: { ...extra, ativa: !extra.ativa } })
-                  }
-                />
+                {/* Chevron decorativo — só aparece com a lista aberta, como
+                    o Figma desenha (8200:6833 vs 8201:9110). Não tem clique
+                    próprio: quem abre e fecha é o interruptor ao lado. */}
+                {extra.ativa ? (
+                  <img
+                    className={s.chevronExtra}
+                    src={caretDown}
+                    alt=""
+                    width={24}
+                    height={24}
+                  />
+                ) : null}
               </div>
 
               {extra.ativa ? (
@@ -371,7 +428,10 @@ export default function EditorPergunta({ pergunta, numero, onSalvar, onFechar })
         </div>
 
         <div className={s.rodape}>
-          <Botao onClick={fechar}>Cancelar</Botao>
+          {/* "Voltar", não "Cancelar" — é como o Figma rotula o par com
+              Salvar (8200:6871 e irmãos). O clique continua o mesmo: fecha
+              o editor, perguntando antes se há o que descartar. */}
+          <Botao onClick={fechar}>Voltar</Botao>
           <Botao
             variante="marca"
             desabilitado={!podeSalvar}

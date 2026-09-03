@@ -25,6 +25,14 @@
   width: 480px;
 }
 
+/* Espaço entre cabeçalho, corpo e rodapé no editor de pergunta (Figma
+   8200:6794 e irmãos) é maior que o dos outros modais que dividem .modal
+   (EditorAbertura, ModalConfirmar, ModalSairDoFluxo) — por isso entra como
+   classe extra, e não como troca do gap de .modal. */
+.modalPergunta {
+  gap: var(--espaco-40);
+}
+
 .texto {
   margin: 0;
   font-size: 16px;
@@ -91,35 +99,134 @@
   outline: 1px solid var(--cor-texto);
 }
 
+/*
+ * .campo, .rotulo e .entrada acima são de EditorAbertura.jsx também — as
+ * medidas abaixo valem só para o corpo do editor de pergunta (Figma
+ * 8200:6794 e irmãos), então entram como o de dentro de .corpoPergunta, e
+ * não como troca das regras de cima.
+ */
+.corpoPergunta {
+  gap: var(--espaco-32);
+}
+
+.corpoPergunta .campo {
+  gap: var(--espaco-12);
+}
+
+.corpoPergunta .rotulo {
+  color: var(--cor-texto-apoio);
+  font-size: 16px;
+  line-height: 1.1;
+  letter-spacing: -0.23px;
+}
+
+.corpoPergunta .entrada {
+  min-height: 56px;
+  padding: var(--espaco-16) var(--espaco-24);
+  border-color: var(--cor-borda-forte);
+  border-radius: var(--raio-campo);
+  color: var(--cor-texto-apoio);
+  font-weight: var(--peso-medio);
+  letter-spacing: -0.23px;
+}
+
+/* Select nativo sem a seta do navegador, com o ícone do Figma no lugar
+   (CaretDown no Tipo, CaretUpDown na Escala) — clique e teclado continuam do
+   <select>; o ícone só decora por cima, sem capturar o ponteiro. */
+.selecaoEnvoltorio {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.selecaoEntrada {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 58px;
+  cursor: pointer;
+}
+
+.selecaoIcone {
+  position: absolute;
+  top: 50%;
+  right: var(--espaco-24);
+  width: 24px;
+  height: 24px;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* ---- Escala: "0" fixo, "a", teto configurável (Figma 8200:6811) ---- */
+
+.linhaEscala {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: var(--espaco-12);
+}
+
+/* A caixa da esquerda e o envoltório do select da direita dividem a linha
+   em partes iguais — o mesmo que o Figma desenha com duas caixas do mesmo
+   tamanho. */
+.linhaEscala > .caixaEscala,
+.linhaEscala > .selecaoEnvoltorio {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.caixaEscala {
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--espaco-16) var(--espaco-24);
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-campo);
+  color: var(--cor-texto-apoio);
+  font-size: 16px;
+  font-weight: var(--peso-medio);
+  letter-spacing: -0.23px;
+}
+
+.escalaSeparador {
+  flex: none;
+  width: 40px;
+  color: var(--cor-texto-apoio);
+  font-size: 16px;
+  font-weight: var(--peso-medio);
+  letter-spacing: -0.23px;
+  text-align: center;
+}
+
 .duasColunas {
   display: grid;
-  gap: var(--espaco-16);
+  gap: var(--espaco-12);
   grid-template-columns: 1fr 1fr;
 }
 
-/* Lista de opções: cada linha tem o campo e o botão de remover. */
+/* Lista de opções: cada linha tem o campo e o botão de remover, e a última
+   é a de adicionar (Figma 8203:12280). */
 .opcoes {
   display: flex;
   flex-direction: column;
-  gap: var(--espaco-8);
+  gap: var(--espaco-12);
 }
 
 .linhaOpcao {
   display: flex;
   align-items: center;
-  gap: var(--espaco-8);
+  gap: var(--espaco-12);
 }
 
 .remover {
   display: flex;
   flex: none;
-  width: 40px;
-  height: 40px;
+  width: 24px;
+  height: 24px;
   align-items: center;
   justify-content: center;
   padding: 0;
   border: none;
-  border-radius: var(--raio-pilula);
   background: transparent;
   cursor: pointer;
 }
@@ -135,17 +242,31 @@
   height: 24px;
 }
 
-.secundario {
-  align-self: flex-start;
-  padding: var(--espaco-8) var(--espaco-12);
-  border: 1px solid var(--cor-borda-acao);
-  border-radius: var(--raio-pilula);
+/* Mesma linha das opções, mas o "campo" é só um rótulo — quem faz a caixa
+   parecer uma entrada é .caixaAdicionar, não um <input>. */
+.linhaAdicionar {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: var(--espaco-12);
+  padding: 0;
+  border: none;
   background: transparent;
-  color: var(--cor-texto);
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: var(--peso-medio);
   cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+
+.caixaAdicionar {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: var(--espaco-16) var(--espaco-24);
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-campo);
+  color: var(--cor-texto-apoio);
+  font-size: 16px;
+  font-weight: var(--peso-medio);
+  letter-spacing: -0.23px;
 }
 
 .alternador {
@@ -164,9 +285,11 @@
 
 .dica {
   margin: 0;
-  color: var(--cor-texto-secundario);
-  font-size: 14px;
-  font-weight: var(--peso-regular);
+  color: var(--cor-texto-apoio);
+  font-size: 16px;
+  font-weight: var(--peso-medio);
+  line-height: 1.4;
+  letter-spacing: -0.23px;
 }
 
 /* Escolha do tipo, no "Adicionar pergunta". */
@@ -218,6 +341,14 @@
   gap: var(--espaco-12);
 }
 
+/* Rótulo e interruptor ficam colados (Figma 8200:6834); é o chevron que vai
+   sozinho para a ponta da linha, e só quando a lista está aberta. */
+.rotuloEInterruptor {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-12);
+}
+
 .rotuloExtra {
   color: var(--cor-texto-secundario);
   font-size: 14px;
@@ -225,12 +356,18 @@
   letter-spacing: -0.4px;
 }
 
+.chevronExtra {
+  flex: none;
+  transform: rotate(180deg);
+}
+
 .tituloNegativas {
   margin: 0;
   color: var(--cor-preto-suave);
   font-size: 16px;
   font-weight: var(--peso-semibold);
-  letter-spacing: -0.31px;
+  line-height: 25px;
+  letter-spacing: -0.45px;
 }
 
 .listaNegativas {
@@ -252,6 +389,7 @@
   font-family: inherit;
   font-size: 16px;
   font-weight: var(--peso-semibold);
+  line-height: 21px;
   letter-spacing: -0.31px;
   text-align: left;
   cursor: pointer;
