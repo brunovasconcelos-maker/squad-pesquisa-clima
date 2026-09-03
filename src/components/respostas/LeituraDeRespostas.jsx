@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import CorpoDaResposta from '../perguntas/CorpoDaResposta.jsx'
 import { valorDe } from '../../lib/respostas.js'
 import s from './LeituraDeRespostas.module.css'
@@ -51,6 +51,37 @@ function CartaoResposta({ rotulo, pergunta, resposta, enunciado }) {
           uma tela vazia e uma tela que informa. */}
       {valor ? (
         <CorpoDaResposta pergunta={pergunta} resposta={valor} />
+      ) : (
+        <p className={s.semResposta}>Sem resposta para esta pergunta.</p>
+      )}
+    </section>
+  )
+}
+
+/*
+ * O card de uma pergunta extra condicional (lib/perguntaExtra.js) que
+ * disparou nesta resposta — só existe aqui, nunca na lista fixa de
+ * perguntas, porque nasceu da resposta em si. Por isso o número tem duas
+ * partes: a resposta a que pertence, e a ordem entre as extras dela, para o
+ * caso de mais de uma pergunta da pesquisa ter disparado a sua.
+ *
+ * A borda azul e a tag "Gerada através da pergunta anterior" (Figma
+ * 8217:2254, 8217:2397) são o que distingue este card dos das perguntas de
+ * verdade — sem isso pareceria que a pesquisa sempre teve essa pergunta.
+ * Sempre respostaLonga por enquanto (gerarPerguntaExtra), então o texto
+ * entra direto, sem passar pelo CorpoDaResposta genérico.
+ */
+function CartaoRespostaExtra({ numero, extra, resposta }) {
+  const valor = valorDe(resposta, extra)
+  return (
+    <section className={`${s.cartao} ${s.cartaoExtra}`}>
+      <div className={s.topoCartaoExtra}>
+        <p className={s.rotuloCartao}>Resposta {numero}</p>
+        <p className={s.tagExtra}>Gerada através da pergunta anterior</p>
+      </div>
+      <p className={s.enunciado}>{extra.enunciado}</p>
+      {valor ? (
+        <p className={s.textoExtra}>{valor.valor}</p>
       ) : (
         <p className={s.semResposta}>Sem resposta para esta pergunta.</p>
       )}
@@ -141,14 +172,30 @@ export function PorPergunta({ perguntas, respostas }) {
           </p>
         </section>
       ) : (
-        respostas.map((resposta, i) => (
-          <CartaoResposta
-            key={resposta.id}
-            rotulo={`Resposta ${i + 1}`}
-            pergunta={pergunta}
-            resposta={resposta}
-          />
-        ))
+        respostas.map((resposta, i) => {
+          /* Só a extra desta pergunta, se esta resposta a disparou — a vista
+             mostra uma pergunta de cada vez, então nunca há mais de uma para
+             mostrar aqui, e o "M" é sempre 1. */
+          const extra = (resposta.extras || []).find(
+            (e) => e.origemId === pergunta?.id,
+          )
+          return (
+            <Fragment key={resposta.id}>
+              <CartaoResposta
+                rotulo={`Resposta ${i + 1}`}
+                pergunta={pergunta}
+                resposta={resposta}
+              />
+              {extra ? (
+                <CartaoRespostaExtra
+                  numero={`${i + 1}.1`}
+                  extra={extra}
+                  resposta={resposta}
+                />
+              ) : null}
+            </Fragment>
+          )
+        })
       )}
     </>
   )
@@ -165,6 +212,17 @@ export function Individual({ perguntas, respostas, onBaixar, onDeletar }) {
   }, [indice, total])
 
   const pessoa = respostas[indice]
+
+  /* Uma linha por pergunta, com a extra dela — se esta pessoa a disparou —
+     logo depois. O "M" conta as extras desta resposta na ordem em que as
+     perguntas que as geraram aparecem, para o caso de mais de uma ter
+     disparado a sua. */
+  let contadorExtra = 0
+  const linhas = perguntas.map((q, i) => {
+    const extra = (pessoa?.extras || []).find((e) => e.origemId === q.id)
+    if (extra) contadorExtra += 1
+    return { q, i, extra, numero: contadorExtra }
+  })
 
   return (
     <>
@@ -208,34 +266,22 @@ export function Individual({ perguntas, respostas, onBaixar, onDeletar }) {
         </div>
       </section>
 
-      {perguntas.map((q, i) => (
-        <CartaoResposta
-          key={q.id}
-          rotulo={`Pergunta ${i + 1}:`}
-          enunciado={q.enunciado}
-          pergunta={q}
-          resposta={pessoa}
-        />
-      ))}
-
-      {/*
-       * As perguntas condicionais que dispararam nesta resposta — "Gerar
-       * pergunta extra quando a resposta for negativa" (lib/perguntaExtra.js).
-       * Não vêm de `perguntas`: são sintéticas, nasceram desta resposta, e só
-       * ela sabe qual foi o enunciado gerado. Por isso o rótulo diz "Pergunta
-       * extra" em vez de continuar a numeração de cima — misturar as duas
-       * numerações sugeriria que a pesquisa sempre teve essa pergunta a mais,
-       * que não é o caso: ela só apareceu porque esta pessoa respondeu o que
-       * respondeu.
-       */}
-      {(pessoa.extras || []).map((extra) => (
-        <CartaoResposta
-          key={extra.id}
-          rotulo="Pergunta extra:"
-          enunciado={extra.enunciado}
-          pergunta={extra}
-          resposta={pessoa}
-        />
+      {linhas.map(({ q, i, extra, numero }) => (
+        <Fragment key={q.id}>
+          <CartaoResposta
+            rotulo={`Pergunta ${i + 1}:`}
+            enunciado={q.enunciado}
+            pergunta={q}
+            resposta={pessoa}
+          />
+          {extra ? (
+            <CartaoRespostaExtra
+              numero={`${indice + 1}.${numero}`}
+              extra={extra}
+              resposta={pessoa}
+            />
+          ) : null}
+        </Fragment>
       ))}
     </>
   )

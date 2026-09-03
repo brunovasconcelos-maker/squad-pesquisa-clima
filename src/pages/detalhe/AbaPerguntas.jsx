@@ -22,7 +22,7 @@ import s from './AbaPerguntas.module.css'
  * sem explicar não diz o que fazer; quem clica recebe a saída, que é pausar.
  *
  * Toda mudança aqui é anotada no registro de alterações, que é o que a coluna
- * Atividade do Histórico conta. A anotação vai junto com a mudança, na mesma
+ * Atividade da aba Ciclos conta. A anotação vai junto com a mudança, na mesma
  * gravação: se fossem duas, um F5 no meio deixaria uma sem a outra.
  */
 export default function AbaPerguntas({ pesquisa, onAlterar }) {
@@ -39,7 +39,7 @@ export default function AbaPerguntas({ pesquisa, onAlterar }) {
   /* Encerrada é o fim, e vale aqui como vale nas Configurações: nenhum ciclo
      novo vai rodar, então mudar as perguntas não muda nada que ainda vá
      acontecer — e a alteração era anotada para um ciclo que nunca existiria,
-     sumindo do Histórico. Quem quer o mesmo questionário outra vez duplica,
+     sumindo da aba Ciclos. Quem quer o mesmo questionário outra vez duplica,
      que é o caminho que a lista oferece. */
   const encerrada = ehFinal(pesquisa)
 
@@ -133,8 +133,8 @@ export default function AbaPerguntas({ pesquisa, onAlterar }) {
           texto={'A pesquisa está rodando e já foi enviada. Mudar as perguntas agora deixaria as respostas de antes e as de depois sem comparação, então é preciso pausar antes de editar. Ela continua no ar, em "Ativa | Aguardando", e o ciclo em curso fecha agora.'}
           rotuloConfirmar="Pausar pesquisa"
           onConfirmar={() => {
-            /* Acerta o passo junto: pausar fecha o ciclo, e ir direto no
-               Histórico tem de mostrar a linha dele. */
+            /* Acerta o passo junto: pausar fecha o ciclo, e ir direto na aba
+               Ciclos tem de mostrar a linha dele. */
             onAlterar((p) => acertarPasso(encerrarCiclo(p)))
             setPedindoPausa(false)
           }}

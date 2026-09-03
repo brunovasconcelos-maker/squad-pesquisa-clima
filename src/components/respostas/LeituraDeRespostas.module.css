@@ -181,3 +181,39 @@
   font-size: 14px;
   line-height: 20px;
 }
+
+/* ---- pergunta extra condicional (Figma 8217:2254, 8217:2397) ----
+   O card da pergunta gerada por "pergunta extra condicional"
+   (lib/perguntaExtra.js): mesma forma do cartão comum, com a borda azul do
+   Figma no lugar da cinza e o padding um tanto menor, que é como o Figma
+   desenha os dois. */
+.cartaoExtra {
+  padding: var(--espaco-20);
+  border-color: var(--cor-azul);
+}
+
+/* Sem justify-content: space-between — o rótulo e a tag ficam colados, e não
+   nas pontas do card, diferente da linha de cima do cartão comum. */
+.topoCartaoExtra {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  gap: var(--espaco-24);
+}
+
+.tagExtra {
+  margin: 0;
+  color: var(--cor-azul);
+  font-size: 16px;
+  font-weight: var(--peso-medio);
+  letter-spacing: -0.4px;
+  white-space: nowrap;
+}
+
+.textoExtra {
+  margin: 0;
+  font-size: 16px;
+  font-weight: var(--peso-regular);
+  letter-spacing: -0.4px;
+  line-height: normal;
+}

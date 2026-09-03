@@ -3,14 +3,14 @@ import { useNavigate, useParams } from 'react-router-dom'
 import Rosca from '../../components/detalhe/Rosca.jsx'
 import { historicoDe, ordenar, COLUNAS } from '../../lib/historico.js'
 import { fraseDeAtividade } from '../../lib/alteracoes.js'
-import s from './AbaHistorico.module.css'
+import s from './AbaCiclos.module.css'
 
 import caretRight from '../../assets/icons/CaretRight.svg'
 import arrowsDownUp from '../../assets/icons/ArrowsDownUp.svg'
 import warning from '../../assets/icons/Warning.svg'
 
 /*
- * Aba Histórico (Figma 8032:1828).
+ * Aba Ciclos (Figma 8032:1828).
  *
  * Uma linha por ciclo encerrado — o que está rodando não entra, porque a
  * lista é do que já fechou. Os dados vêm de lib/historico.js e são simulados,
@@ -25,7 +25,7 @@ import warning from '../../assets/icons/Warning.svg'
  * só diz que a linha abre. É o CaretRight do projeto — não há uma seta reta
  * em src/assets/icons.
  */
-export default function AbaHistorico({ pesquisa }) {
+export default function AbaCiclos({ pesquisa }) {
   const navigate = useNavigate()
   const { id } = useParams()
   const [ordem, setOrdem] = useState({ coluna: 'numero', crescente: false })

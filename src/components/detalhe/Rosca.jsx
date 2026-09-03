@@ -2,7 +2,7 @@ import s from './Rosca.module.css'
 
 /*
  * Rosca da taxa de resposta. Grande no cartão do Geral (Figma 8109:9403,
- * moldura de 100 e traço de 16) e pequena na linha do Histórico
+ * moldura de 100 e traço de 16) e pequena na linha da aba Ciclos
  * (Figma 8087:8725, moldura de 28 e traço de 6, sem o número no meio).
  *
  * O Figma exporta cada arco como vetor, um por porcentagem. Aqui é um círculo

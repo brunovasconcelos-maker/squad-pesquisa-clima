@@ -125,7 +125,7 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
    * A linha "Repetir" chamava o modal de frequência, e escolher qualquer
    * intervalo ali marcava a pesquisa como recorrente — inclusive uma Única já
    * encerrada, que assim reabria os interruptores travados e ganhava a aba
-   * Histórico de volta. Era a porta dos fundos das travas todas.
+   * Ciclos de volta. Era a porta dos fundos das travas todas.
    *
    * Uma pesquisa que já saiu do rascunho tem ciclos, histórico e respostas
    * contados segundo o tipo dela; virar o tipo no meio faria tudo isso passar
@@ -354,7 +354,7 @@ export default function AbaConfiguracoes({ pesquisa, onAlterar }) {
           /* Trocar o público troca o denominador de tudo: a taxa do ciclo em
              curso e a de cada ciclo do histórico contam sobre ele. Por isso
              acerta o passo na mesma gravação, como as viradas de status —
-             senão o Histórico ficaria até 30s contando sobre o público
+             senão a aba Ciclos ficaria até 30s contando sobre o público
              velho. */
           onSalvar={(participantes) => {
             onAlterar((p) => acertarPasso({ ...p, participantes }))

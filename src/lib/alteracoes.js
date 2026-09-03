@@ -4,7 +4,7 @@ import { ehFinal } from './pesquisas.js'
 /*
  * Registro de alterações nas perguntas.
  *
- * A coluna "Atividade" do Histórico dizia "Sofreu N alterações" a partir de um
+ * A coluna "Atividade" da aba Ciclos dizia "Sofreu N alterações" a partir de um
  * hash. Agora vem daqui: cada edição, exclusão ou inclusão de pergunta — e
  * cada mudança na abertura — entra num registro, guardado junto da pesquisa e
  * separado por ciclo.
@@ -15,7 +15,7 @@ import { ehFinal } from './pesquisas.js'
  *    alteração é dele.
  *  - Pausada, a aba Perguntas exige pausar antes de editar, então quem edita
  *    interrompeu o ciclo em curso — e esse já fechou ao pausar, então é o
- *    último contado. É a mesma linha que o Histórico marca com o aviso de
+ *    último contado. É a mesma linha que a aba Ciclos marca com o aviso de
  *    "encerrado antes do prazo".
  *  - Entre ciclos por conta do prazo, encerrada, fora do ar, agendada ou
  *    rascunho, não há ciclo interrompido: o que se edita agora vale para o
@@ -39,7 +39,7 @@ export function cicloEmAberto(p) {
   const fechados = p.ciclos ?? 0
   /* Encerrada não tem ciclo aberto nem próximo: `fechados + 1` apontava para
      um ciclo que nunca vai existir, e a alteração anotada nele não aparecia
-     em lugar nenhum do Histórico. A aba de Perguntas não deixa editar uma
+     em lugar nenhum da aba Ciclos. A aba de Perguntas não deixa editar uma
      pesquisa encerrada, então na prática ninguém chega aqui assim; isto é o
      que garante que nada seja anotado num ciclo fantasma se algum caminho
      novo chegar. */
@@ -57,7 +57,7 @@ export function cicloEmAberto(p) {
 export function registrar(p, tipo, alvo) {
   const aberto = cicloEmAberto(p)
   /* Sem ciclo a que pertencer, a anotação não tem onde morar: guardá-la num
-     número inventado é o que fazia a alteração sumir do Histórico. */
+     número inventado é o que fazia a alteração sumir da aba Ciclos. */
   if (aberto === null) return p
   const numero = String(aberto)
   const registro = p.alteracoes || {}

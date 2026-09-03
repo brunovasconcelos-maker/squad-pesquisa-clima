@@ -191,7 +191,7 @@ export default function TelaCiclo() {
   const pesquisa = pesquisas?.find((p) => p.id === id)
   const ciclo = pesquisa && cicloDe(pesquisa, cicloId)
 
-  /* Pesquisa apagada, ou um ciclo que não existe: volta para o Histórico em
+  /* Pesquisa apagada, ou um ciclo que não existe: volta para os Ciclos em
      vez de mostrar uma tela sem conteúdo. */
   useEffect(() => {
     if (!pesquisas) return
@@ -210,7 +210,7 @@ export default function TelaCiclo() {
      propósito, então vai pelo state da navegação — num F5 o detalhe volta a
      abrir no Geral, como sempre. */
   const voltar = () =>
-    navigate(`/pesquisas/${id}`, { state: { aba: 'Histórico' } })
+    navigate(`/pesquisas/${id}`, { state: { aba: 'Ciclos' } })
 
   const baixarRespostas = () => {
     setMenuAberto(false)

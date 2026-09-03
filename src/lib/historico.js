@@ -23,7 +23,7 @@ import { alteracoesDoCiclo } from './alteracoes.js'
  *
  * Este arquivo só preenche buraco: ciclo que fechou antes de o motor passar a
  * guardar o retrato não deixou medida nenhuma, e a linha dele é reconstruída
- * por hash, como o Histórico inteiro era antes. O que nasce daqui para a
+ * por hash, como a aba Ciclos inteira era antes. O que nasce daqui para a
  * frente nunca passa por essa reconstrução.
  *
  * Quantos ciclos existem e a numeração deles saem de `ciclos`, o mesmo número
@@ -160,7 +160,7 @@ export function sincronizarHistorico(p) {
    * Do último deles ainda dá para saber a verdade: enquanto a pesquisa não
    * abre o ciclo seguinte, ela continua carregando as respostas e as datas
    * daquele que fechou. É o que `recuperarUltimo` aproveita, e é o que fazia o
-   * Geral e o Histórico discordarem sobre o mesmo ciclo. Dos anteriores não
+   * Geral e a aba Ciclos discordarem sobre o mesmo ciclo. Dos anteriores não
    * sobrou medida nenhuma, e a linha é reconstruída por hash, como sempre foi.
    */
   const real = recuperarUltimo(p, quantos)
@@ -228,8 +228,8 @@ export function historicoDe(p) {
  * roda, o último fechado quando está entre ciclos —, porque os dois cartões
  * não podem falar do mesmo.
  *
- * Os números são os do próprio ciclo, que são os mesmos que a tabela do
- * Histórico conta — e o público é o da pesquisa, o mesmo do cartão de cima.
+ * Os números são os do próprio ciclo, que são os mesmos que a tabela da aba
+ * Ciclos conta — e o público é o da pesquisa, o mesmo do cartão de cima.
  */
 export function taxasAnteriores(p) {
   if (!ehRecorrente(p)) return []
@@ -249,7 +249,7 @@ export function taxasAnteriores(p) {
 
 /* A taxa que a tabela mostra vem das respostas guardadas, não do número que
    sorteou o ciclo: apagar as respostas tem de derrubar a taxa junto, senão a
-   linha do Histórico diria 71% para um ciclo com zero respostas. */
+   linha da aba Ciclos diria 71% para um ciclo com zero respostas. */
 export function taxaDoCiclo(ciclo) {
   const convidados = ciclo.convidados || 0
   if (!convidados) return 0

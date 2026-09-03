@@ -396,7 +396,7 @@ function iniciarCiclo(p, quando) {
 /*
  * O retrato do ciclo que acabou de fechar, do jeito que ele foi.
  *
- * O Histórico inventava cada linha quando ela aparecia: sorteava uma taxa por
+ * A aba Ciclos inventava cada linha quando ela aparecia: sorteava uma taxa por
  * hash e gerava respostas próprias, sem relação com o que o motor tinha
  * medido. O mesmo ciclo aparecia com um número no Geral e outro na tabela, e
  * as datas eram recalculadas para trás a cada passada — dois ciclos chegavam

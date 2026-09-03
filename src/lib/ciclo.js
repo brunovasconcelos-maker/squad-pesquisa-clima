@@ -8,7 +8,7 @@ import { historicoDe, taxaDoCiclo } from './historico.js'
  * naquele ciclo e as respostas dele. Nada é gerado aqui — quem cria é
  * lib/historico.js, uma vez só, quando o ciclo fecha.
  *
- * É o mesmo registro que a tabela do Histórico lê, então as duas telas não
+ * É o mesmo registro que a tabela da aba Ciclos lê, então as duas telas não
  * podem discordar sobre o mesmo ciclo.
  */
 
