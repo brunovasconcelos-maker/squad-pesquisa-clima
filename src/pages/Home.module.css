@@ -58,21 +58,6 @@
   white-space: nowrap;
 }
 
-/* Círculo preto do "+". O Add.svg já vem branco, então não precisa tingir. */
-.novo {
-  display: flex;
-  flex: none;
-  width: 40px;
-  height: 40px;
-  align-items: center;
-  justify-content: center;
-  padding: 10px;
-  border: none;
-  border-radius: var(--raio-pilula);
-  background: var(--cor-marca);
-  cursor: pointer;
-}
-
 .icone {
   display: block;
   width: 24px;

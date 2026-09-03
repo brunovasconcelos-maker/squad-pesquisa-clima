@@ -4,6 +4,7 @@ import Sidebar from '../components/Sidebar.jsx'
 import CartaoPesquisa from '../components/lista/CartaoPesquisa.jsx'
 import ModalConfirmar from '../components/fluxo/ModalConfirmar.jsx'
 import Aviso from '../components/Aviso.jsx'
+import Botao from '../components/fluxo/Botao.jsx'
 import { rotuloParticipantes } from './nova-pesquisa/estado.jsx'
 import {
   ler,
@@ -181,14 +182,12 @@ export default function Home() {
         <div className={s.cabecalho}>
           <div className={s.tituloLinha}>
             <h1 className={s.titulo}>Pesquisa de Clima</h1>
-            <button
-              type="button"
-              className={s.novo}
-              aria-label="Nova Pesquisa"
-              onClick={() => navigate('/pesquisas/nova')}
-            >
+            {/* Pílula "Novo" (Figma 8222:2410), no lugar do círculo só com o
+                "+" que a tela tinha antes. O clique continua o mesmo. */}
+            <Botao variante="marca" onClick={() => navigate('/pesquisas/nova')}>
+              Novo
               <img className={s.icone} src={add} alt="" width={24} height={24} />
-            </button>
+            </Botao>
           </div>
 
           <div className={s.busca}>
