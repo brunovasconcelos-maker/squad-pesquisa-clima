@@ -52,6 +52,12 @@
   text-align: center;
 }
 
+.estimativaBloco {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-8);
+}
+
 .estimativa {
   display: flex;
   align-items: flex-start;
@@ -60,6 +66,16 @@
   letter-spacing: -0.31px;
   line-height: 21px;
   white-space: nowrap;
+}
+
+/* A ressalva de que o tempo pode variar — a pergunta extra condicional faz
+   o total de passos de quem responde crescer conforme a resposta. Menor e
+   mais discreta que a linha de cima: é um aviso, não a estimativa em si. */
+.estimativaNota {
+  margin: 0;
+  color: var(--cor-texto-secundario);
+  font-size: 14px;
+  font-weight: var(--peso-regular);
 }
 
 .estimativaTexto {

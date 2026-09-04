@@ -5,7 +5,7 @@ import CartaoPesquisa from '../components/lista/CartaoPesquisa.jsx'
 import ModalConfirmar from '../components/fluxo/ModalConfirmar.jsx'
 import Aviso from '../components/Aviso.jsx'
 import Botao from '../components/fluxo/Botao.jsx'
-import { rotuloParticipantes } from './nova-pesquisa/estado.jsx'
+import { rotuloParticipantes, PASSOS } from './nova-pesquisa/estado.jsx'
 import {
   ler,
   gravar,
@@ -136,9 +136,15 @@ export default function Home() {
    * Sem perguntas, cai no nome — que é onde o fluxo começa a ter o que
    * guardar, e onde estes rascunhos foram salvos quando essa era a primeira
    * tela.
+   *
+   * A mesma regra vale para um `passo` que não é mais um dos passos do fluxo
+   * — "template", de antes de a escolha do template virar a rota índice.
+   * Sem isto o rascunho caía numa rota que não existe mais e o catch-all
+   * mandava de volta para a home sem dizer por quê, como se o clique não
+   * tivesse feito nada.
    */
   const passoDoRascunho = (p) => {
-    if (p.passo) return `/${p.passo}`
+    if (p.passo && PASSOS.includes(p.passo)) return `/${p.passo}`
     return (p.perguntas?.length ?? 0) > 0 ? '/revisao' : '/nome'
   }
 

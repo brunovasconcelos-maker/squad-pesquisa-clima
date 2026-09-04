@@ -65,6 +65,13 @@ export default function EditorPergunta({ pergunta, numero, onSalvar, onFechar })
      com o tipo escolhido, e é por isso que é estado e não a prop. */
   const [original, setOriginal] = useState(pergunta)
   const [confirmandoDescarte, setConfirmandoDescarte] = useState(false)
+  /* O texto de uma opção ainda não confirmada — só vira opção de verdade,
+     em rascunho.opcoes, no clique do "+". Fica fora do rascunho porque não
+     é uma opção da pergunta enquanto não é confirmada: contá-la ali faria o
+     "Salvar" travar por uma linha que a pessoa ainda nem terminou de
+     escrever, e um "Voltar" no meio a perderia como qualquer outro campo
+     não confirmado. */
+  const [novaOpcao, setNovaOpcao] = useState('')
 
   const alterada = !iguais(rascunho, original)
   const fechar = () => {
@@ -128,6 +135,16 @@ export default function EditorPergunta({ pergunta, numero, onSalvar, onFechar })
     alterar({
       opcoes: rascunho.opcoes.map((o, i) => (i === indice ? texto : o)),
     })
+
+  /* Confirma o que estava em "Adicionar opção": vira uma linha de verdade
+     na lista, e o campo volta a ficar vazio para a próxima. Em branco não
+     faz nada — é o que já mantém o "+" desabilitado. */
+  const adicionarOpcao = () => {
+    const texto = novaOpcao.trim()
+    if (!texto) return
+    alterar({ opcoes: [...rascunho.opcoes, texto] })
+    setNovaOpcao('')
+  }
 
   const removerOpcao = (indice) =>
     alterar({
@@ -210,15 +227,14 @@ export default function EditorPergunta({ pergunta, numero, onSalvar, onFechar })
                     sempre zero neste projeto, então a caixa da esquerda é só
                     visual — quem muda é o teto, na caixa da direita. */}
                 <div className={s.linhaEscala}>
-                  <div className={s.caixaEscala} aria-hidden="true">
+                  {/* Sem seta e sem cor de campo ativo: não é um controle,
+                      é o piso fixo da escala, mostrado só para dizer onde
+                      ela começa. */}
+                  <div
+                    className={`${s.caixaEscala} ${s.caixaEscalaFixa}`}
+                    aria-hidden="true"
+                  >
                     <span>0</span>
-                    <img
-                      className={s.icone}
-                      src={caretUpDown}
-                      alt=""
-                      width={24}
-                      height={24}
-                    />
                   </div>
                   <span className={s.escalaSeparador}>a</span>
                   <span className={s.selecaoEnvoltorio}>
@@ -303,7 +319,7 @@ export default function EditorPergunta({ pergunta, numero, onSalvar, onFechar })
                     />
                     <button
                       type="button"
-                      className={s.remover}
+                      className={s.acaoIcone}
                       aria-label={`Remover opção ${indice + 1}`}
                       disabled={rascunho.opcoes.length <= MIN_OPCOES}
                       onClick={() => removerOpcao(indice)}
@@ -314,15 +330,31 @@ export default function EditorPergunta({ pergunta, numero, onSalvar, onFechar })
                 ))}
                 {/* A própria lista de opções ganha uma última linha para
                     adicionar (Figma 8203:12280) — não é mais um botão solto
-                    abaixo dela. */}
-                <button
-                  type="button"
-                  className={s.linhaAdicionar}
-                  onClick={() => alterar({ opcoes: [...rascunho.opcoes, ''] })}
-                >
-                  <span className={s.caixaAdicionar}>Adicionar opção</span>
-                  <img className={s.icone} src={plus} alt="" width={24} height={24} />
-                </button>
+                    abaixo dela. Começa vazia: só vira opção no clique do
+                    "+", e depois volta a ficar vazia para a próxima. */}
+                <div className={s.linhaOpcao}>
+                  <input
+                    className={s.entrada}
+                    type="text"
+                    value={novaOpcao}
+                    placeholder="Adicionar opção"
+                    onChange={(e) => setNovaOpcao(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key !== 'Enter') return
+                      e.preventDefault()
+                      adicionarOpcao()
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className={s.acaoIcone}
+                    aria-label="Adicionar opção"
+                    disabled={!novaOpcao.trim()}
+                    onClick={adicionarOpcao}
+                  >
+                    <img className={s.icone} src={plus} alt="" width={24} height={24} />
+                  </button>
+                </div>
               </div>
               <button
                 type="button"

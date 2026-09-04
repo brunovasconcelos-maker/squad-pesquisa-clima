@@ -160,18 +160,18 @@
 
 .linhaEscala {
   display: flex;
-  width: 100%;
   align-items: center;
   gap: var(--espaco-12);
 }
 
-/* A caixa da esquerda e o envoltório do select da direita dividem a linha
-   em partes iguais — o mesmo que o Figma desenha com duas caixas do mesmo
-   tamanho. */
+/* As duas caixas são bem menores que o resto dos campos: só cabe um número
+   de 0 a 10 em cada, e esticá-las pela linha inteira sobrava vazio no meio
+   do "a" — o mesmo tamanho nas duas é o que faz a caixa fixa e a de
+   verdade lerem como um par. */
 .linhaEscala > .caixaEscala,
 .linhaEscala > .selecaoEnvoltorio {
-  flex: 1 1 0;
-  min-width: 0;
+  flex: none;
+  width: 110px;
 }
 
 .caixaEscala {
@@ -186,6 +186,16 @@
   font-size: 16px;
   font-weight: var(--peso-medio);
   letter-spacing: -0.23px;
+}
+
+/* O piso da escala é sempre zero — não é um campo, é a informação de que a
+   pergunta começa em zero. Sem seta de setinha (não muda) e no cinza de
+   desabilitado do projeto, para não parecer um controle a mais. */
+.caixaEscalaFixa {
+  justify-content: center;
+  border-color: var(--cor-borda-acao);
+  background: var(--cor-fundo-desabilitado);
+  color: var(--cor-texto-desabilitado);
 }
 
 .escalaSeparador {
@@ -218,7 +228,9 @@
   gap: var(--espaco-12);
 }
 
-.remover {
+/* Botão de ícone solto, sem moldura — serve tanto para remover uma opção
+   quanto para confirmar a que está sendo digitada em "Adicionar opção". */
+.acaoIcone {
   display: flex;
   flex: none;
   width: 24px;
@@ -231,7 +243,7 @@
   cursor: pointer;
 }
 
-.remover:disabled {
+.acaoIcone:disabled {
   cursor: default;
   opacity: 0.3;
 }
@@ -240,33 +252,6 @@
   display: block;
   width: 24px;
   height: 24px;
-}
-
-/* Mesma linha das opções, mas o "campo" é só um rótulo — quem faz a caixa
-   parecer uma entrada é .caixaAdicionar, não um <input>. */
-.linhaAdicionar {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: var(--espaco-12);
-  padding: 0;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font-family: inherit;
-  text-align: left;
-}
-
-.caixaAdicionar {
-  flex: 1 1 0;
-  min-width: 0;
-  padding: var(--espaco-16) var(--espaco-24);
-  border: 1px solid var(--cor-borda-forte);
-  border-radius: var(--raio-campo);
-  color: var(--cor-texto-apoio);
-  font-size: 16px;
-  font-weight: var(--peso-medio);
-  letter-spacing: -0.23px;
 }
 
 .alternador {

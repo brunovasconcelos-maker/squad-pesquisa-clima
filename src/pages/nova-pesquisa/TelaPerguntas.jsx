@@ -69,12 +69,20 @@ export default function TelaPerguntas() {
           </button>
         </div>
 
-        <div className={s.estimativa}>
-          <p className={s.estimativaTexto}>Em média</p>
-          <p className={s.estimativaValor}>
-            {minutos} {minutos === 1 ? 'minuto' : 'minutos'}
+        <div className={s.estimativaBloco}>
+          <div className={s.estimativa}>
+            <p className={s.estimativaTexto}>Em média</p>
+            <p className={s.estimativaValor}>
+              {minutos} {minutos === 1 ? 'minuto' : 'minutos'}
+            </p>
+            <p className={s.estimativaTexto}>para responder</p>
+          </div>
+          {/* Com a pergunta extra condicional, o total de passos de quem
+              responde pode crescer — a média continua valendo, mas não é
+              mais garantida como era antes dela existir. */}
+          <p className={s.estimativaNota}>
+            Pode variar um pouco dependendo das suas respostas.
           </p>
-          <p className={s.estimativaTexto}>para responder</p>
         </div>
       </div>
     </FluxoLayout>

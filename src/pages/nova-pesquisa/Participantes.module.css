@@ -125,6 +125,10 @@
   background: none;
   cursor: pointer;
   font-family: inherit;
+  /* Sem isto o "Grupos:" ficava centralizado — <button> centraliza texto
+     por padrão do navegador, e .item (o rádio/caixa acima) só escapa disso
+     porque já pedia text-align: left explicitamente. */
+  text-align: left;
   gap: var(--espaco-24);
 }
 
