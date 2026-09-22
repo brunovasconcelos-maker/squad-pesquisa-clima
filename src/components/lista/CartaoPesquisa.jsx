@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   PauseCircle,
   Play,
-  DotsThreeVertical,
+  DotsThree,
   Square,
   CheckSquare,
   Eye,
@@ -104,7 +104,7 @@ export default function CartaoPesquisa({
         }}
       >
         {selecionado ? (
-          <CheckSquare size={24} color="var(--cor-texto)" />
+          <CheckSquare size={24} color="var(--cor-texto)" weight="fill" />
         ) : (
           <Square size={24} color="#c2c8c8" />
         )}
@@ -148,7 +148,12 @@ export default function CartaoPesquisa({
             aria-expanded={menuAberto}
             onClick={() => setMenuAberto((aberto) => !aberto)}
           >
-            <DotsThreeVertical size={24} color="var(--cor-texto-secundario)" weight="fill" />
+            <DotsThree
+              size={24}
+              color="var(--cor-texto-secundario)"
+              weight="regular"
+              className={s.iconeMenu}
+            />
           </button>
 
           {menuAberto ? (

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { CaretLeft, GraduationCap, Plus, SlidersHorizontal, Square, CheckSquare } from '@phosphor-icons/react'
 import arrowsDownUpIcon from '../assets/icons/ArrowsDownUp.svg'
 import caretDownIcon from '../assets/icons/CaretDown.svg'
+import closeIcon from '../assets/icons/Close.svg'
 import Sidebar from '../components/Sidebar.jsx'
 import BottomSearchBar from '../components/BottomSearchBar.jsx'
 import BarraSelecao from '../components/lista/BarraSelecao.jsx'
@@ -320,24 +321,30 @@ export default function Home() {
             onClick={aoSelecionarTodos}
           >
             {todosSelecionados ? (
-              <CheckSquare size={24} color="var(--cor-texto)" />
+              <CheckSquare size={24} color="var(--cor-texto)" weight="fill" />
             ) : (
               <Square size={24} color="#c2c8c8" />
             )}
           </button>
           {COLUNAS.map(({ chave, rotulo, classe, tipo }) => {
             const ordenavel = tipo === 'ordenar'
+            const ativo = ordenavel && sortColuna === chave
             return (
               <button
                 type="button"
                 key={chave}
                 className={`${s.celulaCabecalho} ${s[classe]}`}
                 tabIndex={ordenavel ? 0 : -1}
-                aria-pressed={ordenavel ? sortColuna === chave : undefined}
+                aria-pressed={ordenavel ? ativo : undefined}
                 onClick={ordenavel ? () => aoOrdenar(chave) : undefined}
               >
                 <span>{rotulo}</span>
-                {ordenavel ? (
+                {/* Ativa, a coluna troca as setas pelo X: é o mesmo clique
+                    que ordena que também limpa, e o ícone muda para dizer
+                    isso — igual às colunas Nome e Ativo desde de lá. */}
+                {ativo ? (
+                  <img src={closeIcon} width={16} height={16} alt="" />
+                ) : ordenavel ? (
                   <img src={arrowsDownUpIcon} width={16} height={16} alt="" />
                 ) : (
                   <img src={caretDownIcon} width={16} height={16} alt="" />

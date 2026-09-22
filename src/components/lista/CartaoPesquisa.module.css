@@ -143,6 +143,13 @@
   cursor: pointer;
 }
 
+/* DotsThree do Phosphor é horizontal; girado 90°, os três pontos colineares
+   ficam na vertical — mesma conta que o BeneficiosGrid de lá faz ao girar
+   o próprio DotsThree.svg. */
+.iconeMenu {
+  transform: rotate(90deg);
+}
+
 /* ---- menu de três pontos ---- */
 .suspenso {
   position: absolute;
