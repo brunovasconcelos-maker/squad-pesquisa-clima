@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { CaretLeft, GraduationCap, Plus } from '@phosphor-icons/react'
 import Sidebar from '../components/Sidebar.jsx'
+import BottomSearchBar from '../components/BottomSearchBar.jsx'
 import CartaoPesquisa from '../components/lista/CartaoPesquisa.jsx'
 import ModalConfirmar from '../components/fluxo/ModalConfirmar.jsx'
 import Aviso from '../components/Aviso.jsx'
@@ -27,8 +29,6 @@ import {
 } from '../lib/pesquisas.js'
 import s from './Home.module.css'
 
-import add from '../assets/icons/Add.svg'
-import search from '../assets/icons/Search.svg'
 
 /*
  * Home do módulo (Figma 8137:11498).
@@ -40,10 +40,13 @@ import search from '../assets/icons/Search.svg'
  *
  * A busca filtra pelo nome, sem acento e sem caixa: quem procura "clima" tem
  * de achar "Clima Geral" e "CLIMA", e quem digita "organizacao" tem de achar
- * "Organização".
+ * "Organização". Mora na barra flutuante de baixo agora, porte do mesmo
+ * componente do Gestão de Pessoas — o campo que ficava presa no topo saiu.
  *
- * O Figma tem um botão de settings à esquerda do "+", mas com opacity 0.
- * Ficou de fora: um botão invisível e clicável é pior que ausente.
+ * Cabeçalho e sidebar também são o mesmo porte: "Voltar" e "Tutorial" ainda
+ * não fazem nada, e a sidebar são só os cinco espaços reservados — os dois
+ * marcam o lugar de uma navegação de produto compartilhada que ainda não
+ * existe, para os dois módulos já nascerem parecidos.
  */
 const COLUNAS = [
   { nome: 'Nome da Pesquisa', largura: 214 },
@@ -187,25 +190,26 @@ export default function Home() {
       <main className={s.coluna}>
         <div className={s.cabecalho}>
           <div className={s.tituloLinha}>
-            <h1 className={s.titulo}>Pesquisa de Clima</h1>
-            {/* Pílula "Novo" (Figma 8222:2410), no lugar do círculo só com o
-                "+" que a tela tinha antes. O clique continua o mesmo. */}
-            <Botao variante="marca" onClick={() => navigate('/pesquisas/nova')}>
-              Novo
-              <img className={s.icone} src={add} alt="" width={24} height={24} />
-            </Botao>
-          </div>
-
-          <div className={s.busca}>
-            <img className={s.icone} src={search} alt="" width={24} height={24} />
-            <input
-              className={s.buscaCampo}
-              type="text"
-              value={busca}
-              placeholder="Pesquisar por uma pesquisa..."
-              aria-label="Pesquisar por uma pesquisa"
-              onChange={(e) => setBusca(e.target.value)}
-            />
+            <div className={s.tituloGrupo}>
+              {/* Ainda não recua para lugar nenhum — só marca onde a volta
+                  vai entrar quando este módulo tiver de onde voltar. */}
+              <button type="button" className={s.iconeCirculo} aria-label="Voltar">
+                <CaretLeft size={24} />
+              </button>
+              <h1 className={s.titulo}>Pesquisa de Clima</h1>
+            </div>
+            <div className={s.acoesGrupo}>
+              {/* Também só visual por enquanto — sem tutorial escrito ainda. */}
+              <button type="button" className={s.iconeCirculo} aria-label="Tutorial">
+                <GraduationCap size={24} />
+              </button>
+              {/* Pílula "Novo" (Figma 8222:2410); o clique continua o mesmo
+                  de sempre, só o ícone virou Phosphor. */}
+              <Botao variante="marca" onClick={() => navigate('/pesquisas/nova')}>
+                Novo
+                <Plus size={24} />
+              </Botao>
+            </div>
           </div>
         </div>
 
@@ -261,6 +265,8 @@ export default function Home() {
           ) : null}
         </div>
       </main>
+
+      <BottomSearchBar onBuscar={setBusca} />
 
       <Aviso texto={aviso} onSumir={limparAviso} />
 

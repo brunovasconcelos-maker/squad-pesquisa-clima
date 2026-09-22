@@ -40,7 +40,6 @@
   align-items: flex-start;
 }
 
-/* Aviso curto do "Copiar link". Fica preso embaixo, fora do fluxo da lista. */
 .tituloLinha {
   display: flex;
   width: 100%;
@@ -49,52 +48,44 @@
   justify-content: space-between;
 }
 
+.tituloGrupo {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-16);
+}
+
+.acoesGrupo {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-12);
+}
+
+/* "Voltar" e "Tutorial": pílula de 40px em cinza-superfície, sem ícone
+   próprio — o Phosphor entra direto como filho, sem passar por um <img>. */
+.iconeCirculo {
+  display: flex;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: var(--raio-pilula);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  cursor: pointer;
+}
+
 .titulo {
   margin: 0;
-  font-size: 28px;
-  font-weight: var(--peso-semibold);
+  color: var(--cor-texto);
+  font-size: 24px;
+  font-weight: var(--peso-medio);
   letter-spacing: -0.26px;
-  line-height: 1.2;
   white-space: nowrap;
 }
 
-.icone {
-  display: block;
-  width: 24px;
-  height: 24px;
-}
-
-.busca {
-  display: flex;
-  width: 100%;
-  height: 40px;
-  align-items: center;
-  gap: var(--espaco-8);
-  padding: var(--espaco-12);
-  border-radius: var(--raio-caixa);
-  background: var(--cor-superficie);
-}
-
-.buscaCampo {
-  flex: 1 0 0;
-  min-width: 0;
-  border: none;
-  background: transparent;
-  color: var(--cor-texto);
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: var(--peso-regular);
-  letter-spacing: -0.08px;
-  line-height: 1.2;
-}
-
-.buscaCampo::placeholder {
-  color: var(--cor-texto-secundario);
-}
-
-.buscaCampo:focus {
-  outline: none;
-}
 
 /* Cabeçalho da tabela: alinhado embaixo porque "Taxa de Resposta" ocupa duas
    linhas na largura dela e as outras precisam encostar na mesma base. */
