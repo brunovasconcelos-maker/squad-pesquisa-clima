@@ -1,11 +1,13 @@
+/* Linha de tabela, não cartão avulso: fundo branco (o da página, atrás),
+   dividida da vizinha só pela borda de baixo — mesmo tratamento do
+   CollaboratorsTable de lá. */
 .cartao {
   display: flex;
   width: 100%;
   align-items: center;
   gap: var(--espaco-12);
-  padding: var(--espaco-12) var(--espaco-16);
-  border-radius: var(--raio-caixa);
-  background: var(--cor-superficie);
+  padding: var(--espaco-12);
+  border-bottom: 1px solid var(--cor-borda-acao);
   cursor: pointer;
 }
 

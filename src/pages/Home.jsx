@@ -1,14 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  CaretLeft,
-  GraduationCap,
-  Plus,
-  SlidersHorizontal,
-  ArrowsDownUp,
-  CaretDown,
-  Square,
-} from '@phosphor-icons/react'
+import { CaretLeft, GraduationCap, Plus, SlidersHorizontal, Square } from '@phosphor-icons/react'
+import arrowsDownUpIcon from '../assets/icons/ArrowsDownUp.svg'
+import caretDownIcon from '../assets/icons/CaretDown.svg'
 import Sidebar from '../components/Sidebar.jsx'
 import BottomSearchBar from '../components/BottomSearchBar.jsx'
 import CartaoPesquisa from '../components/lista/CartaoPesquisa.jsx'
@@ -215,9 +209,11 @@ export default function Home() {
               <h1 className={s.titulo}>Pesquisa de Clima</h1>
             </div>
             <div className={s.acoesGrupo}>
-              {/* Também só visual por enquanto — sem tutorial escrito ainda. */}
+              {/* Também só visual por enquanto — sem tutorial escrito ainda.
+                  Cinza, e não preto como o "Voltar": o Figma diferencia os
+                  dois. */}
               <button type="button" className={s.iconeCirculo} aria-label="Tutorial">
-                <GraduationCap size={24} />
+                <GraduationCap size={24} color="var(--cor-texto-secundario)" />
               </button>
               {/* Pílula "Novo" (Figma 8222:2410); o clique continua o mesmo
                   de sempre, só o ícone virou Phosphor. */}
@@ -245,7 +241,7 @@ export default function Home() {
         ) : null}
 
         <div className={s.ferramentas}>
-          <span className={s.total}>Total: {encontradas.length} pesquisas</span>
+          <span className={s.total}>Total: {pesquisas.length} pesquisas</span>
           {/* Mesmo tratamento do "Voltar"/"Tutorial": só o visual do botão
               chegou, filtro de verdade fica para depois. */}
           <Botao variante="contorno">
@@ -272,9 +268,9 @@ export default function Home() {
             >
               <span>{rotulo}</span>
               {tipo === 'ordenar' ? (
-                <ArrowsDownUp size={16} />
+                <img src={arrowsDownUpIcon} width={16} height={16} alt="" />
               ) : (
-                <CaretDown size={16} />
+                <img src={caretDownIcon} width={16} height={16} alt="" />
               )}
             </button>
           ))}
