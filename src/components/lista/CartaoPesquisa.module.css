@@ -97,7 +97,12 @@
 }
 
 /* Botão de play/pause: quadrado cinza-superfície sobre o fundo branco da
-   linha. */
+   linha. Selecionada, a linha já é cinza-superfície, e o quadrado precisa
+   virar branco para não desaparecer nela. */
+.selecionado .transporte {
+  background: var(--cor-fundo);
+}
+
 .transporte {
   display: flex;
   width: 40px;

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CaretLeft, GraduationCap, Plus, SlidersHorizontal, Square, CheckSquare } from '@phosphor-icons/react'
 import arrowsDownUpIcon from '../assets/icons/ArrowsDownUp.svg'
@@ -8,6 +8,7 @@ import Sidebar from '../components/Sidebar.jsx'
 import BottomSearchBar from '../components/BottomSearchBar.jsx'
 import BarraSelecao from '../components/lista/BarraSelecao.jsx'
 import CartaoPesquisa from '../components/lista/CartaoPesquisa.jsx'
+import PainelFiltros, { formatarDataCurta } from '../components/lista/PainelFiltros.jsx'
 import ModalConfirmar from '../components/fluxo/ModalConfirmar.jsx'
 import Aviso from '../components/Aviso.jsx'
 import Botao from '../components/fluxo/Botao.jsx'
@@ -30,6 +31,9 @@ import {
   encerrarCiclo,
   paraLinha,
   botaoDe,
+  dataDoEvento,
+  ehRecorrente,
+  STATUS,
   INTERVALO_MS,
 } from '../lib/pesquisas.js'
 import s from './Home.module.css'
@@ -54,24 +58,123 @@ import s from './Home.module.css'
  * existe, para os dois módulos já nascerem parecidos.
  *
  * A tabela é outro porte do mesmo padrão (CollaboratorsTable de lá): a
- * caixa de seleção e a ordenação por Nome/% Resposta/Ciclos funcionam de
- * verdade agora, com a barra de seleção em massa entrando no lugar da busca
- * flutuante enquanto há linhas marcadas. Os filtros de coluna (Público,
- * Tipo, Status, Evento) e o botão "Filtros" continuam só visuais — essa
- * parte ainda não tem regra nenhuma por trás.
+ * caixa de seleção, a ordenação por Nome/% Resposta/Ciclos e os filtros de
+ * Público/Tipo/Status funcionam de verdade agora, com a barra de seleção em
+ * massa entrando no lugar da busca flutuante enquanto há linhas marcadas.
+ * Evento perdeu o filtro — a data que ele mostra entra pelo painel
+ * "Filtros" (seção Período) — e virou cabeçalho só de rótulo, sem ícone.
+ * Coluna de cabeçalho e painel lateral escrevem no mesmo objeto de filtros,
+ * exatamente como Time/Cargo (cabeçalho) e Atividade/Período (painel) fazem
+ * lá.
  */
 /* Mesma ordem das células de `CartaoPesquisa`, para as larguras baterem com
-   as da linha. `tipo` diz só qual ícone entra — nenhuma das duas abre nada
-   ainda. */
+   as da linha. `tipo` diz que tipo de cabeçalho entra: 'ordenar' liga a
+   ordenação, 'filtrar' abre um dropdown de opções, 'nenhum' é só rótulo. */
 const COLUNAS = [
   { chave: 'nome', rotulo: 'Nome da Pesquisa', classe: 'nomeCabecalho', tipo: 'ordenar' },
   { chave: 'publico', rotulo: 'Público', classe: 'publicoCabecalho', tipo: 'filtrar' },
   { chave: 'tipo', rotulo: 'Tipo', classe: 'tipoCabecalho', tipo: 'filtrar' },
   { chave: 'status', rotulo: 'Status', classe: 'statusCabecalho', tipo: 'filtrar' },
-  { chave: 'evento', rotulo: 'Evento', classe: 'eventoCabecalho', tipo: 'filtrar' },
+  { chave: 'evento', rotulo: 'Evento', classe: 'eventoCabecalho', tipo: 'nenhum' },
   { chave: 'taxa', rotulo: '% Resposta', classe: 'taxaCabecalho', tipo: 'ordenar' },
   { chave: 'ciclos', rotulo: 'Ciclos', classe: 'ciclosCabecalho', tipo: 'ordenar' },
 ]
+
+/* Opções fixas dos filtros de coluna que não dependem dos dados. Público é
+   a exceção — vem das pesquisas de verdade, calculado dentro do componente. */
+const TIPO_OPCOES = [
+  { valor: 'Recorrente', texto: 'Recorrente' },
+  { valor: 'Única', texto: 'Única' },
+]
+
+const STATUS_OPCOES = Object.entries(STATUS).map(([chave, { texto }]) => ({
+  valor: chave,
+  texto,
+}))
+
+/* As três pílulas de Atividade do painel são um agrupamento simplificado
+   dos seis status reais — Pausada cobre tudo que não está nem rodando nem
+   encerrado. */
+const GRUPO_DE_STATUS = {
+  rodando: 'Rodando',
+  aguardando: 'Pausada',
+  naoAtiva: 'Pausada',
+  agendada: 'Pausada',
+  rascunho: 'Pausada',
+  encerrada: 'Encerrada',
+}
+
+function criarFiltrosVazios() {
+  return {
+    publico: new Set(),
+    tipo: new Set(),
+    status: new Set(),
+    atividade: new Set(),
+    periodo: { start: null, end: null },
+    taxa: { min: null, max: null },
+    ciclos: { min: null, max: null },
+  }
+}
+
+/*
+ * Se a pesquisa passa por todos os filtros ativos — cada categoria com as
+ * outras em E, e dentro de uma mesma categoria os valores marcados em OU
+ * (marcar dois times mostra pesquisas de qualquer um dos dois).
+ *
+ * Público, Tipo, Taxa e Ciclos tratam um rascunho (e Taxa também uma
+ * agendada) como sem valor: a coluna mostra "—" para essas linhas, e um
+ * filtro ativo não pode dar como resultado uma linha que na tela não mostra
+ * o valor que supostamente bateu.
+ */
+function pesquisaPassaNoFiltro(p, filtros) {
+  if (filtros.publico.size > 0) {
+    if (p.status === 'rascunho') return false
+    const bate = [...filtros.publico].some((valor) => {
+      if (valor === 'Toda a empresa') return Boolean(p.participantes?.todaEmpresa)
+      if (valor === 'Pessoas avulsas') return (p.participantes?.pessoas?.length ?? 0) > 0
+      return (p.participantes?.grupos || []).includes(valor)
+    })
+    if (!bate) return false
+  }
+
+  if (filtros.tipo.size > 0) {
+    if (p.status === 'rascunho') return false
+    if (!filtros.tipo.has(ehRecorrente(p) ? 'Recorrente' : 'Única')) return false
+  }
+
+  if (filtros.status.size > 0 && !filtros.status.has(p.status)) return false
+
+  if (filtros.atividade.size > 0) {
+    const grupo = GRUPO_DE_STATUS[p.status]
+    if (!grupo || !filtros.atividade.has(grupo)) return false
+  }
+
+  const { start, end } = filtros.periodo
+  if (start || end) {
+    const data = dataDoEvento(p)
+    if (!data) return false
+    if (start && data < new Date(`${start}T00:00:00`)) return false
+    if (end && data > new Date(`${end}T23:59:59`)) return false
+  }
+
+  const { min: taxaMin, max: taxaMax } = filtros.taxa
+  if (taxaMin != null || taxaMax != null) {
+    if (p.status === 'rascunho' || p.status === 'agendada') return false
+    const taxa = taxaDe(p)
+    if (taxaMin != null && taxa < taxaMin) return false
+    if (taxaMax != null && taxa > taxaMax) return false
+  }
+
+  const { min: ciclosMin, max: ciclosMax } = filtros.ciclos
+  if (ciclosMin != null || ciclosMax != null) {
+    if (p.status === 'rascunho') return false
+    const ciclos = p.ciclos ?? 0
+    if (ciclosMin != null && ciclos < ciclosMin) return false
+    if (ciclosMax != null && ciclos > ciclosMax) return false
+  }
+
+  return true
+}
 
 const maisRecentePrimeiro = (a, b) =>
   new Date(b.atualizadoEm) - new Date(a.atualizadoEm)
@@ -84,20 +187,28 @@ const maisRecentePrimeiro = (a, b) =>
  */
 const ordenarPorNome = (a, b) => a.nome.localeCompare(b.nome, 'pt-BR')
 
-const semValorPara = (final) => (a, b) => {
+/* Taxa e Ciclos ordenam do maior para o menor no primeiro clique — é o que
+   costuma interessar primeiro nessas duas (quem mais responde, quem já deu
+   mais voltas) —, por isso `invertido` nasce `true` nelas; Nome continua
+   crescente, A a Z. */
+const semValorPara = (final, invertido = false) => (a, b) => {
   const va = final(a)
   const vb = final(b)
   if (va === null && vb === null) return 0
   if (va === null) return 1
   if (vb === null) return -1
-  return va - vb
+  return invertido ? vb - va : va - vb
 }
 
-const ordenarPorTaxa = semValorPara((p) =>
-  p.status === 'rascunho' || p.status === 'agendada' ? null : taxaDe(p),
+const ordenarPorTaxa = semValorPara(
+  (p) => (p.status === 'rascunho' || p.status === 'agendada' ? null : taxaDe(p)),
+  true,
 )
 
-const ordenarPorCiclos = semValorPara((p) => (p.status === 'rascunho' ? null : p.ciclos ?? 0))
+const ordenarPorCiclos = semValorPara(
+  (p) => (p.status === 'rascunho' ? null : p.ciclos ?? 0),
+  true,
+)
 
 const ORDENACOES = { nome: ordenarPorNome, taxa: ordenarPorTaxa, ciclos: ordenarPorCiclos }
 
@@ -110,6 +221,52 @@ const normalizar = (t) =>
     .toLowerCase()
     .trim()
 
+/*
+ * Cabeçalho de coluna filtrável (porte do FilterHeaderCell do
+ * CollaboratorsTable de lá): clicar abre um dropdown de opções com
+ * checkbox; clicar de novo fecha; e clicar com algo já marcado limpa a
+ * coluna sem precisar abrir o dropdown primeiro.
+ */
+function FiltroCabecalho({ classe, rotulo, opcoes, selecionados, aberto, onClicar, onAlternar, containerRef }) {
+  const filtroAtivo = selecionados.size > 0
+  return (
+    <div className={`${s.envoltorioFiltroCabecalho} ${s[classe]}`} ref={containerRef}>
+      <button type="button" className={s.celulaCabecalho} onClick={onClicar}>
+        <span>{rotulo}</span>
+        {aberto || filtroAtivo ? (
+          <img src={closeIcon} width={16} height={16} alt="" />
+        ) : (
+          <img src={caretDownIcon} width={16} height={16} alt="" />
+        )}
+      </button>
+      {aberto ? (
+        <div className={s.dropdownFiltro} role="menu">
+          {opcoes.map(({ valor, texto }) => {
+            const marcado = selecionados.has(valor)
+            return (
+              <button
+                type="button"
+                key={valor}
+                className={s.opcaoFiltro}
+                role="menuitemcheckbox"
+                aria-checked={marcado}
+                onClick={() => onAlternar(valor)}
+              >
+                {marcado ? (
+                  <CheckSquare size={20} color="var(--cor-texto)" weight="fill" />
+                ) : (
+                  <Square size={20} color="#c2c8c8" />
+                )}
+                <span>{texto}</span>
+              </button>
+            )
+          })}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 export default function Home() {
   const navigate = useNavigate()
   const [pesquisas, setPesquisas] = useState([])
@@ -118,11 +275,27 @@ export default function Home() {
   const [busca, setBusca] = useState('')
   const [sortColuna, setSortColuna] = useState(null)
   const [selecionados, setSelecionados] = useState(() => new Set())
+  const [filtros, setFiltros] = useState(criarFiltrosVazios)
+  const [colunaAberta, setColunaAberta] = useState(null)
+  const [painelFiltrosAberto, setPainelFiltrosAberto] = useState(false)
+  const containerRefs = useRef({})
   /* Leitura que falhou fica na tela até ser resolvida, e não some sozinha
      como um aviso passageiro: a lista vazia embaixo dela é justamente o que
      precisa de explicação. */
   const [falhaDeLeitura, setFalhaDeLeitura] = useState(null)
   const limparAviso = useCallback(() => setAviso(''), [])
+
+  /* Clicar fora do dropdown aberto fecha ele — mesmo padrão do menu de três
+     pontos de cada linha, um nível acima (cabeçalho, e não linha). */
+  useEffect(() => {
+    if (colunaAberta === null) return undefined
+    const aoClicarFora = (evento) => {
+      const ref = containerRefs.current[colunaAberta]
+      if (ref && !ref.contains(evento.target)) setColunaAberta(null)
+    }
+    document.addEventListener('mousedown', aoClicarFora)
+    return () => document.removeEventListener('mousedown', aoClicarFora)
+  }, [colunaAberta])
 
   /*
    * Toda ação da lista passa por aqui: a escrita relê antes de mudar, e o
@@ -236,9 +409,67 @@ export default function Home() {
     setSelecionados(new Set())
   }
 
+  /* Só o clique no cabeçalho de coluna passa por aqui — Atividade/Período/
+     Taxa/Ciclos são o painel, que mexe direto no `filtros` pelo `onSalvar`. */
+  const aoAlternarFiltro = (categoria, valor) =>
+    setFiltros((atual) => {
+      const proximo = new Set(atual[categoria])
+      if (proximo.has(valor)) proximo.delete(valor)
+      else proximo.add(valor)
+      return { ...atual, [categoria]: proximo }
+    })
+
+  const aoClicarCabecalhoFiltro = (categoria) => {
+    if (colunaAberta === categoria) {
+      setColunaAberta(null)
+    } else if (filtros[categoria].size > 0) {
+      setFiltros((atual) => ({ ...atual, [categoria]: new Set() }))
+    } else {
+      setColunaAberta(categoria)
+    }
+  }
+
+  const limparTodosOsFiltros = () => setFiltros(criarFiltrosVazios())
+
+  /* "Toda a empresa" só entra se alguma pesquisa de verdade tiver esse
+     alvo, cada time só entra se tiver ao menos uma pesquisa nele, e
+     "Pessoas avulsas" só entra se alguma pesquisa tiver gente escolhida
+     avulsa — um rascunho não conta, porque a coluna Público dele mostra
+     "—": filtrar por um valor que a própria linha não exibe seria
+     confuso. */
+  const naoRascunho = pesquisas.filter((p) => p.status !== 'rascunho')
+  const publicoOpcoes = []
+  if (naoRascunho.some((p) => p.participantes?.todaEmpresa)) {
+    publicoOpcoes.push({ valor: 'Toda a empresa', texto: 'Toda a empresa' })
+  }
+  const timesComPesquisa = new Set()
+  naoRascunho.forEach((p) => (p.participantes?.grupos || []).forEach((g) => timesComPesquisa.add(g)))
+  Array.from(timesComPesquisa)
+    .sort((a, b) => a.localeCompare(b, 'pt-BR'))
+    .forEach((nome) => publicoOpcoes.push({ valor: nome, texto: nome }))
+  if (naoRascunho.some((p) => (p.participantes?.pessoas?.length ?? 0) > 0)) {
+    publicoOpcoes.push({ valor: 'Pessoas avulsas', texto: 'Pessoas avulsas' })
+  }
+
+  const resumoPartes = [
+    ...filtros.publico,
+    ...filtros.tipo,
+    ...[...filtros.status].map((chave) => STATUS[chave]?.texto ?? chave),
+    ...filtros.atividade,
+  ]
+  if (filtros.periodo.start) resumoPartes.push(formatarDataCurta(filtros.periodo.start))
+  if (filtros.periodo.end) resumoPartes.push(formatarDataCurta(filtros.periodo.end))
+  if (filtros.taxa.min != null) resumoPartes.push(`Mín. ${filtros.taxa.min}%`)
+  if (filtros.taxa.max != null) resumoPartes.push(`Máx. ${filtros.taxa.max}%`)
+  if (filtros.ciclos.min != null) resumoPartes.push(`Mín. ${filtros.ciclos.min} ciclos`)
+  if (filtros.ciclos.max != null) resumoPartes.push(`Máx. ${filtros.ciclos.max} ciclos`)
+  const resumoFiltros = resumoPartes.join(', ')
+  const filtrosAtivos = resumoPartes.length > 0
+
   const procurado = normalizar(busca)
   let encontradas = [...pesquisas]
     .filter((p) => !procurado || normalizar(p.nome).includes(procurado))
+    .filter((p) => pesquisaPassaNoFiltro(p, filtros))
     .sort(maisRecentePrimeiro)
   if (sortColuna) encontradas = [...encontradas].sort(ORDENACOES[sortColuna])
 
@@ -298,20 +529,33 @@ export default function Home() {
 
         <div className={s.ferramentas}>
           <span className={s.total}>Total: {pesquisas.length} pesquisas</span>
-          {/* Mesmo tratamento do "Voltar"/"Tutorial": só o visual do botão
-              chegou, filtro de verdade fica para depois. */}
-          <Botao variante="contorno">
-            Filtros
-            <SlidersHorizontal size={24} />
-          </Botao>
+          <div className={s.acoesFerramentas}>
+            {resumoFiltros ? (
+              <div className={s.resumoFiltros}>
+                <span className={s.resumoFiltrosTexto}>{resumoFiltros}</span>
+                <button
+                  type="button"
+                  className={s.resumoFiltrosLimpar}
+                  aria-label="Limpar filtros"
+                  onClick={limparTodosOsFiltros}
+                >
+                  <img src={closeIcon} width={20} height={20} alt="" />
+                </button>
+              </div>
+            ) : null}
+            <Botao variante="contorno" onClick={() => setPainelFiltrosAberto(true)}>
+              Filtros
+              <SlidersHorizontal size={24} />
+            </Botao>
+          </div>
         </div>
 
-        {/* Só os três cabeçalhos ordenáveis são de verdade — os de filtro
-            continuam decorativos, então ficam fora do alcance do teclado.
-            O rótulo de cada coluna também vai junto do rótulo de cada linha
-            (ver `rotuloDaLinha` em CartaoPesquisa): quem usa leitor de tela
-            ouve a coluna duas vezes só nas ordenáveis, e isso é o preço de
-            elas terem função de verdade agora. */}
+        {/* Nome, % Resposta e Ciclos ordenam; Público, Tipo e Status abrem
+            um dropdown de filtro; Evento é só rótulo. O nome de cada coluna
+            também vai junto do rótulo de cada linha (ver `rotuloDaLinha` em
+            CartaoPesquisa) — quem usa leitor de tela ouve a coluna duas
+            vezes só nas que têm função de verdade, e isso é o preço delas
+            fazerem algo. */}
         <div className={s.tabela}>
           <button
             type="button"
@@ -327,16 +571,42 @@ export default function Home() {
             )}
           </button>
           {COLUNAS.map(({ chave, rotulo, classe, tipo }) => {
-            const ordenavel = tipo === 'ordenar'
-            const ativo = ordenavel && sortColuna === chave
+            if (tipo === 'filtrar') {
+              const opcoes =
+                chave === 'publico' ? publicoOpcoes : chave === 'tipo' ? TIPO_OPCOES : STATUS_OPCOES
+              return (
+                <FiltroCabecalho
+                  key={chave}
+                  classe={classe}
+                  rotulo={rotulo}
+                  opcoes={opcoes}
+                  selecionados={filtros[chave]}
+                  aberto={colunaAberta === chave}
+                  onClicar={() => aoClicarCabecalhoFiltro(chave)}
+                  onAlternar={(valor) => aoAlternarFiltro(chave, valor)}
+                  containerRef={(el) => {
+                    containerRefs.current[chave] = el
+                  }}
+                />
+              )
+            }
+
+            if (tipo === 'nenhum') {
+              return (
+                <span key={chave} className={`${s.rotuloCabecalho} ${s[classe]}`}>
+                  {rotulo}
+                </span>
+              )
+            }
+
+            const ativo = sortColuna === chave
             return (
               <button
                 type="button"
                 key={chave}
                 className={`${s.celulaCabecalho} ${s[classe]}`}
-                tabIndex={ordenavel ? 0 : -1}
-                aria-pressed={ordenavel ? ativo : undefined}
-                onClick={ordenavel ? () => aoOrdenar(chave) : undefined}
+                aria-pressed={ativo}
+                onClick={() => aoOrdenar(chave)}
               >
                 <span>{rotulo}</span>
                 {/* Ativa, a coluna troca as setas pelo X: é o mesmo clique
@@ -344,10 +614,8 @@ export default function Home() {
                     isso — igual às colunas Nome e Ativo desde de lá. */}
                 {ativo ? (
                   <img src={closeIcon} width={16} height={16} alt="" />
-                ) : ordenavel ? (
-                  <img src={arrowsDownUpIcon} width={16} height={16} alt="" />
                 ) : (
-                  <img src={caretDownIcon} width={16} height={16} alt="" />
+                  <img src={arrowsDownUpIcon} width={16} height={16} alt="" />
                 )}
               </button>
             )
@@ -374,10 +642,12 @@ export default function Home() {
           ))}
 
           {/* A lista some quando nada bate; dizer isso é melhor do que deixar
-              a tabela vazia parecendo que a busca travou. */}
-          {procurado && encontradas.length === 0 ? (
+              a tabela vazia parecendo que a busca (ou o filtro) travou. */}
+          {(procurado || filtrosAtivos) && encontradas.length === 0 ? (
             <p className={s.vazio}>
-              Nenhuma pesquisa com &quot;{busca.trim()}&quot; no nome.
+              {procurado
+                ? `Nenhuma pesquisa com "${busca.trim()}" no nome.`
+                : 'Nenhuma pesquisa com os filtros escolhidos.'}
             </p>
           ) : null}
         </div>
@@ -396,6 +666,13 @@ export default function Home() {
       ) : (
         <BottomSearchBar onBuscar={setBusca} />
       )}
+
+      <PainelFiltros
+        aberto={painelFiltrosAberto}
+        onFechar={() => setPainelFiltrosAberto(false)}
+        filtros={filtros}
+        onSalvar={(parcial) => setFiltros((atual) => ({ ...atual, ...parcial }))}
+      />
 
       <Aviso texto={aviso} onSumir={limparAviso} />
 

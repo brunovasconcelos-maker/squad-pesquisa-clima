@@ -751,23 +751,32 @@ export function botaoDe(p) {
   return 'iniciar'
 }
 
-function eventoDe(p) {
-  if (p.status === 'agendada') return `Começa: ${formatarCurto(p.cicloInicio)}`
-  if (p.status === 'rodando') return `Encerra: ${formatarCurto(p.cicloFim)}`
-  if (p.status === 'encerrada') return `Encerrada: ${formatarCurto(p.cicloFim)}`
+/*
+ * A data por trás da coluna Evento, para quem precisa da data de verdade e
+ * não do texto formatado — o filtro de Período, por exemplo. `null` é a
+ * mesma coisa que o "—" da coluna: não há data para anunciar.
+ */
+export function dataDoEvento(p) {
+  if (p.status === 'agendada') return p.cicloInicio ? new Date(p.cicloInicio) : null
+  if (p.status === 'rodando') return p.cicloFim ? new Date(p.cicloFim) : null
+  if (p.status === 'encerrada') return p.cicloFim ? new Date(p.cicloFim) : null
   if (p.status === 'aguardando') {
     /* Uma Única não tem próxima: ela está entre o ciclo que pausou e o fim.
        A coluna Status já diz "Ativa | Aguardando", então aqui não há evento
        nenhum a anunciar — anunciar uma data de repetição seria inventá-la. */
-    if (!ehRecorrente(p) || !p.cicloInicio) return '—'
-    const proximo = proximoCiclo(
-      new Date(p.cicloInicio),
-      p.configuracao?.frequencia,
-      p.configuracao,
-    )
-    if (!proximo) return '—'
-    return `Próxima: ${formatarCurto(proximo.toISOString())}`
+    if (!ehRecorrente(p) || !p.cicloInicio) return null
+    return proximoCiclo(new Date(p.cicloInicio), p.configuracao?.frequencia, p.configuracao)
   }
+  return null
+}
+
+function eventoDe(p) {
+  const data = dataDoEvento(p)
+  if (!data) return '—'
+  if (p.status === 'agendada') return `Começa: ${formatarCurto(data.toISOString())}`
+  if (p.status === 'rodando') return `Encerra: ${formatarCurto(data.toISOString())}`
+  if (p.status === 'encerrada') return `Encerrada: ${formatarCurto(data.toISOString())}`
+  if (p.status === 'aguardando') return `Próxima: ${formatarCurto(data.toISOString())}`
   return '—'
 }
 

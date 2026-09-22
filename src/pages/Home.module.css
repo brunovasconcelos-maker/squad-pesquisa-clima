@@ -105,6 +105,46 @@
   color: var(--cor-texto-secundario);
 }
 
+.acoesFerramentas {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-12);
+}
+
+/* Resumo dos filtros ativos, ao lado do botão "Filtros" — mesmo padrão do
+   CollaboradoresToolbar de lá. */
+.resumoFiltros {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-8);
+  height: 40px;
+  box-sizing: border-box;
+  padding: 0 var(--espaco-16);
+  border-radius: var(--raio-pilula);
+  background: var(--cor-superficie);
+}
+
+.resumoFiltrosTexto {
+  max-width: 180px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 14px;
+  font-weight: var(--peso-medio);
+  color: var(--cor-texto);
+}
+
+.resumoFiltrosLimpar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
 /* Cabeçalho da tabela: porte do CollaboratorsTable de lá — fundo cinza,
    cantos de 4px, uma célula por coluna com o rótulo e o ícone de
    ordenar/filtrar. As larguras espelham as células de `CartaoPesquisa` para
@@ -137,6 +177,7 @@
 
 .celulaCabecalho {
   display: flex;
+  width: 100%;
   align-items: center;
   gap: var(--espaco-8);
   border: none;
@@ -145,6 +186,61 @@
   font: inherit;
   color: inherit;
   text-align: left;
+  cursor: pointer;
+}
+
+/* Envoltório das três colunas filtráveis (Público, Tipo, Status): a largura
+   já entra pela classe da coluna (.publicoCabecalho etc.), aqui só ganha o
+   `position: relative` que ancora o dropdown. */
+.envoltorioFiltroCabecalho {
+  position: relative;
+  display: flex;
+}
+
+/* Evento: só rótulo agora, sem função — não usa `.celulaCabecalho` porque
+   não é botão, e cursor de clique nela seria mentira. */
+.rotuloCabecalho {
+  display: flex;
+  align-items: center;
+}
+
+.dropdownFiltro {
+  position: absolute;
+  top: calc(100% + var(--espaco-8));
+  left: 0;
+  z-index: 10;
+  display: flex;
+  min-width: 200px;
+  flex-direction: column;
+  padding: var(--espaco-8);
+  border: 1px solid var(--cor-borda-acao);
+  border-radius: var(--raio-caixa);
+  background: var(--cor-fundo);
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.12);
+  /* Cor e peso de texto normais aqui dentro — o cabeçalho é cinza/12px, mas
+     as opções do dropdown não são rótulo de coluna. */
+  color: var(--cor-texto);
+  font-size: 14px;
+  font-weight: var(--peso-medio);
+}
+
+.opcaoFiltro {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-8);
+  padding: var(--espaco-8);
+  border: none;
+  border-radius: var(--raio-campo);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.opcaoFiltro:hover {
+  background: var(--cor-superficie);
 }
 
 /* Mesmas larguras de `CartaoPesquisa.module.css` (.nome, .publico, .tipo,
