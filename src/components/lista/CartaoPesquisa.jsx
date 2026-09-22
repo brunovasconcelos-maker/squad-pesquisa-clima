@@ -1,15 +1,25 @@
 import { useEffect, useRef, useState } from 'react'
-import { PauseCircle, Play, DotsThreeVertical, Square } from '@phosphor-icons/react'
+import {
+  PauseCircle,
+  Play,
+  DotsThreeVertical,
+  Square,
+  CheckSquare,
+  Eye,
+  CopySimple,
+} from '@phosphor-icons/react'
 import s from './CartaoPesquisa.module.css'
 import Selo from '../Selo.jsx'
+
+import trashIcon from '../../assets/icons/Trash.svg'
 
 /*
  * Uma linha da lista de pesquisas (Figma 8015:432).
  *
- * Recebe os dados por prop e não sabe de onde vêm — hoje é exemplo fixo,
- * depois vira a pesquisa de verdade.
- *
- * As ações chegam por prop; o cartão só decide quando chamá-las.
+ * Recebe os dados prontos por prop (já passaram por `paraLinha`, que lê a
+ * pesquisa de verdade do localStorage) — o cartão só desenha, não sabe de
+ * onde vieram nem decide o que fazer com um clique além de chamar a ação que
+ * recebeu.
  */
 const TRANSPORTE = {
   pausar: { Icone: PauseCircle, tamanho: 20, rotulo: 'Pausar' },
@@ -18,10 +28,11 @@ const TRANSPORTE = {
 
 export default function CartaoPesquisa({
   pesquisa,
+  selecionado,
+  onSelecionar,
   onAbrir,
   onTransporte,
   onDuplicar,
-  onCopiarLink,
   onDeletar,
 }) {
   const [menuAberto, setMenuAberto] = useState(false)
@@ -75,16 +86,29 @@ export default function CartaoPesquisa({
 
   return (
     <div
-      className={s.cartao}
+      className={selecionado ? `${s.cartao} ${s.selecionado}` : s.cartao}
       role="button"
       tabIndex={0}
       aria-label={`Abrir ${rotuloDaLinha}`}
       onClick={onAbrir}
       onKeyDown={aoTeclar}
     >
-      <span className={s.checkbox} aria-hidden="true">
-        <Square size={24} color="#c2c8c8" />
-      </span>
+      <button
+        type="button"
+        className={s.checkbox}
+        aria-label={selecionado ? `Desmarcar ${nome}` : `Selecionar ${nome}`}
+        aria-pressed={selecionado}
+        onClick={(e) => {
+          e.stopPropagation()
+          onSelecionar?.()
+        }}
+      >
+        {selecionado ? (
+          <CheckSquare size={24} color="var(--cor-texto)" />
+        ) : (
+          <Square size={24} color="#c2c8c8" />
+        )}
+      </button>
       <span className={`${s.celula} ${s.nome}`} title={nome}>
         {nome}
       </span>
@@ -133,17 +157,19 @@ export default function CartaoPesquisa({
                 type="button"
                 className={s.itemSuspenso}
                 role="menuitem"
-                onClick={executar(onDuplicar)}
+                onClick={executar(onAbrir)}
               >
-                Duplicar
+                <Eye size={20} color="var(--cor-texto-secundario)" />
+                Ver pesquisa
               </button>
               <button
                 type="button"
                 className={s.itemSuspenso}
                 role="menuitem"
-                onClick={executar(onCopiarLink)}
+                onClick={executar(onDuplicar)}
               >
-                Copiar link
+                <CopySimple size={20} color="var(--cor-texto-secundario)" />
+                Duplicar pesquisa
               </button>
               <button
                 type="button"
@@ -151,7 +177,8 @@ export default function CartaoPesquisa({
                 role="menuitem"
                 onClick={executar(onDeletar)}
               >
-                Deletar
+                <img src={trashIcon} width={20} height={20} alt="" />
+                Deletar pesquisa
               </button>
             </div>
           ) : null}

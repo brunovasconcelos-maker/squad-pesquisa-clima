@@ -1,21 +1,24 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CaretLeft, GraduationCap, Plus, SlidersHorizontal, Square } from '@phosphor-icons/react'
+import { CaretLeft, GraduationCap, Plus, SlidersHorizontal, Square, CheckSquare } from '@phosphor-icons/react'
 import arrowsDownUpIcon from '../assets/icons/ArrowsDownUp.svg'
 import caretDownIcon from '../assets/icons/CaretDown.svg'
 import Sidebar from '../components/Sidebar.jsx'
 import BottomSearchBar from '../components/BottomSearchBar.jsx'
+import BarraSelecao from '../components/lista/BarraSelecao.jsx'
 import CartaoPesquisa from '../components/lista/CartaoPesquisa.jsx'
 import ModalConfirmar from '../components/fluxo/ModalConfirmar.jsx'
 import Aviso from '../components/Aviso.jsx'
 import Botao from '../components/fluxo/Botao.jsx'
 import { rotuloParticipantes, PASSOS } from './nova-pesquisa/estado.jsx'
+import { taxaDe } from '../lib/participacao.js'
 import {
   ler,
   gravar,
   erroDeLeitura,
   TEXTO_DE_LEITURA,
   ERRO_AO_GRAVAR,
+  atualizarGuardadas,
   trocarGuardada,
   acrescentarGuardada,
   removerGuardada,
@@ -26,7 +29,6 @@ import {
   encerrarCiclo,
   paraLinha,
   botaoDe,
-  linkDaPesquisa,
   INTERVALO_MS,
 } from '../lib/pesquisas.js'
 import s from './Home.module.css'
@@ -51,10 +53,11 @@ import s from './Home.module.css'
  * existe, para os dois módulos já nascerem parecidos.
  *
  * A tabela é outro porte do mesmo padrão (CollaboratorsTable de lá): a
- * caixa de seleção, os ícones de ordenar/filtrar e o botão "Filtros" ainda
- * não fazem nada — só o visual chegou agora. A ordenação e a busca por nome
- * continuam sendo as únicas regras de verdade que existem, sem mudança
- * nenhuma; o resto é só ficar parecido até ganhar comportamento.
+ * caixa de seleção e a ordenação por Nome/% Resposta/Ciclos funcionam de
+ * verdade agora, com a barra de seleção em massa entrando no lugar da busca
+ * flutuante enquanto há linhas marcadas. Os filtros de coluna (Público,
+ * Tipo, Status, Evento) e o botão "Filtros" continuam só visuais — essa
+ * parte ainda não tem regra nenhuma por trás.
  */
 /* Mesma ordem das células de `CartaoPesquisa`, para as larguras baterem com
    as da linha. `tipo` diz só qual ícone entra — nenhuma das duas abre nada
@@ -72,6 +75,31 @@ const COLUNAS = [
 const maisRecentePrimeiro = (a, b) =>
   new Date(b.atualizadoEm) - new Date(a.atualizadoEm)
 
+/*
+ * Comparações das três colunas ordenáveis, cada uma com sua própria noção de
+ * "sem valor" — rascunho não tem taxa nem ciclos ainda, e agendada não tem
+ * taxa. Essas linhas vão sempre para o fim, ordem crescente ou não, em vez
+ * de competir como zero contra pesquisas que de fato respondem por zero.
+ */
+const ordenarPorNome = (a, b) => a.nome.localeCompare(b.nome, 'pt-BR')
+
+const semValorPara = (final) => (a, b) => {
+  const va = final(a)
+  const vb = final(b)
+  if (va === null && vb === null) return 0
+  if (va === null) return 1
+  if (vb === null) return -1
+  return va - vb
+}
+
+const ordenarPorTaxa = semValorPara((p) =>
+  p.status === 'rascunho' || p.status === 'agendada' ? null : taxaDe(p),
+)
+
+const ordenarPorCiclos = semValorPara((p) => (p.status === 'rascunho' ? null : p.ciclos ?? 0))
+
+const ORDENACOES = { nome: ordenarPorNome, taxa: ordenarPorTaxa, ciclos: ordenarPorCiclos }
+
 /* Comparação frouxa de propósito: acento e caixa não deveriam esconder uma
    pesquisa de quem está procurando por ela. */
 const normalizar = (t) =>
@@ -87,6 +115,8 @@ export default function Home() {
   const [confirmacao, setConfirmacao] = useState(null)
   const [aviso, setAviso] = useState('')
   const [busca, setBusca] = useState('')
+  const [sortColuna, setSortColuna] = useState(null)
+  const [selecionados, setSelecionados] = useState(() => new Set())
   /* Leitura que falhou fica na tela até ser resolvida, e não some sozinha
      como um aviso passageiro: a lista vazia embaixo dela é justamente o que
      precisa de explicação. */
@@ -169,28 +199,53 @@ export default function Home() {
     navigate(`/rascunhos/${p.id}${passoDoRascunho(p)}`)
   }
 
-  const aoDeletar = (p) =>
-    setConfirmacao({
-      titulo: 'Deletar pesquisa?',
-      texto: `"${p.nome}" e tudo o que foi respondido nela serão removidos. Não dá para desfazer.`,
-      rotulo: 'Deletar',
-      aoConfirmar: () => aplicar(removerGuardada(p.id)),
+  /* Sem confirmação, igual à deleção em massa: as duas são o mesmo tanto de
+     irreversível, e pedir "tem certeza?" só de uma delas seria inconsistente
+     sem deixá-la mais segura de verdade. */
+  const aoDeletar = (p) => aplicar(removerGuardada(p.id))
+
+  /*
+   * Seleção e ordenação vivem só na tela: nada disso é gravado, e recarregar
+   * a página zera as duas. Marcar uma linha muda o que aparece pintado e o
+   * conteúdo da barra flutuante de baixo, nunca o que está no armazenamento.
+   */
+  const aoOrdenar = (coluna) =>
+    setSortColuna((atual) => (atual === coluna ? null : coluna))
+
+  const aoSelecionar = (id) =>
+    setSelecionados((atual) => {
+      const proximo = new Set(atual)
+      if (proximo.has(id)) proximo.delete(id)
+      else proximo.add(id)
+      return proximo
     })
 
-  const aoCopiarLink = async (p) => {
-    try {
-      await navigator.clipboard.writeText(linkDaPesquisa(p))
-      setAviso('Link copiado')
-    } catch {
-      // Sem permissão de área de transferência (contexto inseguro, por ex.).
-      setAviso('Não foi possível copiar o link')
-    }
+  const aoDuplicarSelecionados = () => {
+    aplicar(
+      atualizarGuardadas((lista) => [
+        ...lista,
+        ...lista.filter((p) => selecionados.has(p.id)).map((p) => duplicar(p)),
+      ]),
+    )
+    setSelecionados(new Set())
+  }
+
+  const aoDeletarSelecionados = () => {
+    aplicar(atualizarGuardadas((lista) => lista.filter((p) => !selecionados.has(p.id))))
+    setSelecionados(new Set())
   }
 
   const procurado = normalizar(busca)
-  const encontradas = [...pesquisas]
+  let encontradas = [...pesquisas]
     .filter((p) => !procurado || normalizar(p.nome).includes(procurado))
     .sort(maisRecentePrimeiro)
+  if (sortColuna) encontradas = [...encontradas].sort(ORDENACOES[sortColuna])
+
+  const idsVisiveis = encontradas.map((p) => p.id)
+  const todosSelecionados =
+    idsVisiveis.length > 0 && idsVisiveis.every((id) => selecionados.has(id))
+  const aoSelecionarTodos = () =>
+    setSelecionados(todosSelecionados ? new Set() : new Set(idsVisiveis))
 
   return (
     <div className={s.layout}>
@@ -250,30 +305,46 @@ export default function Home() {
           </Botao>
         </div>
 
-        {/* Cabeçalhos: o nome de cada coluna já vai junto do valor no rótulo
-            de cada linha (ver `rotuloDaLinha` em CartaoPesquisa), então o
-            grupo de cabeçalho é `aria-hidden` — sem isso um leitor de tela
-            leria "Nome da Pesquisa, Público, Tipo..." como uma fila de
-            palavras soltas antes de cada linha repetir a mesma informação. */}
-        <div className={s.tabela} aria-hidden="true">
-          <span className={s.checkboxCabecalho}>
-            <Square size={24} color="#c2c8c8" />
-          </span>
-          {COLUNAS.map(({ chave, rotulo, classe, tipo }) => (
-            <button
-              type="button"
-              key={chave}
-              className={`${s.celulaCabecalho} ${s[classe]}`}
-              tabIndex={-1}
-            >
-              <span>{rotulo}</span>
-              {tipo === 'ordenar' ? (
-                <img src={arrowsDownUpIcon} width={16} height={16} alt="" />
-              ) : (
-                <img src={caretDownIcon} width={16} height={16} alt="" />
-              )}
-            </button>
-          ))}
+        {/* Só os três cabeçalhos ordenáveis são de verdade — os de filtro
+            continuam decorativos, então ficam fora do alcance do teclado.
+            O rótulo de cada coluna também vai junto do rótulo de cada linha
+            (ver `rotuloDaLinha` em CartaoPesquisa): quem usa leitor de tela
+            ouve a coluna duas vezes só nas ordenáveis, e isso é o preço de
+            elas terem função de verdade agora. */}
+        <div className={s.tabela}>
+          <button
+            type="button"
+            className={s.checkboxCabecalho}
+            aria-label={todosSelecionados ? 'Desmarcar todas' : 'Selecionar todas'}
+            aria-pressed={todosSelecionados}
+            onClick={aoSelecionarTodos}
+          >
+            {todosSelecionados ? (
+              <CheckSquare size={24} color="var(--cor-texto)" />
+            ) : (
+              <Square size={24} color="#c2c8c8" />
+            )}
+          </button>
+          {COLUNAS.map(({ chave, rotulo, classe, tipo }) => {
+            const ordenavel = tipo === 'ordenar'
+            return (
+              <button
+                type="button"
+                key={chave}
+                className={`${s.celulaCabecalho} ${s[classe]}`}
+                tabIndex={ordenavel ? 0 : -1}
+                aria-pressed={ordenavel ? sortColuna === chave : undefined}
+                onClick={ordenavel ? () => aoOrdenar(chave) : undefined}
+              >
+                <span>{rotulo}</span>
+                {ordenavel ? (
+                  <img src={arrowsDownUpIcon} width={16} height={16} alt="" />
+                ) : (
+                  <img src={caretDownIcon} width={16} height={16} alt="" />
+                )}
+              </button>
+            )
+          })}
           <span className={s.acoesCabecalho} />
         </div>
 
@@ -286,10 +357,11 @@ export default function Home() {
             <CartaoPesquisa
               key={p.id}
               pesquisa={paraLinha(p, rotuloParticipantes)}
+              selecionado={selecionados.has(p.id)}
+              onSelecionar={() => aoSelecionar(p.id)}
               onAbrir={() => aoAbrir(p)}
               onTransporte={() => aoTransportar(p)}
               onDuplicar={() => aplicar(acrescentarGuardada(duplicar(p)))}
-              onCopiarLink={() => aoCopiarLink(p)}
               onDeletar={() => aoDeletar(p)}
             />
           ))}
@@ -304,7 +376,19 @@ export default function Home() {
         </div>
       </main>
 
-      <BottomSearchBar onBuscar={setBusca} />
+      {/* Mesmo lugar na tela, uma coisa de cada vez: selecionar alguma linha
+          troca a busca flutuante pela barra de ações em massa, e fechá-la
+          devolve a busca — nunca as duas ao mesmo tempo. */}
+      {selecionados.size > 0 ? (
+        <BarraSelecao
+          quantidade={selecionados.size}
+          onDuplicar={aoDuplicarSelecionados}
+          onDeletar={aoDeletarSelecionados}
+          onFechar={() => setSelecionados(new Set())}
+        />
+      ) : (
+        <BottomSearchBar onBuscar={setBusca} />
+      )}
 
       <Aviso texto={aviso} onSumir={limparAviso} />
 

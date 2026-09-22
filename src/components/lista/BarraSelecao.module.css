@@ -1,0 +1,48 @@
+/* Mesma posição e camada do BottomSearchBar (ver o comentário de lá): fica
+   abaixo de qualquer modal, para escurecer junto com o resto da página em
+   vez de competir com eles — e nunca aparece com a busca ao mesmo tempo,
+   já que a Home só renderiza uma das duas por vez. */
+.barra {
+  position: fixed;
+  bottom: 24px;
+  left: calc(50vw + var(--largura-sidebar) / 2);
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  /* 21px no Figma — não é um dos tokens de espaço, mas é o mesmo valor do
+     BulkActionBar de lá entre a contagem e o grupo de ações. */
+  gap: 21px;
+  box-sizing: border-box;
+  padding: var(--espaco-12) var(--espaco-24);
+  border-radius: var(--raio-pilula);
+  background: var(--cor-fundo);
+  box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.08);
+}
+
+.contagem {
+  font-size: 14px;
+  font-weight: var(--peso-medio);
+  color: var(--cor-texto);
+  white-space: nowrap;
+}
+
+.acoes {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-8);
+}
+
+.botaoIcone {
+  display: flex;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: var(--raio-pilula);
+  background: transparent;
+  cursor: pointer;
+}
