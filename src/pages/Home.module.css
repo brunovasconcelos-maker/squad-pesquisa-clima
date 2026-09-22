@@ -307,11 +307,14 @@
 
 /* Sem vão entre linhas: elas se tocam e a borda de baixo de cada uma é que
    divide — um vão aqui deixaria cada linha flutuando com borda nos quatro
-   lados, e não a tabela contínua do Figma. */
+   lados, e não a tabela contínua do Figma. Os 120px de baixo são o mesmo
+   respiro do .home__panel de lá: sem eles a última linha fica escondida
+   atrás da barra de busca flutuante. */
 .linhas {
   display: flex;
   flex-direction: column;
   margin-top: var(--espaco-20);
+  padding-bottom: 120px;
 }
 
 /* Recado de busca sem resultado, no lugar onde as linhas estariam. */
