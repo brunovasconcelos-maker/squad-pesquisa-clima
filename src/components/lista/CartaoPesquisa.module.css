@@ -141,11 +141,15 @@
   height: 40px;
   align-items: center;
   justify-content: center;
-  padding: 10px;
+  padding: 0;
   border: none;
   border-radius: var(--raio-pilula);
   background: transparent;
   cursor: pointer;
+}
+
+.menu:hover {
+  background: var(--cor-superficie);
 }
 
 /* DotsThree do Phosphor é horizontal; girado 90°, os três pontos colineares
@@ -168,14 +172,14 @@
   border: 1px solid var(--cor-borda-acao);
   border-radius: var(--raio-caixa);
   background: var(--cor-fundo);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.08);
 }
 
 .itemSuspenso {
   display: flex;
   align-items: center;
-  gap: var(--espaco-8);
-  padding: var(--espaco-8) var(--espaco-12);
+  gap: var(--espaco-12);
+  padding: var(--espaco-12) var(--espaco-16);
   border: none;
   border-radius: var(--raio-campo);
   background: transparent;

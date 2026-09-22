@@ -151,7 +151,7 @@ export default function CartaoPesquisa({
             <DotsThree
               size={24}
               color="var(--cor-texto-secundario)"
-              weight="regular"
+              weight="bold"
               className={s.iconeMenu}
             />
           </button>
