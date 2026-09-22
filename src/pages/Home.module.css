@@ -27,11 +27,36 @@
 .cabecalho,
 .ferramentas,
 .tabela,
-.linhas {
+.linhas,
+.falha {
   width: 100%;
   max-width: var(--largura-lista);
   margin-right: auto;
   margin-left: auto;
+}
+
+/* Mesma escala do Gestão de Pessoas (.home__inner de lá): o teto de 1100
+   vale até 1440px de tela; dali até 1800 ele acompanha a viewport em vez de
+   ficar parado, e acima de 1800 trava em 1440 para a lista não esticar sem
+   fim numa tela muito larga. Sempre centrada — só o teto muda de regra. */
+@media (min-width: 1441px) and (max-width: 1800px) {
+  .cabecalho,
+  .ferramentas,
+  .tabela,
+  .linhas,
+  .falha {
+    max-width: 80vw;
+  }
+}
+
+@media (min-width: 1801px) {
+  .cabecalho,
+  .ferramentas,
+  .tabela,
+  .linhas,
+  .falha {
+    max-width: 1440px;
+  }
 }
 
 .cabecalho {
@@ -300,15 +325,12 @@
 }
 
 /* Falha ao ler o que estava guardado. Fica na tela — não é aviso passageiro:
-   a tabela vazia logo abaixo é que precisa da explicação, e ela não some. */
+   a tabela vazia logo abaixo é que precisa da explicação, e ela não some.
+   Largura, teto responsivo e centralização já vêm do seletor combinado lá
+   em cima — repeti-los aqui depois das media queries as sobrescreveria de
+   volta para o teto fixo. */
 .falha {
   display: flex;
-  /* Mesma coluna do cabeçalho e da tabela: sem isto a faixa esticava para
-     além da largura da lista e ficava mais larga que tudo em volta. */
-  width: 100%;
-  max-width: var(--largura-lista);
-  margin-right: auto;
-  margin-left: auto;
   flex-direction: column;
   gap: var(--espaco-8);
   margin-bottom: var(--espaco-24);
