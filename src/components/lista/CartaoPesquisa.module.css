@@ -16,13 +16,20 @@
   outline-offset: 2px;
 }
 
+.checkbox {
+  display: flex;
+  flex: none;
+  width: 24px;
+  align-items: center;
+}
+
 .celula {
   min-width: 0;
   overflow: hidden;
   font-size: 14px;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-weight: var(--peso-medio);
+  font-weight: var(--peso-regular);
   color: var(--cor-texto-secundario);
   letter-spacing: -0.08px;
   line-height: 1.2;
@@ -37,6 +44,7 @@
   flex: 0 1 198px;
   min-width: 80px;
   color: var(--cor-texto);
+  font-weight: var(--peso-medio);
 }
 
 .publico,
@@ -72,26 +80,32 @@
   gap: var(--espaco-12);
 }
 
-/* Botão de play/pause: quadrado branco sobre o cinza da linha. */
+/* Botão de play/pause: quadrado cinza-superfície sobre o fundo branco da
+   linha. */
 .transporte {
   display: flex;
   width: 40px;
   height: 40px;
+  flex: none;
   align-items: center;
   justify-content: center;
   padding: 10px;
   border: none;
   border-radius: var(--raio-caixa);
-  background: var(--cor-fundo);
+  background: var(--cor-superficie);
   cursor: pointer;
 }
 
-/* Quando não há play nem pause, o espaço continua reservado para os menus
-   das linhas ficarem todos na mesma coluna. */
+/* Quando não há play nem pause (Encerrada, Rascunho), o botão some mas o
+   espaço continua reservado — invisível, e não ausente — para os menus de
+   todas as linhas ficarem na mesma coluna. */
 .semTransporte {
   width: 40px;
   height: 40px;
   flex: none;
+  border-radius: var(--raio-caixa);
+  background: var(--cor-borda-sutil);
+  opacity: 0;
 }
 
 .envoltorioMenu {
@@ -111,12 +125,6 @@
   border-radius: var(--raio-pilula);
   background: transparent;
   cursor: pointer;
-}
-
-.icone {
-  display: block;
-  width: 24px;
-  height: 24px;
 }
 
 /* ---- menu de três pontos ---- */

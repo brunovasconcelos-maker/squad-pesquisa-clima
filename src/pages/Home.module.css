@@ -25,6 +25,7 @@
  * qualquer largura — e em 1440 cai a 2px de onde o Figma a desenha.
  */
 .cabecalho,
+.ferramentas,
 .tabela,
 .linhas {
   width: 100%;
@@ -87,24 +88,96 @@
 }
 
 
-/* Cabeçalho da tabela: alinhado embaixo porque "Taxa de Resposta" ocupa duas
-   linhas na largura dela e as outras precisam encostar na mesma base. */
+/* Barra "Total: X pesquisas" + "Filtros" (Figma 8222:2410, porte do
+   CollaboradoresToolbar de lá). O botão em si é o `Botao` variante contorno
+   que o fluxo já usa — mesma pílula de 40px, só com borda em vez de fundo. */
+.ferramentas {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  margin-top: var(--espaco-24);
+}
+
+.total {
+  font-size: 14px;
+  font-weight: var(--peso-regular);
+  color: var(--cor-texto-secundario);
+}
+
+/* Cabeçalho da tabela: porte do CollaboratorsTable de lá — fundo cinza,
+   cantos de 4px, uma célula por coluna com o rótulo e o ícone de
+   ordenar/filtrar. As larguras espelham as células de `CartaoPesquisa` para
+   as colunas baterem entre cabeçalho e linha. */
 .tabela {
   display: flex;
+  align-items: center;
   gap: var(--espaco-12);
-  align-items: flex-end;
-  margin-top: var(--espaco-20);
-  padding: var(--espaco-12) 0 var(--espaco-16);
-  border-bottom: 1px solid var(--cor-borda-acao);
+  margin-top: var(--espaco-24);
+  padding: var(--espaco-12);
+  border-radius: var(--raio-campo);
+  background: var(--cor-superficie);
   color: var(--cor-texto-secundario);
-  font-size: 14px;
-  font-weight: var(--peso-medio);
+  font-size: 12px;
+  font-weight: var(--peso-regular);
   letter-spacing: -0.08px;
   line-height: 1.2;
 }
 
-.coluna1 {
+.checkboxCabecalho {
+  display: flex;
   flex: none;
+  width: 24px;
+  align-items: center;
+}
+
+.celulaCabecalho {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-8);
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+
+/* Mesmas larguras de `CartaoPesquisa.module.css` (.nome, .publico, .tipo,
+   .status, .evento, .taxa, .ciclos), para as colunas do cabeçalho e da
+   linha ficarem alinhadas. */
+.nomeCabecalho {
+  flex: 0 1 198px;
+  min-width: 80px;
+}
+
+.publicoCabecalho,
+.tipoCabecalho {
+  flex: 0 1 120px;
+}
+
+.statusCabecalho {
+  flex: none;
+  width: 140px;
+}
+
+.eventoCabecalho {
+  flex: 0 1 140px;
+}
+
+.taxaCabecalho {
+  flex: 0 1 110px;
+}
+
+.ciclosCabecalho {
+  flex: 1 1 0;
+}
+
+/* Mesma largura das duas ações (play/pause + menu) no fim de cada linha,
+   para o cabeçalho não ficar mais curto que elas: 40 + 12 de vão + 40. */
+.acoesCabecalho {
+  flex: none;
+  width: 92px;
 }
 
 .linhas {

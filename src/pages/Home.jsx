@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CaretLeft, GraduationCap, Plus } from '@phosphor-icons/react'
+import {
+  CaretLeft,
+  GraduationCap,
+  Plus,
+  SlidersHorizontal,
+  ArrowsDownUp,
+  CaretDown,
+  Square,
+} from '@phosphor-icons/react'
 import Sidebar from '../components/Sidebar.jsx'
 import BottomSearchBar from '../components/BottomSearchBar.jsx'
 import CartaoPesquisa from '../components/lista/CartaoPesquisa.jsx'
@@ -47,16 +55,24 @@ import s from './Home.module.css'
  * não fazem nada, e a sidebar são só os cinco espaços reservados — os dois
  * marcam o lugar de uma navegação de produto compartilhada que ainda não
  * existe, para os dois módulos já nascerem parecidos.
+ *
+ * A tabela é outro porte do mesmo padrão (CollaboratorsTable de lá): a
+ * caixa de seleção, os ícones de ordenar/filtrar e o botão "Filtros" ainda
+ * não fazem nada — só o visual chegou agora. A ordenação e a busca por nome
+ * continuam sendo as únicas regras de verdade que existem, sem mudança
+ * nenhuma; o resto é só ficar parecido até ganhar comportamento.
  */
+/* Mesma ordem das células de `CartaoPesquisa`, para as larguras baterem com
+   as da linha. `tipo` diz só qual ícone entra — nenhuma das duas abre nada
+   ainda. */
 const COLUNAS = [
-  { nome: 'Nome da Pesquisa', largura: 214 },
-  { nome: 'Público', largura: 120 },
-  { nome: 'Tipo', largura: 120 },
-  { nome: 'Status', largura: 140 },
-  { nome: 'Evento', largura: 140 },
-  // 110px é o que quebra "Taxa de Resposta" em duas linhas, como no Figma.
-  { nome: 'Taxa de Resposta', largura: 110 },
-  { nome: 'Ciclos', largura: 60 },
+  { chave: 'nome', rotulo: 'Nome da Pesquisa', classe: 'nomeCabecalho', tipo: 'ordenar' },
+  { chave: 'publico', rotulo: 'Público', classe: 'publicoCabecalho', tipo: 'filtrar' },
+  { chave: 'tipo', rotulo: 'Tipo', classe: 'tipoCabecalho', tipo: 'filtrar' },
+  { chave: 'status', rotulo: 'Status', classe: 'statusCabecalho', tipo: 'filtrar' },
+  { chave: 'evento', rotulo: 'Evento', classe: 'eventoCabecalho', tipo: 'filtrar' },
+  { chave: 'taxa', rotulo: '% Resposta', classe: 'taxaCabecalho', tipo: 'ordenar' },
+  { chave: 'ciclos', rotulo: 'Ciclos', classe: 'ciclosCabecalho', tipo: 'ordenar' },
 ]
 
 const maisRecentePrimeiro = (a, b) =>
@@ -228,15 +244,41 @@ export default function Home() {
           </div>
         ) : null}
 
-        {/* Cabeçalhos só visuais: o nome de cada coluna já vai junto do valor
-            no rótulo de cada linha, e lê-los aqui de novo seria uma fila de
-            sete palavras soltas antes da lista. */}
+        <div className={s.ferramentas}>
+          <span className={s.total}>Total: {encontradas.length} pesquisas</span>
+          {/* Mesmo tratamento do "Voltar"/"Tutorial": só o visual do botão
+              chegou, filtro de verdade fica para depois. */}
+          <Botao variante="contorno">
+            Filtros
+            <SlidersHorizontal size={24} />
+          </Botao>
+        </div>
+
+        {/* Cabeçalhos: o nome de cada coluna já vai junto do valor no rótulo
+            de cada linha (ver `rotuloDaLinha` em CartaoPesquisa), então o
+            grupo de cabeçalho é `aria-hidden` — sem isso um leitor de tela
+            leria "Nome da Pesquisa, Público, Tipo..." como uma fila de
+            palavras soltas antes de cada linha repetir a mesma informação. */}
         <div className={s.tabela} aria-hidden="true">
-          {COLUNAS.map(({ nome, largura }) => (
-            <span key={nome} className={s.coluna1} style={{ width: largura }}>
-              {nome}
-            </span>
+          <span className={s.checkboxCabecalho}>
+            <Square size={24} color="#c2c8c8" />
+          </span>
+          {COLUNAS.map(({ chave, rotulo, classe, tipo }) => (
+            <button
+              type="button"
+              key={chave}
+              className={`${s.celulaCabecalho} ${s[classe]}`}
+              tabIndex={-1}
+            >
+              <span>{rotulo}</span>
+              {tipo === 'ordenar' ? (
+                <ArrowsDownUp size={16} />
+              ) : (
+                <CaretDown size={16} />
+              )}
+            </button>
           ))}
+          <span className={s.acoesCabecalho} />
         </div>
 
         {/* `group` e não `list`: as linhas são botões, e uma lista cujos

@@ -1,10 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import { PauseCircle, Play, DotsThreeVertical, Square } from '@phosphor-icons/react'
 import s from './CartaoPesquisa.module.css'
 import Selo from '../Selo.jsx'
-
-import pauseCircle from '../../assets/icons/PauseCircle.svg'
-import play from '../../assets/icons/Play.svg'
-import more from '../../assets/icons/More.svg'
 
 /*
  * Uma linha da lista de pesquisas (Figma 8015:432).
@@ -15,8 +12,8 @@ import more from '../../assets/icons/More.svg'
  * As ações chegam por prop; o cartão só decide quando chamá-las.
  */
 const TRANSPORTE = {
-  pausar: { icone: pauseCircle, rotulo: 'Pausar' },
-  iniciar: { icone: play, rotulo: 'Iniciar' },
+  pausar: { Icone: PauseCircle, tamanho: 20, rotulo: 'Pausar' },
+  iniciar: { Icone: Play, tamanho: 16, rotulo: 'Iniciar' },
 }
 
 export default function CartaoPesquisa({
@@ -85,6 +82,9 @@ export default function CartaoPesquisa({
       onClick={onAbrir}
       onKeyDown={aoTeclar}
     >
+      <span className={s.checkbox} aria-hidden="true">
+        <Square size={24} color="#c2c8c8" />
+      </span>
       <span className={`${s.celula} ${s.nome}`} title={nome}>
         {nome}
       </span>
@@ -110,7 +110,7 @@ export default function CartaoPesquisa({
             aria-label={`${botao.rotulo} ${nome}`}
             onClick={onTransporte}
           >
-            <img className={s.icone} src={botao.icone} alt="" width={24} height={24} />
+            <botao.Icone size={botao.tamanho} color="var(--cor-texto-secundario)" weight="fill" />
           </button>
         ) : (
           <span className={s.semTransporte} />
@@ -124,7 +124,7 @@ export default function CartaoPesquisa({
             aria-expanded={menuAberto}
             onClick={() => setMenuAberto((aberto) => !aberto)}
           >
-            <img className={s.icone} src={more} alt="" width={24} height={24} />
+            <DotsThreeVertical size={24} color="var(--cor-texto-secundario)" weight="fill" />
           </button>
 
           {menuAberto ? (
