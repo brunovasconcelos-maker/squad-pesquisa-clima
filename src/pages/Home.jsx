@@ -545,7 +545,7 @@ export default function Home() {
             ) : null}
             <Botao variante="contorno" onClick={() => setPainelFiltrosAberto(true)}>
               Filtros
-              <SlidersHorizontal size={24} />
+              <SlidersHorizontal size={24} color="#798282" />
             </Botao>
           </div>
         </div>
