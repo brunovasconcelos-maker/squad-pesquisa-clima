@@ -13,13 +13,16 @@
 }
 
 /* Os 16px de recuo são os mesmos do padding interno da linha: é o que faz a
-   coluna do cabeçalho cair em cima da célula que ela nomeia. */
+   coluna do cabeçalho cair em cima da célula que ela nomeia. Fundo e
+   tipografia no mesmo padrão da tabela da Home (Figma), inclusive aqui,
+   onde antes não tinha nenhum dos dois. */
 .cabecalho {
   display: flex;
   align-items: flex-end;
   gap: var(--espaco-12);
   padding: var(--espaco-12) var(--espaco-16) var(--espaco-16);
   border-bottom: 1px solid var(--cor-borda-acao);
+  background: var(--cor-superficie);
 }
 
 .coluna {
@@ -32,9 +35,9 @@
   background: none;
   color: var(--cor-texto-secundario);
   font-family: inherit;
-  font-size: 14px;
-  font-weight: var(--peso-medio);
-  letter-spacing: -0.08px;
+  font-size: 12px;
+  font-weight: var(--peso-regular);
+  letter-spacing: 0;
   line-height: 1.2;
   text-align: left;
   white-space: nowrap;
@@ -92,9 +95,9 @@ button.coluna {
   align-items: center;
   min-width: 0;
   font-size: 14px;
-  font-weight: var(--peso-medio);
+  font-weight: var(--peso-regular);
   color: var(--cor-texto-secundario);
-  letter-spacing: -0.08px;
+  letter-spacing: 0;
   line-height: 1.2;
 }
 
@@ -108,9 +111,11 @@ button.coluna {
   white-space: nowrap;
 }
 
-/* Só o número do ciclo vem em preto; o resto da linha é secundário. */
+/* Só o número do ciclo vem em preto e com peso 500; o resto da linha é
+   secundário e regular. */
 .celula.numero {
   color: var(--cor-texto);
+  font-weight: var(--peso-medio);
 }
 
 .inicio,
